@@ -9,11 +9,15 @@ El proyecto inicia en fase de documentación. Aún no hay código de aplicación
 ## Contenido
 
 - [Documentación](docs/README.md)
+- [Contexto y objetivos](docs/Producto/contexto-y-objetivos.md)
+- [Arquitectura del sistema](docs/Arquitectura/arquitectura-del-sistema.md)
+- [Especificación de frontend](docs/Frontend/especificacion.md)
+- [Decisiones de arquitectura](docs/ADR/)
 - [Wireframes de frontend](docs/Frontend/README.md)
 
 ## Próximos documentos
 
-1. Objetivos, alcance y usuarios.
-2. Requisitos funcionales y no funcionales.
-3. Arquitectura y decisiones técnicas.
-4. Plan de desarrollo e hitos.
+1. Resolver las decisiones abiertas de telemetría antes de implementar el contrato de WebSocket.
+2. Convertir la especificación frontend en requisitos y criterios de aceptación por pantalla.
+3. Definir los endpoints REST y el protocolo WebSocket para el Sprint 2.
+4. Planificar los hitos de desarrollo y validación con hardware.
