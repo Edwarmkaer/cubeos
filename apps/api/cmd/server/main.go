@@ -1,0 +1,75 @@
+package main
+
+import (
+	"context"
+	"errors"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/Edwarmkaer/cubeos/apps/api/internal/config"
+	"github.com/Edwarmkaer/cubeos/apps/api/internal/devices"
+	api "github.com/Edwarmkaer/cubeos/apps/api/internal/http"
+	"github.com/Edwarmkaer/cubeos/apps/api/internal/identity"
+	"github.com/Edwarmkaer/cubeos/apps/api/internal/storage"
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+func main() {
+	if err := run(); err != nil {
+		log.Print(err)
+		os.Exit(1)
+	}
+}
+func run() error {
+	c, err := config.Load(os.Getenv)
+	if err != nil {
+		return err
+	}
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	pc, err := pgxpool.ParseConfig(c.DatabaseURL)
+	if err != nil {
+		return errors.New("invalid database configuration")
+	}
+	pc.ConnConfig.ConnectTimeout = 3 * time.Second
+	pc.MaxConns = 10
+	pool, err := pgxpool.NewWithConfig(ctx, pc)
+	if err != nil {
+		return errors.New("could not configure database")
+	}
+	defer pool.Close()
+	if len(os.Args) > 1 {
+		if len(os.Args) != 2 || os.Args[1] != "migrate" {
+			return errors.New("usage: server [migrate]")
+		}
+		migrationCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
+		defer cancel()
+		if err = storage.Migrate(migrationCtx, pool); err != nil {
+			return errors.New("migration failed; check database availability and migration versions")
+		}
+		if _, err = identity.Local(migrationCtx, pool); err != nil {
+			return errors.New("local profile initialization failed")
+		}
+		log.Print("migrations and local profile ready")
+		return nil
+	}
+	resolver := func(ctx context.Context, r *http.Request) (identity.Principal, error) {
+		return identity.Local(ctx, pool)
+	}
+	server := &http.Server{Addr: c.Address, Handler: api.New(c, pool, devices.NewRepository(pool), resolver), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 15 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
+	go func() {
+		<-ctx.Done()
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_ = server.Shutdown(shutdownCtx)
+	}()
+	log.Printf("local API listening on %s", c.Address)
+	if err = server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		return err
+	}
+	return nil
+}

@@ -1,0 +1,12 @@
+{
+  "name": "@cubeos/api",
+  "private": true,
+  "scripts": {
+    "dev": "go run ./cmd/server",
+    "migrate": "go run ./cmd/server migrate",
+    "build": "go build -o dist/server ./cmd/server",
+    "lint": "go vet ./... && sh -c 'test -z \"$(gofmt -l cmd internal)\"'",
+    "test": "go test -race -count=1 ./...",
+    "typecheck": "go vet ./..."
+  }
+}

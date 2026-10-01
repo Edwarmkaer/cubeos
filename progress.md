@@ -2,6 +2,26 @@
 
 Actualizado: 2026-10-01.
 
+## PR 3 — API local y PostgreSQL
+
+PR2 integrado: [PR #3](https://github.com/Edwarmkaer/cubeos/pull/3), merge `d7a14a2`.
+Rama `feat/api-local-foundation`. API Go con principal local persistente, CRUD
+de dispositivos con propiedad, nombre editable separado del identificador de
+vuelo, migraciones versionadas/checksum y exclusión concurrente. Health separa
+proceso de readiness. Modo público/auth local y Clerk todavía no implementado
+fallan al iniciar; protecciones explícitas de Host/Origin y escrituras JSON.
+Operación y límites: [README API](apps/api/README.md). Compose publica en loopback
+y conserva PostgreSQL en volumen; puertos loopback, web/API sin root y prueba
+de arranque sin egress con imágenes preparadas.
+Web sigue con la demo y el mismo aspecto; solo añade salida Next standalone.
+Ingestión/SSE/Clerk/progreso/fotos siguen pendientes en sus PRs.
+
+Verificación Go/PostgreSQL real: configuración, nombres, propietario A/B en HTTP
+y repositorio, identidad local concurrente/idempotente, migraciones paralelas,
+rollback, checksum/versiones futuras y readiness con base caída. Runners del
+head final y prueba Docker/offline/persistencia se reportan en este chat/PR.
+Revisión independiente y merge corresponden a raíz; no avanzar PR4 aquí.
+
 ## PR 2 — Contratos y reproducción Chasqui v2
 
 PR1 integrado: [PR #2](https://github.com/Edwarmkaer/cubeos/pull/2), merge `03c365d`.
@@ -24,7 +44,7 @@ Verificación local: frozen install, 22 tests, lint, tipos y build pasaron;
 enlaces internos resuelven. Se conserva la advertencia previa de Big Shoulders.
 Runners del head final pendientes al escribir esta nota; evidencia final estará
 en el PR y reporte del chat. Revisión independiente y merge
-corresponden a raíz. No comenzar PR3 aquí. Frontend/legacy sin cambios, backend
+corresponden a raíz. Frontend/legacy sin cambios en PR2, backend
 todavía pendiente; Railway/S3 no fueron desplegados ni creados.
 
 ## PR 1 — Workspace y UI compartida

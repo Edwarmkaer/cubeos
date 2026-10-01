@@ -1,0 +1,9 @@
+.git
+**/node_modules
+**/.next
+**/dist
+**/.turbo
+**/.env*
+!**/.env.example
+.superpowers
+references

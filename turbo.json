@@ -1,6 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": [".node-version"],
+  "globalDependencies": [".node-version", ".go-version"],
   "tasks": {
     "dev": { "cache": false, "persistent": true },
     "build": {
@@ -14,6 +14,17 @@
     "test": { "dependsOn": ["^test"], "outputs": [] },
     "typecheck": {
       "dependsOn": ["^typecheck"]
+    },
+    "@cubeos/api#dev": {
+      "cache": false, "persistent": true,
+      "env": ["DATABASE_URL", "DEPLOYMENT_MODE", "AUTH_MODE", "LOCAL_CONTAINER", "LISTEN_HOST", "PORT", "ALLOWED_ORIGIN"]
+    },
+    "@cubeos/api#migrate": { "cache": false, "env": ["DATABASE_URL"] },
+    "@cubeos/api#build": { "inputs": ["$TURBO_DEFAULT$"], "outputs": ["dist/**"] },
+    "@cubeos/api#test": {
+      "cache": false,
+      "inputs": ["$TURBO_DEFAULT$", "../../packages/contracts/**"],
+      "env": ["TEST_DATABASE_URL", "TEST_MIGRATION_DATABASE_URL"]
     },
     "web#typecheck": {
       "dependsOn": ["^typecheck"],
