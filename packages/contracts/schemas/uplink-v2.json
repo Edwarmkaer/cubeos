@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cubesat-chasqui.local/schemas/uplink-v2.json",
+  "title": "Chasqui II LoRa uplink v2",
+  "type": "object",
+  "required": ["v", "id", "m", "n", "u", "t", "st", "fl"],
+  "properties": {
+    "v": { "const": 2 },
+    "id": { "type": "string", "pattern": "^[A-Z0-9_-]{2,12}$" },
+    "m": { "enum": ["H", "E", "O", "I", "G"] },
+    "n": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+    "u": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+    "t": { "type": "integer", "minimum": 0 },
+    "st": { "type": "integer", "minimum": 0, "maximum": 6 },
+    "fl": { "type": "integer", "minimum": 0, "maximum": 255 },
+    "bv": { "type": "integer", "minimum": 0, "maximum": 20000 },
+    "bi": { "type": "integer", "minimum": -20000, "maximum": 20000 },
+    "bp": { "type": "integer", "minimum": -200000, "maximum": 200000 },
+    "cam": { "type": "integer", "minimum": 0, "maximum": 1 },
+    "sd": { "type": "integer", "minimum": 0 },
+    "dp": { "type": "integer", "minimum": 0, "maximum": 4 },
+    "t1": { "type": "integer", "minimum": -5000, "maximum": 10000 },
+    "rh": { "type": "integer", "minimum": 0, "maximum": 10000 },
+    "p1": { "type": "integer", "minimum": 10000, "maximum": 120000 },
+    "gr": { "type": "integer", "minimum": 0 },
+    "t2": { "type": "integer", "minimum": -5000, "maximum": 10000 },
+    "p2": { "type": "integer", "minimum": 10000, "maximum": 120000 },
+    "ti": { "type": "integer", "minimum": -5000, "maximum": 15000 },
+    "lx": { "type": "integer", "minimum": 0 },
+    "uvr": { "type": "integer", "minimum": 0, "maximum": 4095 },
+    "uvm": { "type": "integer", "minimum": 0, "maximum": 3300 },
+    "ax": { "type": "integer", "minimum": -16000, "maximum": 16000 },
+    "ay": { "type": "integer", "minimum": -16000, "maximum": 16000 },
+    "az": { "type": "integer", "minimum": -16000, "maximum": 16000 },
+    "gx": { "type": "integer", "minimum": -2000000, "maximum": 2000000 },
+    "gy": { "type": "integer", "minimum": -2000000, "maximum": 2000000 },
+    "gz": { "type": "integer", "minimum": -2000000, "maximum": 2000000 },
+    "la": { "type": "integer", "minimum": -900000000, "maximum": 900000000 },
+    "lo": { "type": "integer", "minimum": -1800000000, "maximum": 1800000000 },
+    "al": { "type": "integer", "minimum": -10000000, "maximum": 100000000 },
+    "sp": { "type": "integer", "minimum": 0 },
+    "hd": { "type": "integer", "minimum": 0, "maximum": 35999 },
+    "fx": { "type": "integer", "minimum": 0, "maximum": 3 },
+    "sa": { "type": "integer", "minimum": 0, "maximum": 99 }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "m": { "const": "H" } }, "required": ["m"] },
+      "then": { "required": ["cam", "sd", "dp"] }
+    },
+    {
+      "if": { "properties": { "m": { "const": "E" } }, "required": ["m"] },
+      "then": { "required": ["t1", "rh", "p1", "gr"] }
+    },
+    {
+      "if": { "properties": { "m": { "const": "O" } }, "required": ["m"] },
+      "then": { "required": ["lx", "uvr", "uvm"] }
+    },
+    {
+      "if": { "properties": { "m": { "const": "I" } }, "required": ["m"] },
+      "then": { "required": ["ax", "ay", "az", "gx", "gy", "gz"] }
+    },
+    {
+      "if": { "properties": { "m": { "const": "G" } }, "required": ["m"] },
+      "then": { "required": ["la", "lo", "al", "sp", "hd", "fx", "sa"] }
+    }
+  ],
+  "additionalProperties": false
+}

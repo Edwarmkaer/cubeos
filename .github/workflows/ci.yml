@@ -38,14 +38,34 @@ jobs:
       - name: Build
         run: pnpm build
 
+  contracts:
+    name: contracts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .node-version
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+        with:
+          run_install: false
+      - name: Install frozen dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Validate contracts and deterministic simulator
+        run: pnpm test
+
   ci-required:
     name: ci-required
     if: ${{ always() }}
-    needs: [web]
+    needs: [web, contracts]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - name: Require applicable checks to pass
         env:
           WEB_RESULT: ${{ needs.web.result }}
-        run: test "$WEB_RESULT" = success
+          CONTRACTS_RESULT: ${{ needs.contracts.result }}
+        run: test "$WEB_RESULT" = success && test "$CONTRACTS_RESULT" = success

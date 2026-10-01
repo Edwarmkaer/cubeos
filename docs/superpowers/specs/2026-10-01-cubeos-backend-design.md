@@ -1,6 +1,6 @@
 # Arquitectura de CubeOS con telemetría v2 y modo local
 
-Estado: diseño consolidado para ejecución progresiva. Fecha: 2026-10-01. El ADR 0005 registra la nueva dirección y sustituye las decisiones de backend/persistencia anteriores. El contrato de doce campos describe todavía el simulador implementado y se migra en el PR de contratos.
+Estado: diseño consolidado para ejecución progresiva. Fecha: 2026-10-01. El ADR 0005 registra la nueva dirección y sustituye las decisiones de backend/persistencia anteriores. PR2 formaliza el contrato hardware v2; los doce campos permanecen en la demo web hasta PR7.
 
 ## Objetivo y alcance
 
@@ -61,7 +61,8 @@ Fuente: entrega Chasqui II v2 del 25/09/2026, cinco archivos inspeccionados. Se 
 
 Tipos y frecuencias iniciales: H 1 Hz, E 1 Hz, O 1 Hz, I 2 Hz, G 0.5 Hz. Son objetivos de prueba, no garantías de recepción. Las referencias LoRa en archivos originales son procedencia documental, no requisitos de transporte de CubeOS. No se desarrolla un receptor LoRa en la plataforma.
 
-Normalización: t1/rh/t2/ti /100; bv/bi/bp /1000; ax/ay/az /1000 a g; gx/gy/gz /1000 a grados/s; la/lo /10^7; al/sp/hd /100 a metros, m/s y grados. Presión se conserva en Pa. `t=0` significa UTC no válida; `receivedAt` lo asigna el backend. GUVA conserva lecturas crudas y no deriva índice UV. No se deriva porcentaje de batería sin un modelo aprobado. GPS ausente no genera coordenadas.
+Normalización, unidades, flags y discrepancias de entrega tienen como dueño
+[telemetry.md](../../telemetry.md), con fixtures compartidos entre TypeScript y Go.
 
 El snapshot conserva la última lectura válida por grupo y metadatos de frescura separados del snapshot legible entregado. `schemaVersion=2.0` y nombres existentes se preservan. No se mezclan lecturas nuevas con antiguas sin hacer visible su antigüedad. Rechazos no cambian el snapshot. La bitmask `fl` conserva bits de eventos de despliegue; no todos sus bits son errores. La calidad del radio, el estado del receptor y la conexión del navegador son conceptos separados.
 

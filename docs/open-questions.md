@@ -8,11 +8,12 @@ No convertir estas preguntas en requisitos implícitos. Al resolver una, actuali
 
 | ID | Decisión | Evidencia actual | Impacto | Resolución necesaria |
 | --- | --- | --- | --- | --- |
-| D-001 | ¿Se incluyen `pressure` y `luz` en el MVP? | Están en el catálogo y en wireframes; no en SQLite, store ni los doce campos. | Contrato, persistencia y tarjetas. | Confirmar inclusión y, de ser así, actualizar telemetry y ADR 0002. |
-| D-002 | ¿`gyro_roll`, `gyro_pitch` y `gyro_yaw` son ángulos o velocidades angulares? | El catálogo usa grados y los vincula a rotación 3D; un resumen antiguo menciona °/s. | Cálculo del visor 3D. | Semántica, ejes, sistema de referencia y normalización. |
-| D-003 | ¿La temperatura es interna, externa o ambas? | El catálogo dice “interna/externa” con un único campo `temperature`. | Etiqueta del Visor y posible evolución del contrato. | Origen y si hacen falta campos separados. |
+| D-001 | Resuelta en hardware v2 | Presión e iluminancia incluidas; campos en [telemetría](telemetry.md). | Migración de widgets en PR7. | No extender el contrato legacy. |
+| D-002 | Resuelta en hardware v2 | Giroscopio mide velocidad angular; ángulos de demo sintéticos. | Visor 3D no puede derivar actitud renombrando ejes. | Pendiente calibración/referencia si se quiere calcular orientación. |
+| D-003 | Resuelta en hardware v2 | Temperaturas de sensores separadas; TMP102 opcional sin confirmar. | Etiquetas de lecturas. | Confirmar instalación TMP102 con hardware. |
 | D-004 | ¿Cuáles son los umbrales visuales? | El Visor pide normal/alerta/crítico; solo hay rangos esperados. | Estados de tarjetas. | Límites por variable y comportamiento ante dato inválido. |
 | D-005 | ¿Qué alcance tienen Construcción, Configuración y las expansiones (cámara, baterías)? | Hay wireframes; faltan flujos, actores y criterios. | Navegación y backlog. | Documentar contenido educativo, datos y acciones por superficie. |
-| D-006 | ¿Cuál será el protocolo WebSocket? | La arquitectura fija FastAPI, WebSocket y JSON. | Integración Sprint 2. | Endpoint, envelopes, validación, reconexión y versión de mensaje. |
+| D-006 | Realtime resuelto como SSE en arquitectura objetivo | ADR 0005 y plan PR6. | Cliente autenticado y reconexión. | Implementación pendiente; confirmar framing/baudrate y transporte Wi-Fi con receptor. |
 | D-007 | ¿Cómo se calcula el nivel de batería de CubeSat y Paneles? | El usuario confirmó que se deriva del voltaje, pero faltan química, cantidad de celdas, rango útil y si son dos mediciones independientes. | Contrato de datos, porcentaje y estados del indicador. | Confirmar campos de voltaje, unidad, rangos vacío/lleno y tratamiento durante carga. |
-| D-008 | ¿Cómo llegan y se conservan las capturas de Cámara? | El Visor requiere una galería; los doce campos no incluyen imágenes ni metadatos. | Endpoint, historial, miniaturas, descarga y persistencia. | Definir URL/binario, fecha, resolución, tamaño, límite del historial y política de almacenamiento. |
+| D-008 | Transporte de fotos resuelto para primera entrega | Importación/HTTP, almacenamiento local/S3 según ADR 0005. | Implementación PR10 independiente de estado de cámara. | UART binario pendiente de framing/checksum/tamaño y rendimiento. |
+| D-009 | ¿Cómo armonizar guía y esquema entregados? | Omitir fallidos contradice campos obligatorios; fx=1 permitido; bt ausente. Tratamiento en [telemetría](telemetry.md). | Rechazos por esquema conservan causa. | Confirmar revisión futura con equipo; no modificar v2 silenciosamente. |

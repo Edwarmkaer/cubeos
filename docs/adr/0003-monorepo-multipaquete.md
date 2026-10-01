@@ -6,6 +6,9 @@ El frontend se construye ahora; el backend FastAPI llega en Sprint 2. Ambos debe
 
 **Status:** amended by [0005-backend-local-cloud-media.md](0005-backend-local-cloud-media.md). El monorepo se conserva; FastAPI y la exclusión inicial de Turborepo son antecedentes de la etapa anterior.
 
+PR2 propone [0006](0006-hardware-v2-contracts.md): `packages/contracts` gobierna
+hardware v2; `packages/telemetry` conserva exclusivamente la demo legacy.
+
 ## Considered Options
 
 - Dos repositorios (frontend / backend): duplica el contrato y retrasa el Sprint 2.
