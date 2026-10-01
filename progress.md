@@ -5,7 +5,8 @@ Actualizado: 2026-10-01.
 ## PR 1 — Workspace y UI compartida
 
 PR 0 integrado: [PR #1](https://github.com/Edwarmkaer/cubeos/pull/1), merge `8638329`.
-PR 1 se desarrolla en `chore/monorepo-foundation`. Turborepo 2.10.11 coordina
+PR 1 abierto: [PR #2](https://github.com/Edwarmkaer/cubeos/pull/2),
+`chore/monorepo-foundation`. Turborepo 2.10.11 coordina
 `pnpm dev`, `pnpm build`, `pnpm lint` y `pnpm typecheck`; web genera los tipos de
 rutas con `next typegen` antes de `tsc` también en un checkout limpio.
 
