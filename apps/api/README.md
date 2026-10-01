@@ -47,8 +47,11 @@ en una red aislada con publicación loopback como este Compose. No publicar
 manualmente ese puerto en una interfaz pública.
 
 Next empaqueta las fuentes descargadas durante el build en `.next/static`;
-el runtime no necesita Google Fonts. El mapa externo ya tiene estado de error
-explícito y no bloquea el tablero sin tiles; no se incluyen tiles offline.
+el runtime no necesita Google Fonts. Docker configura el estilo del mapa a una
+ruta local sin tiles (`/offline-map-not-configured.json`): activa su fallback
+existente sin solicitar OpenFreeMap. No bloquea el tablero. Para incluir tiles
+locales, empaquetar sus assets y configurar el build arg `NEXT_PUBLIC_MAP_STYLE_URL`.
+El desarrollo web nativo conserva su configuración de mapa actual.
 La galería demo está vacía y los sensores siguen simulados. `/lab` es archivo
 de exploración con una fotografía remota; no es parte del recorrido local.
 
