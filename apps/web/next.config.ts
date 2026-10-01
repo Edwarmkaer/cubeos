@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["@cubeos/telemetry"],
+  transpilePackages: ["@cubeos/telemetry", "@cubeos/ui"],
   images: {
     remotePatterns: [
       {

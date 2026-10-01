@@ -2,11 +2,38 @@
 
 Actualizado: 2026-10-01.
 
+## PR 1 — Workspace y UI compartida
+
+PR 0 integrado: [PR #1](https://github.com/Edwarmkaer/cubeos/pull/1), merge `8638329`.
+PR 1 abierto: [PR #2](https://github.com/Edwarmkaer/cubeos/pull/2),
+`chore/monorepo-foundation`. Turborepo 2.10.11 coordina
+`pnpm dev`, `pnpm build`, `pnpm lint` y `pnpm typecheck`; web genera los tipos de
+rutas con `next typegen` antes de `tsc` también en un checkout limpio.
+
+`@cubeos/ui` contiene las seis primitivas existentes, `cn` y la fuente única de
+tokens, conservando props y presentación. Web transpila el paquete y Tailwind
+incluye sus clases mediante `@source`. Los widgets/estado de telemetría permanecen
+en web. El lockfile solo añade Turbo y los importers del workspace, sin upgrades
+incidentales. Desarrollo es persistente y no cacheado; build excluye `.next/cache`
+de sus outputs e incluye cambios de UI/tokens, `.env*` y `NEXT_PUBLIC_*` en el hash.
+
+Verificación local: instalación frozen, lint, typecheck y build pasaron en
+`/home/edwar/cubeos-verification/pr1-clean`, sin dependencias ni `.next` previos.
+La repetición reutiliza la caché. Una modificación temporal de un token invalidó
+build/lint/typecheck del consumidor web; el token fue restaurado. Landing y Visor
+se compararon contra PR0 en navegador: las doce regiones del Visor conservan
+geometría, fondo y radio; Landing conserva geometría, tipografía y colores.
+Capturas y mediciones locales: `/home/edwar/cubeos-verification/pr1-visual/`. La telemetría, mapa y
+atmósfera animada impiden una comparación literal de todos los píxeles.
+Se conserva la advertencia previa de fallback de Big Shoulders. `DESIGN.md`
+permanece en `draft`. Revisión independiente, CI real y merge corresponden al
+chat raíz; los checks finales se consultan en el PR.
+
 ## Arquitectura y siguiente entrega
 
 Frontend pausado para desarrollar backend. Diseño consolidado en [spec](docs/superpowers/specs/2026-10-01-cubeos-backend-design.md), [modelo](docs/domain-model.md) y [plan](docs/superpowers/plans/2026-10-01-cubeos-backend.md). Go/PostgreSQL, perfil local offline y Clerk público, pasos simples por dispositivo, fotos local/S3 e historial persistente. La entrada de telemetría es la ESP32 receptora; imágenes por importación/HTTP y futuro UART acordado con hardware. Railway es destino previsto, no despliegue realizado.
 
-PR 0 abierto en `chore/project-baseline`: [PR #1](https://github.com/Edwarmkaer/cubeos/pull/1). Base actual auditada, documentación canónica y referencias preservadas, un único lockfile raíz y CI Linux con `web`/`ci-required`. Remoto autorizado: `https://github.com/Edwarmkaer/cubeos.git`; `main` se inicializó con los dos commits documentales existentes, sin reescribir historia. El merge requiere revisión independiente del chat raíz. Ramas sin `codex/`, commits con identidad del usuario sin atribución IA. Ningún backend ni despliegue cloud se ha creado. Las notas siguientes conservan el estado de frontend de la sesión anterior; el WebSocket/FastAPI previsto allí fue sustituido por ADR 0005.
+PR 0 integrado desde `chore/project-baseline`: [PR #1](https://github.com/Edwarmkaer/cubeos/pull/1). Base actual auditada, documentación canónica y referencias preservadas, un único lockfile raíz y CI Linux con `web`/`ci-required`. Remoto autorizado: `https://github.com/Edwarmkaer/cubeos.git`; `main` se inicializó con los dos commits documentales existentes, sin reescribir historia. La revisión independiente del chat raíz y los runners precedieron al merge. Ramas sin `codex/`, commits con identidad del usuario sin atribución IA. Ningún backend ni despliegue cloud se ha creado. Las notas siguientes conservan el estado de frontend de la sesión anterior; el WebSocket/FastAPI previsto allí fue sustituido por ADR 0005.
 
 Evidencia PR 0: instalación frozen, lint, tipos y build pasaron sobre una copia limpia; el build se reintentó tras un fallo de red al descargar Google Fonts, sin cambiar código. El [run 36931280322](https://github.com/Edwarmkaer/cubeos/actions/runs/36931280322) verificó en runners reales `web` y `ci-required` para `c945a909192d016fa0b0539e211308dd938dbebf`. Los checks del head actual se consultan en el PR. Snapshot validado e inventario local: `/home/edwar/cubeos-snapshots/pr0-20261001T214329Z/`. Se conservan la advertencia previa de fallback de Big Shoulders y los espacios finales preexistentes del código; frontend, versiones y lockfile raíz permanecen idénticos al snapshot.
 

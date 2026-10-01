@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 
-import { FloatingDock } from "@/components/ui/floating-dock";
+import { FloatingDock } from "@cubeos/ui";
 import { stationNav } from "@/components/station-nav";
 
 export function StationDock() {
