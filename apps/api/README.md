@@ -24,12 +24,13 @@ todo en una transacción bajo advisory lock de PostgreSQL, verifica el checksum
 de cada versión y crea el perfil local de forma idempotente. No hay downgrade
 automático: restaurar backup y corregir una migración fallida antes de reintentar.
 
-## Docker y operación sin egress
+## Docker y operación sin Internet
 
 Copiar `infra/docker/.env.example` a `infra/docker/.env` y reemplazar la clave
 por una contraseña local aleatoria URL-safe. Preparar imágenes/dependencias
-con conexión. Compose tiene una red interna sin salida a Internet y publica
-web/API exclusivamente en loopback; PostgreSQL no publica ningún puerto.
+con conexión. Compose publica web/API exclusivamente en loopback;
+PostgreSQL no publica ningún puerto. El runtime funciona sin Internet, pero
+la red bridge normal no impone un firewall de salida.
 
 ```sh
 docker compose -f infra/docker/compose.yaml up --build -d
@@ -52,7 +53,22 @@ ruta local sin tiles (`/offline-map-not-configured.json`): activa su fallback
 existente sin solicitar OpenFreeMap. No bloquea el tablero. Para incluir tiles
 locales, empaquetar sus assets y configurar el build arg `NEXT_PUBLIC_MAP_STYLE_URL`.
 El desarrollo web nativo conserva su configuración de mapa actual.
-La galería demo está vacía y los sensores siguen simulados. `/lab` es archivo
+Para verificar también el navegador del host sin recursos remotos, el proxy
+descartable `infra/docker/offline-browser-proxy.go` impone CSP con recursos
+solo del origen local, sin cambiar la configuración del navegador ni la web:
+
+```sh
+go run infra/docker/offline-browser-proxy.go http://127.0.0.1:3000
+# Abrir http://127.0.0.1:3104/visor, comprobar demo, fuente y fallback del mapa.
+# Revisar la consola por dependencias externas bloqueadas y cerrar el proxy.
+```
+
+La galería conserva sus seis fotos originales, ahora empaquetadas localmente
+con [procedencia y créditos](../web/public/demo/camera/README.md), y los sensores
+siguen simulados. `smoke.sh` arranca las imágenes preparadas en una red interna
+sin egress usando `compose.offline.yaml`, comprueba persistencia, fuente y fotos
+desde los contenedores y luego restaura la publicación loopback normal.
+`/lab` es archivo
 de exploración con una fotografía remota; no es parte del recorrido local.
 
 ## REST y seguridad

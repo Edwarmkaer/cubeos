@@ -19,7 +19,7 @@ FastAPI/SQLite/WebSocket son antecedentes sustituidos.
 | Contrato hardware | `packages/contracts` | Esquemas JSON, tipos y fixtures compartidos TS/Go |
 | Reproducción | `tools/simulator` | Envelopes v1 deterministas NDJSON o fixtures con tiempo lógico |
 | API local | `apps/api` | Health/readiness, identidad persistente y CRUD de dispositivos con propiedad |
-| Instalación local | `infra/docker` | Contenedores sin root, PostgreSQL persistente y red sin egress |
+| Instalación local | `infra/docker` | Contenedores sin root, PostgreSQL persistente, publicación loopback y runtime verificado sin Internet |
 
 Web todavía usa `TelemetrySource`/`simulatorSource`: el hook inicia y detiene la
 fuente, el store mantiene `latest`, hasta 60 entradas de `history` y `connection`.

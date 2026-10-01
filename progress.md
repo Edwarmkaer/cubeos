@@ -11,7 +11,8 @@ vuelo, migraciones versionadas/checksum y exclusión concurrente. Health separa
 proceso de readiness. Modo público/auth local y Clerk todavía no implementado
 fallan al iniciar; protecciones explícitas de Host/Origin y escrituras JSON.
 Operación y límites: [README API](apps/api/README.md). Compose publica en loopback
-y conserva PostgreSQL en volumen; red interna sin egress, web/API sin root.
+y conserva PostgreSQL en volumen; puertos loopback, web/API sin root y prueba
+de arranque sin egress con imágenes preparadas.
 Web sigue con la demo y el mismo aspecto; solo añade salida Next standalone.
 Ingestión/SSE/Clerk/progreso/fotos siguen pendientes en sus PRs.
 

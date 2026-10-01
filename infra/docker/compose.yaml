@@ -53,6 +53,6 @@ services:
     restart: unless-stopped
 networks:
   local:
-    internal: true
+    driver: bridge
 volumes:
   postgres-data:

@@ -1,0 +1,5 @@
+# Verification only: prepared containers cannot reach Internet on this network.
+# Internal networks may disable published ports; probes run inside containers.
+networks:
+  local:
+    internal: true
