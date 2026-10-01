@@ -32,11 +32,11 @@ jobs:
       - name: Install frozen dependencies
         run: pnpm install --frozen-lockfile
       - name: Lint
-        run: pnpm lint
+        run: pnpm exec turbo run lint --filter=web...
       - name: Typecheck
-        run: pnpm typecheck
+        run: pnpm exec turbo run typecheck --filter=web...
       - name: Build
-        run: pnpm build
+        run: pnpm exec turbo run build --filter=web...
 
   contracts:
     name: contracts
@@ -55,12 +55,12 @@ jobs:
       - name: Install frozen dependencies
         run: pnpm install --frozen-lockfile
       - name: Validate contracts and deterministic simulator
-        run: pnpm test
+        run: pnpm exec turbo run lint typecheck test --filter=@cubeos/contracts --filter=@cubeos/simulator
 
   ci-required:
     name: ci-required
     if: ${{ always() }}
-    needs: [web, contracts]
+    needs: [web, contracts, go, docker]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -68,4 +68,70 @@ jobs:
         env:
           WEB_RESULT: ${{ needs.web.result }}
           CONTRACTS_RESULT: ${{ needs.contracts.result }}
-        run: test "$WEB_RESULT" = success && test "$CONTRACTS_RESULT" = success
+          GO_RESULT: ${{ needs.go.result }}
+          DOCKER_RESULT: ${{ needs.docker.result }}
+        run: test "$WEB_RESULT" = success && test "$CONTRACTS_RESULT" = success && test "$GO_RESULT" = success && test "$DOCKER_RESULT" = success
+
+  go:
+    name: go-postgres
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17.6-alpine
+        env:
+          POSTGRES_PASSWORD: ci-disposable
+        ports: [5432:5432]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 2s --health-timeout 3s --health-retries 30
+    env:
+      TEST_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_http_test?sslmode=disable
+      TEST_MIGRATION_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_migrations_test?sslmode=disable
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: .go-version
+          cache-dependency-path: apps/api/go.sum
+      - name: Create isolated integration databases
+        env:
+          PGPASSWORD: ci-disposable
+        run: |
+          createdb -h localhost -U postgres cubeos_http_test
+          createdb -h localhost -U postgres cubeos_migrations_test
+      - name: Format, vet and race tests against PostgreSQL
+        working-directory: apps/api
+        run: |
+          test -z "$(gofmt -l cmd internal)"
+          go vet ./...
+          go test -race -count=1 -v ./...
+
+  docker:
+    name: docker-local
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Build and start isolated local installation
+        env:
+          POSTGRES_PASSWORD: ci-disposable
+        run: docker compose -p cubeos-ci -f infra/docker/compose.yaml up --build -d
+      - name: Smoke, restart, persistence and offline runtime
+        env:
+          POSTGRES_PASSWORD: ci-disposable
+        run: bash infra/docker/smoke.sh cubeos-ci
+      - name: Logs on failure
+        if: failure()
+        env:
+          POSTGRES_PASSWORD: ci-disposable
+        run: docker compose -p cubeos-ci -f infra/docker/compose.yaml logs --no-color
+      - name: Remove this disposable CI installation
+        if: always()
+        env:
+          POSTGRES_PASSWORD: ci-disposable
+        run: docker compose -p cubeos-ci -f infra/docker/compose.yaml down -v

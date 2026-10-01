@@ -10,10 +10,13 @@ Usar Node.js `22.23.2` (`.node-version`) y pnpm `11.22.0` (`packageManager`); pn
 
 ```bash
 pnpm install --frozen-lockfile
-pnpm dev
+pnpm --filter web dev
 ```
 
 Rutas: `/` Landing, `/visor` shell del visor, `/equipo` plazas por confirmar.
+La [API local](apps/api/README.md) requiere Go y PostgreSQL preparados;
+allí están los comandos nativos, migraciones y Docker Compose. `pnpm dev`
+coordina web y API cuando el entorno del backend está exportado.
 
 ## Verificación
 
@@ -25,11 +28,14 @@ pnpm --filter web exec tsc --noEmit
 pnpm --filter web build
 ```
 
-`next typegen` genera los helpers de rutas usados por TypeScript en un checkout limpio. GitHub Actions ejecuta estos checks en Linux y publica `ci-required` como resultado obligatorio. El build actual descarga las fuentes de Google; la ejecución local offline se prepara en los PRs posteriores.
+`next typegen` genera los helpers de rutas usados por TypeScript en un checkout limpio.
+Las tareas raíz incluyen Go; usar la versión de `.go-version`.
+GitHub Actions exige web, contratos, Go/PostgreSQL y Docker mediante `ci-required`.
+El build descarga fuentes de Google y las empaqueta para el runtime local offline.
 
 ## Documentación
 
-Arquitectura objetivo: [diseño backend/local/cloud](docs/superpowers/specs/2026-10-01-cubeos-backend-design.md), [modelo de dominio Mermaid](docs/domain-model.md) y [plan de PRs](docs/superpowers/plans/2026-10-01-cubeos-backend.md). El frontend actual sigue siendo una vista previa; estos documentos no implican que el backend ya esté implementado.
+Arquitectura objetivo: [diseño backend/local/cloud](docs/superpowers/specs/2026-10-01-cubeos-backend-design.md), [modelo de dominio Mermaid](docs/domain-model.md) y [plan de PRs](docs/superpowers/plans/2026-10-01-cubeos-backend.md). El frontend sigue siendo una vista previa. PR3 implementa identidad/dispositivos locales; ingestión, SSE, Clerk y medios siguen pendientes.
 
 | Archivo | Contenido |
 | --- | --- |
