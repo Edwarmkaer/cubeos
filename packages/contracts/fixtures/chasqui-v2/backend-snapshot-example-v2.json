@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "2.0",
+  "deviceId": "CS01",
+  "receivedAt": "2026-09-25T15:30:10.245Z",
+  "lastSequence": 2003,
+  "deviceTime": {
+    "unixUtc": 0,
+    "uptimeMs": 286600,
+    "utcValid": false
+  },
+  "missionState": "SAFE",
+  "health": {
+    "flags": 1,
+    "errors": ["GPS_UNAVAILABLE"]
+  },
+  "sensors": {
+    "bme680": {
+      "status": "available",
+      "temperatureC": 24.65,
+      "relativeHumidityPct": 52.1,
+      "pressurePa": 100843,
+      "gasResistanceOhm": 128400
+    },
+    "bmp280": {
+      "status": "optional_backup",
+      "temperatureC": 24.59,
+      "pressurePa": 100827
+    },
+    "tmp102": {
+      "status": "unverified"
+    },
+    "bh1750": {
+      "status": "available",
+      "illuminanceLux": 341
+    },
+    "guvaS12sd": {
+      "status": "available_uncalibrated",
+      "adcRaw": 1830,
+      "sensorMv": 1474,
+      "uvIndex": null
+    },
+    "mpu6050": {
+      "status": "available",
+      "accelerationG": { "x": -0.023, "y": 0.014, "z": 1.008 },
+      "angularRateDps": { "x": 0.12, "y": -0.075, "z": 0.018 }
+    },
+    "gps": {
+      "status": "not_installed",
+      "latitudeDeg": null,
+      "longitudeDeg": null,
+      "altitudeM": null,
+      "speedMps": null,
+      "headingDeg": null,
+      "fix": 0,
+      "satellites": 0
+    }
+  },
+  "power": {
+    "status": "monitor_not_installed",
+    "batteryVoltageV": null,
+    "batteryCurrentA": null,
+    "batteryPowerW": null
+  },
+  "payload": {
+    "cameraOk": true,
+    "sdFreeMb": 23842,
+    "deploymentState": "SAFE"
+  },
+  "radio": {
+    "status": "hardware_not_confirmed",
+    "rssiDbm": null,
+    "snrDb": null,
+    "frequencyMhz": 915
+  },
+  "gateway": {
+    "id": "GS01"
+  }
+}

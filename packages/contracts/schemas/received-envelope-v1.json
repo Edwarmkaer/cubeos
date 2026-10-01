@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cubeos.local/schemas/received-envelope-v1.json",
+  "title": "Receiver envelope: provenance assigned by the server is excluded",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["envelopeVersion", "payload"],
+  "properties": {
+    "envelopeVersion": { "const": 1 },
+    "payload": { "$ref": "https://cubesat-chasqui.local/schemas/uplink-v2.json" },
+    "receiver": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "gatewayId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "rssiDbm": { "type": "number" },
+        "snrDb": { "type": "number" },
+        "frequencyMhz": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    }
+  }
+}

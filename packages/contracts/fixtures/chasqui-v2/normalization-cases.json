@@ -1,0 +1,121 @@
+[
+  {
+    "name": "environment-backup-internal-and-energy",
+    "payload": { "v": 2, "id": "CS01", "m": "E", "n": 2001, "u": 286200, "t": 0, "st": 1, "fl": 1, "t1": 2465, "rh": 5210, "p1": 100843, "gr": 128400, "t2": 2459, "p2": 100827, "ti": -123, "bv": 7400, "bi": -250, "bp": -1850 },
+    "expected": {
+      "messageType": "E", "deviceId": "CS01", "sequence": 2001,
+      "deviceTime": { "unixUtc": 0, "uptimeMs": 286200, "utcValid": false },
+      "missionState": "SAFE", "health": { "flags": 1, "errors": ["GPS_UNAVAILABLE"], "events": [] },
+      "sensors": {
+        "bme680": { "temperatureC": 24.65, "relativeHumidityPct": 52.1, "pressurePa": 100843, "gasResistanceOhm": 128400 },
+        "bmp280": { "temperatureC": 24.59, "pressurePa": 100827 },
+        "tmp102": { "temperatureC": -1.23 }
+      },
+      "power": { "batteryVoltageV": 7.4, "batteryCurrentA": -0.25, "batteryPowerW": -1.85 }
+    }
+  },
+  {
+    "name": "optical-raw-uv",
+    "payload": { "v": 2, "id": "CS01", "m": "O", "n": 2002, "u": 286400, "t": 0, "st": 1, "fl": 1, "lx": 341, "uvr": 1830, "uvm": 1474 },
+    "expected": {
+      "messageType": "O", "deviceId": "CS01", "sequence": 2002,
+      "deviceTime": { "unixUtc": 0, "uptimeMs": 286400, "utcValid": false },
+      "missionState": "SAFE", "health": { "flags": 1, "errors": ["GPS_UNAVAILABLE"], "events": [] },
+      "sensors": { "bh1750": { "illuminanceLux": 341 }, "guvaS12sd": { "adcRaw": 1830, "sensorMv": 1474, "uvIndex": null } }
+    }
+  },
+  {
+    "name": "imu-mg-mdps-no-euler",
+    "payload": { "v": 2, "id": "CS01", "m": "I", "n": 2003, "u": 286600, "t": 0, "st": 1, "fl": 1, "ax": -23, "ay": 14, "az": 1008, "gx": 120, "gy": -75, "gz": 18 },
+    "expected": {
+      "messageType": "I", "deviceId": "CS01", "sequence": 2003,
+      "deviceTime": { "unixUtc": 0, "uptimeMs": 286600, "utcValid": false },
+      "missionState": "SAFE", "health": { "flags": 1, "errors": ["GPS_UNAVAILABLE"], "events": [] },
+      "sensors": { "mpu6050": { "accelerationG": { "x": -0.023, "y": 0.014, "z": 1.008 }, "angularRateDps": { "x": 0.12, "y": -0.075, "z": 0.018 } } }
+    }
+  },
+  {
+    "name": "gps-centimeters-and-utc",
+    "payload": { "v": 2, "id": "CS01", "m": "G", "n": 2004, "u": 286800, "t": 1790263810, "st": 4, "fl": 0, "la": -120463700, "lo": -770427900, "al": 81240, "sp": 735, "hd": 18450, "fx": 3, "sa": 11 },
+    "expected": {
+      "messageType": "G", "deviceId": "CS01", "sequence": 2004,
+      "deviceTime": { "unixUtc": 1790263810, "uptimeMs": 286800, "utcValid": true },
+      "missionState": "DESCENT", "health": { "flags": 0, "errors": [], "events": [] },
+      "sensors": { "gps": { "latitudeDeg": -12.04637, "longitudeDeg": -77.04279, "altitudeM": 812.4, "speedMps": 7.35, "headingDeg": 184.5, "fix": 3, "satellites": 11 } }
+    }
+  },
+  {
+    "name": "heartbeat-optional-absent-deployment-events",
+    "payload": { "v": 2, "id": "CS01", "m": "H", "n": 2000, "u": 286000, "t": 0, "st": 3, "fl": 192, "cam": 0, "sd": 0, "dp": 2 },
+    "expected": {
+      "messageType": "H", "deviceId": "CS01", "sequence": 2000,
+      "deviceTime": { "unixUtc": 0, "uptimeMs": 286000, "utcValid": false },
+      "missionState": "RELEASED", "health": { "flags": 192, "errors": [], "events": ["DEPLOYMENT_ARMED", "DEPLOYMENT_TRIGGERED"] },
+      "sensors": {}, "payload": { "cameraOk": false, "sdFreeMb": 0, "deploymentState": "TRIGGERED" }
+    }
+  },
+  {
+    "name": "heartbeat-legitimate-zero-power",
+    "payload": { "v": 2, "id": "CS01", "m": "H", "n": 0, "u": 0, "t": 0, "st": 0, "fl": 63, "cam": 1, "sd": 0, "dp": 0, "bv": 0, "bi": 0, "bp": 0 },
+    "expected": {
+      "messageType": "H", "deviceId": "CS01", "sequence": 0,
+      "deviceTime": { "unixUtc": 0, "uptimeMs": 0, "utcValid": false },
+      "missionState": "BOOT", "health": { "flags": 63, "errors": ["GPS_UNAVAILABLE", "SENSOR_FAILURE", "BATTERY_LOW", "STORAGE_FAILURE", "CAMERA_FAILURE", "RADIO_FAILURE"], "events": [] },
+      "sensors": {}, "power": { "batteryVoltageV": 0, "batteryCurrentA": 0, "batteryPowerW": 0 },
+      "payload": { "cameraOk": true, "sdFreeMb": 0, "deploymentState": "SAFE" }
+    }
+  },
+  {
+    "name": "heartbeat-single-gyro-axis",
+    "payload": { "v": 2, "id": "CS01", "m": "H", "n": 10, "u": 1000, "t": 0, "st": 1, "fl": 1, "cam": 1, "sd": 0, "dp": 0, "gx": 18 },
+    "expected": {
+      "messageType": "H", "deviceId": "CS01", "sequence": 10,
+      "deviceTime": { "unixUtc": 0, "uptimeMs": 1000, "utcValid": false },
+      "missionState": "SAFE", "health": { "flags": 1, "errors": ["GPS_UNAVAILABLE"], "events": [] },
+      "sensors": { "mpu6050": { "angularRateDps": { "x": 0.018 } } },
+      "payload": { "cameraOk": true, "sdFreeMb": 0, "deploymentState": "SAFE" }
+    }
+  },
+  {
+    "name": "heartbeat-partial-axes-with-measured-zero",
+    "payload": { "v": 2, "id": "CS01", "m": "H", "n": 11, "u": 1000, "t": 0, "st": 1, "fl": 1, "cam": 1, "sd": 0, "dp": 0, "ax": 0, "gy": 0, "gz": 18 },
+    "expected": {
+      "messageType": "H", "deviceId": "CS01", "sequence": 11,
+      "deviceTime": { "unixUtc": 0, "uptimeMs": 1000, "utcValid": false },
+      "missionState": "SAFE", "health": { "flags": 1, "errors": ["GPS_UNAVAILABLE"], "events": [] },
+      "sensors": { "mpu6050": { "accelerationG": { "x": 0 }, "angularRateDps": { "y": 0, "z": 0.018 } } },
+      "payload": { "cameraOk": true, "sdFreeMb": 0, "deploymentState": "SAFE" }
+    }
+  },
+  {
+    "name": "optical-partial-axes-with-measured-zero",
+    "payload": { "v": 2, "id": "CS01", "m": "O", "n": 12, "u": 1000, "t": 0, "st": 1, "fl": 1, "lx": 0, "uvr": 0, "uvm": 0, "ay": 14, "az": 0, "gx": 0 },
+    "expected": {
+      "messageType": "O", "deviceId": "CS01", "sequence": 12,
+      "deviceTime": { "unixUtc": 0, "uptimeMs": 1000, "utcValid": false },
+      "missionState": "SAFE", "health": { "flags": 1, "errors": ["GPS_UNAVAILABLE"], "events": [] },
+      "sensors": { "bh1750": { "illuminanceLux": 0 }, "guvaS12sd": { "adcRaw": 0, "sensorMv": 0, "uvIndex": null }, "mpu6050": { "accelerationG": { "y": 0.014, "z": 0 }, "angularRateDps": { "x": 0 } } }
+    }
+  },
+  {
+    "name": "optical-partial-gps-with-measured-zero",
+    "payload": { "v": 2, "id": "CS01", "m": "O", "n": 13, "u": 1000, "t": 0, "st": 1, "fl": 1, "lx": 0, "uvr": 0, "uvm": 0, "la": 0, "al": 81240, "fx": 0 },
+    "expected": {
+      "messageType": "O", "deviceId": "CS01", "sequence": 13,
+      "deviceTime": { "unixUtc": 0, "uptimeMs": 1000, "utcValid": false },
+      "missionState": "SAFE", "health": { "flags": 1, "errors": ["GPS_UNAVAILABLE"], "events": [] },
+      "sensors": { "bh1750": { "illuminanceLux": 0 }, "guvaS12sd": { "adcRaw": 0, "sensorMv": 0, "uvIndex": null }, "gps": { "latitudeDeg": 0, "altitudeM": 812.4, "fix": 0 } }
+    }
+  },
+  {
+    "name": "heartbeat-complete-gps-outside-g",
+    "payload": { "v": 2, "id": "CS01", "m": "H", "n": 14, "u": 1000, "t": 1790263810, "st": 4, "fl": 0, "cam": 1, "sd": 0, "dp": 0, "la": -120463700, "lo": -770427900, "al": 81240, "sp": 735, "hd": 18450, "fx": 3, "sa": 11 },
+    "expected": {
+      "messageType": "H", "deviceId": "CS01", "sequence": 14,
+      "deviceTime": { "unixUtc": 1790263810, "uptimeMs": 1000, "utcValid": true },
+      "missionState": "DESCENT", "health": { "flags": 0, "errors": [], "events": [] },
+      "sensors": { "gps": { "latitudeDeg": -12.04637, "longitudeDeg": -77.04279, "altitudeM": 812.4, "speedMps": 7.35, "headingDeg": 184.5, "fix": 3, "satellites": 11 } },
+      "payload": { "cameraOk": true, "sdFreeMb": 0, "deploymentState": "SAFE" }
+    }
+  }
+]

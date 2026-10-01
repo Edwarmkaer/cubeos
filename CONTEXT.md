@@ -21,7 +21,7 @@ Lado en tierra donde se recibe y se muestra la telemetría. CubeOS es su interfa
 _Avoid_: ground station software, consola de misión, backend
 
 **Visor**:
-Superficie principal. Muestra la última Muestra, su historial breve, la orientación y la posición.
+Superficie principal. Muestra las últimas mediciones, su tendencia y su disponibilidad. La orientación y posición se muestran cuando la fuente las proporciona.
 _Avoid_: dashboard, home, tablero, main
 
 **Construcción**:
@@ -41,12 +41,16 @@ El conjunto de mediciones, estados y eventos recibidos del CubeSat. No incluye c
 _Avoid_: telemetría y telecomando juntos, TM/TC, stream genérico
 
 **Sensor**:
-Magnitud física del CubeSat (aceleración, orientación, GPS, ambiente). No es el widget que la pinta.
+Componente que mide magnitudes físicas del CubeSat, como aceleración o temperatura. No es el widget que las pinta.
 _Avoid_: tarjeta, card, chart
 
 **Orientación**:
 Actitud del CubeSat expresada como roll, pitch y yaw. Es distinta de la velocidad angular medida por el giroscopio; no se obtiene renombrando sus ejes.
 _Avoid_: gyro a secas, rotación 3D, IMU
+
+**Velocidad angular**:
+Rapidez y sentido de giro medidos en cada eje. Es distinta de la Orientación y no describe por sí sola la actitud del CubeSat.
+_Avoid_: ángulo, roll/pitch/yaw, orientación
 
 **Conexión**:
 Estado de la fuente de datos: `simulated`, `connecting`, `connected`, `disconnected` o `error`.
@@ -91,6 +95,10 @@ _Avoid_: muestra completa, snapshot
 **Snapshot**:
 Estado combinado que conserva las últimas mediciones válidas de cada grupo de un dispositivo. Sus grupos pueden tener antigüedades distintas.
 _Avoid_: lectura simultánea, trama
+
+**Frescura**:
+Antigüedad de la última medición válida de cada grupo. Un grupo actualizado no hace recientes las mediciones de los otros grupos.
+_Avoid_: conexión, disponibilidad de sensor, hora de vuelo como hora de recepción
 
 **Progreso de construcción**:
 Pasos del armado completados para un CubeSat del estudiante. No depende de que el dispositivo esté conectado.

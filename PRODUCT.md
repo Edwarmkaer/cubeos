@@ -20,7 +20,7 @@ El prototipo en PyQt5 no se comparte en aula ni se abre en un navegador. Los est
 
 ## Público principal
 
-Estudiantes de ingeniería que construyen u operan el CubeSat, y el grupo CHASQUI-II — UNI que los acompaña. Uso típico: laboratorio o aula, portátil, atención puesta en entender una muestra que llega cada 500 ms.
+Estudiantes de ingeniería que construyen u operan el CubeSat, y el grupo CHASQUI-II — UNI que los acompaña. Uso típico: laboratorio o aula, portátil, atención puesta en entender mediciones de grupos con distintas cadencias.
 
 ## Propuesta
 
@@ -42,7 +42,7 @@ Clara, técnica y didáctica. Copia en español, concreta, sin slogans. El estad
 ## Principios de diseño
 
 - El dato manda: cada región del Visor enseña una magnitud, no un widget genérico.
-- La fuente de datos es un borde: simulador y WebSocket no cambian la UI.
+- La fuente de datos es un borde: demo y recepción real conservan la composición; los datos reales pueden estar ausentes o ser antiguos.
 - La composición estática se entiende antes de añadir 3D o motion.
 - Consistencia de shell entre las tres superficies: misma cabecera, misma navegación, mismo indicador de conexión.
 
@@ -75,9 +75,9 @@ Apartado (landing o blog) de las personas de CHASQUI-II. Composición tipo Tempo
 
 Pantalla principal de telemetría. Shell: cabecera (marca CubeOS, título, estado de conexión) y barra lateral con tres destinos (Visor, Construcción, Configuración).
 
-Regiones previstas, según wireframe de tablero y spec previa:
+Regiones actuales de la demo legacy, según wireframe de tablero y spec previa:
 
-| Región | Trabajo | Datos de contrato confirmado |
+| Región | Trabajo | Datos sintéticos legacy |
 | --- | --- | --- |
 | Visor 3D | Mostrar orientación del CubeSat 1U | `gyro_roll`, `gyro_pitch`, `gyro_yaw` |
 | Tarjetas de sensores | Última muestra, con estado normal/alerta/crítico | temperatura, UV, humedad, altitud, orientación, aceleración |
@@ -88,7 +88,11 @@ El visor se detalla en expansiones (no son rutas nuevas): CubeSat, GPS, movimien
 
 En móvil, las secciones 3D, sensores y mapa pasan a pestañas.
 
-**Conflicto de contrato:** el wireframe del tablero también muestra luz, presión, baterías (CubeSat y paneles) y cámara. Esos widgets no están en los doce campos confirmados. No se implementan hasta resolver D-001 y D-005 en [docs/open-questions.md](docs/open-questions.md).
+**Migración v2:** luz, presión, energía opcional y estado de cámara pertenecen
+al contrato hardware. El giroscopio mide velocidad angular, UV permanece crudo
+y GPS puede no estar instalado. Paneles no tiene medición independiente y el
+estado de cámara no prueba una foto recibida. PR2 conserva la demo y presentación;
+PR7 adaptará las lecturas. Campos/unidades: [telemetría](docs/telemetry.md).
 
 ### Construcción
 
@@ -98,7 +102,7 @@ El catálogo de pasos, piezas y criterios de “paso completado” aún no está
 
 ### Configuración
 
-Mismo shell. Destino para fuente de datos, estado de conexión y ajustes de la estación. El wireframe [references/ui/SettingsPrincipal.png](references/ui/SettingsPrincipal.png) solo fija el marco; los controles concretos se definen con D-006 (protocolo WebSocket) y no se rellenan por comodidad.
+Mismo shell. Destino para fuente de datos, estado de conexión y ajustes de la estación. El wireframe [references/ui/SettingsPrincipal.png](references/ui/SettingsPrincipal.png) solo fija el marco; los controles dependen de la integración acordada con la ESP32 receptora.
 
 ## Alcance de la primera versión
 
@@ -106,21 +110,23 @@ Mismo shell. Destino para fuente de datos, estado de conexión y ajustes de la e
 
 - Las tres superficies de la app y el shell compartido.
 - Landing y Equipo como cara pública (estático primero).
-- Contrato de doce campos a 2 Hz, con simulador en Sprint 1.
+- Demo legacy existente y contrato hardware v2 separado con reproducción sin hardware.
 - Independencia de la fuente de datos.
 
-### Incluye (implementación, cuando se abra código)
+### Entrega actual y progresiva
 
 - Sprint 1: Visor con simulador, composición estática primero, 3D después.
-- Sprint 2: FastAPI + WebSocket + SQLite, mismo contrato.
+- PR2: contratos y reproducción v2. Próximos PRs: API Go, historial persistente,
+  identidad local/pública, progreso por dispositivo y fotografías conforme a
+  [ADR 0005](docs/adr/0005-backend-local-cloud-media.md).
 
 ### No incluye todavía
 
 - Comandar o controlar el CubeSat.
 - Sustituir software profesional de operación.
 - Cliente de escritorio. PyQt5 es antecedente, no destino.
-- `apps/api` en el Sprint 1.
-- Luz, presión, baterías y cámara como requisitos, hasta cerrar D-001 / D-005.
+- Derivar orientación, índice UV o porcentaje de batería sin evidencia/calibración.
+- Sincronización automática entre instalación local y pública.
 - Identidad visual: `DESIGN.md` en `draft` hasta aprobar navy, split de superficies y logo.
 
 ## Resultado esperado por etapa
@@ -128,7 +134,8 @@ Mismo shell. Destino para fuente de datos, estado de conexión y ajustes de la e
 | Etapa | Fuente | Objetivo |
 | --- | --- | --- |
 | Sprint 1 | Simulador en el frontend | Validar Visor, visualizaciones y flujo educativo |
-| Sprint 2 | Serial/radio → FastAPI → WebSocket | Telemetría real e historial persistido |
+| Contratos PR2 | Reproducción v2 sin hardware | Validar esquema y conversiones |
+| Backend progresivo | ESP32 receptora → API Go → REST/SSE | Lecturas reales, ausencia/falla/frescura e historial persistido |
 
 ## Criterio de éxito
 

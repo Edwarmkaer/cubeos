@@ -2,6 +2,31 @@
 
 Actualizado: 2026-10-01.
 
+## PR 2 — Contratos y reproducción Chasqui v2
+
+PR1 integrado: [PR #2](https://github.com/Edwarmkaer/cubeos/pull/2), merge `03c365d`.
+Rama PR2: `feat/telemetry-v2-contracts`. `packages/contracts` conserva los tres
+JSON originales byte a byte y documenta checksums/procedencia de la entrega;
+Word/Excel solo se inspeccionaron localmente. Esquemas uplink/snapshot/envelope,
+tipos y conversiones de referencia separados de la demo legacy. Frescura/revisión
+quedan fuera del snapshot legible. ADR 0006 en propuesta para revisión.
+
+TDD: validadores/normalizador y simulador se observaron fallar antes de implementar;
+20 tests de contratos y 8 de simulador pasaron tras la corrección de revisión.
+Se agregaron fixtures GPS fuera de G y ejes parciales: todas las claves conocidas
+se convierten por presencia, conservando cero y sin rellenar valores ausentes.
+Esquemas originales y snapshot completo no cambiaron. CLI determinista emite envelopes
+NDJSON o JSON con tiempos lógicos: H/E/O/I, GPS opcional, duplicado, atraso,
+reinicio y fallas. El escenario de fallas conserva una omisión inválida para
+probar rechazo. CI añade `contracts` al `ci-required` que exige ambos jobs.
+
+Verificación local: frozen install, 22 tests, lint, tipos y build pasaron;
+enlaces internos resuelven. Se conserva la advertencia previa de Big Shoulders.
+Runners del head final pendientes al escribir esta nota; evidencia final estará
+en el PR y reporte del chat. Revisión independiente y merge
+corresponden a raíz. No comenzar PR3 aquí. Frontend/legacy sin cambios, backend
+todavía pendiente; Railway/S3 no fueron desplegados ni creados.
+
 ## PR 1 — Workspace y UI compartida
 
 PR 0 integrado: [PR #1](https://github.com/Edwarmkaer/cubeos/pull/1), merge `8638329`.
@@ -69,4 +94,4 @@ Hover sobre el rail izquierdo en `/visor` para ver la magnificación. En móvil,
 
 1. Recapturar Landing, Visor y Equipo en desktop y móvil.
 2. Aprobar explícitamente la dirección aplicada y cambiar `DESIGN.md` a `approved`.
-3. Conectar `TelemetrySource` por WebSocket en Sprint 2 conservando el mismo contrato.
+3. Seguir el plan progresivo Go/v2; la integración web REST/SSE corresponde a PR6/PR7.

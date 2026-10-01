@@ -11,6 +11,7 @@
       "passThroughEnv": ["NEXT_TELEMETRY_DISABLED"]
     },
     "lint": { "dependsOn": ["^lint"] },
+    "test": { "dependsOn": ["^test"], "outputs": [] },
     "typecheck": {
       "dependsOn": ["^typecheck"]
     },
