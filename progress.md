@@ -12,7 +12,10 @@ tipos y conversiones de referencia separados de la demo legacy. Frescura/revisi�
 quedan fuera del snapshot legible. ADR 0006 en propuesta para revisión.
 
 TDD: validadores/normalizador y simulador se observaron fallar antes de implementar;
-14 tests de contratos y 8 de simulador pasaron. CLI determinista emite envelopes
+20 tests de contratos y 8 de simulador pasaron tras la corrección de revisión.
+Se agregaron fixtures GPS fuera de G y ejes parciales: todas las claves conocidas
+se convierten por presencia, conservando cero y sin rellenar valores ausentes.
+Esquemas originales y snapshot completo no cambiaron. CLI determinista emite envelopes
 NDJSON o JSON con tiempos lógicos: H/E/O/I, GPS opcional, duplicado, atraso,
 reinicio y fallas. El escenario de fallas conserva una omisión inválida para
 probar rechazo. CI añade `contracts` al `ci-required` que exige ambos jobs.

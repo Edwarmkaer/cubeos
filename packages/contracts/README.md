@@ -21,7 +21,9 @@ sintetizar lecturas; se conservan todos los nombres y estados originales.
 
 `normalizeUplinkV2` es una referencia de conversiones, no combina snapshots ni
 interpreta orden/reinicios o fallas de sensores individuales. Devuelve solo los
-valores presentes, manteniendo `fl`; sus patches no son snapshots completos.
+valores presentes independientemente de `m`, manteniendo `fl`; ejes IMU y GPS
+pueden ser parciales. Sus patches no son snapshots completos y recibir campos
+GPS fuera de G no prueba por sí solo instalación ni fix válido.
 La recepción, autorización, selección de la última lectura válida y frescura por
 grupo se implementarán en Go. `SnapshotProjectionV2` define el borde futuro con
 `revision` y `freshnessByGroup` fuera de `snapshot`; aún no hay endpoint.

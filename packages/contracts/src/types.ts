@@ -45,12 +45,17 @@ export type GroupFreshness = { receivedAt: string; sequence: number; uptimeMs: n
 /** The readable source snapshot stays intact inside a future server projection. */
 export type SnapshotProjectionV2 = { revision: number; snapshot: SnapshotV2; freshnessByGroup: Partial<Record<MessageType, GroupFreshness>> };
 
+type VectorPatch = Partial<Record<"x" | "y" | "z", number>>;
 /** Conversion reference only: not a persisted/combined snapshot or an ordering algorithm. */
 export type NormalizedUplinkV2 = {
   messageType: MessageType; deviceId: string; sequence: number;
   deviceTime: DeviceTime; missionState: MissionState;
   health: { flags: number; errors: HealthError[]; events: DeploymentEvent[] };
-  sensors: { [K in keyof SensorReadings]?: Partial<SensorReadings[K]> };
+  sensors: {
+    [K in keyof SensorReadings]?: K extends "mpu6050"
+      ? { accelerationG?: VectorPatch; angularRateDps?: VectorPatch }
+      : Partial<SensorReadings[K]>
+  };
   power?: Partial<PowerReadings>;
   payload?: Partial<PayloadState>;
 };

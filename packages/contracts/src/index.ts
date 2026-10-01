@@ -61,9 +61,30 @@ export function normalizeUplinkV2(value: unknown): NormalizedUplinkV2 {
   if (p.ti !== undefined) result.sensors.tmp102 = { temperatureC: p.ti / 100 };
   if (p.lx !== undefined) result.sensors.bh1750 = { illuminanceLux: p.lx };
   if (p.uvr !== undefined || p.uvm !== undefined) result.sensors.guvaS12sd = { ...(p.uvr !== undefined && { adcRaw: p.uvr }), ...(p.uvm !== undefined && { sensorMv: p.uvm }), uvIndex: null };
-  if (p.ax !== undefined && p.ay !== undefined && p.az !== undefined) result.sensors.mpu6050 = { accelerationG: { x: p.ax / 1000, y: p.ay / 1000, z: p.az / 1000 } };
-  if (p.gx !== undefined && p.gy !== undefined && p.gz !== undefined) result.sensors.mpu6050 = { ...result.sensors.mpu6050, angularRateDps: { x: p.gx / 1000, y: p.gy / 1000, z: p.gz / 1000 } };
-  if (p.m === "G") result.sensors.gps = { latitudeDeg: p.la / 1e7, longitudeDeg: p.lo / 1e7, altitudeM: p.al / 100, speedMps: p.sp / 100, headingDeg: p.hd / 100, fix: p.fx, satellites: p.sa };
+  if (p.ax !== undefined || p.ay !== undefined || p.az !== undefined) result.sensors.mpu6050 = {
+    accelerationG: {
+      ...(p.ax !== undefined && { x: p.ax / 1000 }),
+      ...(p.ay !== undefined && { y: p.ay / 1000 }),
+      ...(p.az !== undefined && { z: p.az / 1000 }),
+    },
+  };
+  if (p.gx !== undefined || p.gy !== undefined || p.gz !== undefined) result.sensors.mpu6050 = {
+    ...result.sensors.mpu6050,
+    angularRateDps: {
+      ...(p.gx !== undefined && { x: p.gx / 1000 }),
+      ...(p.gy !== undefined && { y: p.gy / 1000 }),
+      ...(p.gz !== undefined && { z: p.gz / 1000 }),
+    },
+  };
+  if (p.la !== undefined || p.lo !== undefined || p.al !== undefined || p.sp !== undefined || p.hd !== undefined || p.fx !== undefined || p.sa !== undefined) result.sensors.gps = {
+    ...(p.la !== undefined && { latitudeDeg: p.la / 1e7 }),
+    ...(p.lo !== undefined && { longitudeDeg: p.lo / 1e7 }),
+    ...(p.al !== undefined && { altitudeM: p.al / 100 }),
+    ...(p.sp !== undefined && { speedMps: p.sp / 100 }),
+    ...(p.hd !== undefined && { headingDeg: p.hd / 100 }),
+    ...(p.fx !== undefined && { fix: p.fx }),
+    ...(p.sa !== undefined && { satellites: p.sa }),
+  };
   if (p.bv !== undefined || p.bi !== undefined || p.bp !== undefined) result.power = {
     ...(p.bv !== undefined && { batteryVoltageV: p.bv / 1000 }),
     ...(p.bi !== undefined && { batteryCurrentA: p.bi / 1000 }),
