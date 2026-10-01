@@ -1,0 +1,153 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+:root {
+  --background: #16161e;
+  --foreground: #e8e8f0;
+  --surface: #1c1c26;
+  --well: #0a0a10;
+  --muted: #9c9caa;
+  --primary: #e8e8f0;
+  --primary-foreground: #0a0a10;
+  --secondary: #1c1c26;
+  --secondary-foreground: #e8e8f0;
+  --border: rgb(232 232 240 / 0.06);
+  --input: rgb(232 232 240 / 0.06);
+  --ring: #e8e8f0;
+  --destructive: #d1184a;
+  --chart-roll: #63c4d5;
+  --chart-pitch: #a78bda;
+  --chart-yaw: #d9a650;
+  --radius: 8px;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-well: var(--well);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-destructive: var(--destructive);
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --font-sans: var(--font-barlow);
+  --font-display: var(--font-big-shoulders);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-barlow), ui-sans-serif, system-ui, sans-serif;
+}
+
+.telemetry-map-marker {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--well);
+  border-radius: 999px;
+  background: var(--chart-roll);
+  box-shadow:
+    0 0 0 4px rgb(99 196 213 / 0.18),
+    0 2px 8px rgb(0 0 0 / 0.55);
+}
+
+.telemetry-map-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.maplibregl-map {
+  font-family: var(--font-barlow), ui-sans-serif, system-ui, sans-serif;
+}
+
+.maplibregl-ctrl-group {
+  border: 1px solid var(--border);
+  background: rgb(10 10 16 / 0.88);
+  box-shadow: none;
+}
+
+.maplibregl-ctrl-group button {
+  filter: invert(1);
+}
+
+.maplibregl-ctrl-attrib {
+  background: rgb(10 10 16 / 0.78) !important;
+  color: var(--muted);
+}
+
+.maplibregl-ctrl-attrib a {
+  color: var(--foreground);
+}
+
+.camera-circular-strip {
+  perspective: 900px;
+  scrollbar-width: none;
+}
+
+.camera-circular-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.camera-circular-card {
+  transform-style: preserve-3d;
+  transition:
+    transform 220ms ease-out,
+    opacity 220ms ease-out;
+}
+
+.dashboard-bento {
+  display: grid;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  overflow: hidden;
+  gap: 0.75rem;
+  grid-template-columns:
+    minmax(0, 1.05fr) minmax(0, 1.05fr) 10.75rem minmax(0, 1.28fr)
+    minmax(0, 0.86fr);
+  grid-template-rows: repeat(12, minmax(0, 1fr));
+  grid-template-areas:
+    "luz luzuv presion visor visor"
+    "luz luzuv presion visor visor"
+    "giro giro presion visor visor"
+    "giro giro presion visor visor"
+    "giro giro temp visor visor"
+    "giro giro temp visor visor"
+    "gps gps temp telem batteries"
+    "gps gps temp telem batteries"
+    "gps gps humedad telem batteries"
+    "gps gps humedad camera camera"
+    "gps gps humedad camera camera"
+    "gps gps humedad camera camera";
+}
+
+@media (max-width: 1199px) {
+  .dashboard-bento {
+    min-width: 72rem;
+  }
+}
+
+.font-display {
+  font-family: var(--font-big-shoulders), ui-sans-serif, sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
