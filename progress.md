@@ -30,6 +30,12 @@ sin esperar heartbeat; el ID SSE conserva el UUID solicitado y el cliente lo
 comprueba exactamente. Identidad/bearer no se normalizan. Regresión PG red sin
 normalización→green, dos streams simultáneos y CLI tipado con UUID uppercase.
 
+Corrección de revisión PR6: un corte TCP durante body REST HTTP 200 se clasifica
+como fallo de transporte reintentable. Catch limitado a `reader.read`: abort,
+UTF-8, JSON, esquema y Content-Type mantienen su comportamiento terminal/cancelable.
+Regresión TCP real red→green prueba token fresco, latest REST + dedup SSE,
+cancelación de body pendiente y cierre de conexión; UTF-8 inválido no reintenta.
+
 ## PR 5 — Serial USB/UART y HTTP Wi-Fi
 
 Base PR4 integrada: [PR #5](https://github.com/Edwarmkaer/cubeos/pull/5), merge

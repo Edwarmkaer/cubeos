@@ -99,7 +99,13 @@ async function boundedText(response: Response, signal: AbortSignal): Promise<str
     const decoder = new TextDecoder("utf-8", { fatal: true });
     try {
         while (true) {
-            const result = await cancellable(reader.read(), signal);
+            let result: ReadableStreamReadResult<Uint8Array>;
+            try {
+                result = await cancellable(reader.read(), signal);
+            } catch {
+                signal.throwIfAborted();
+                throw new APIError("REST response body interrupted", 0, true);
+            }
             if (result.done)
                 return text + decoder.decode();
             size += result.value.byteLength;
