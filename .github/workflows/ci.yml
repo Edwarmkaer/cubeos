@@ -62,7 +62,7 @@ jobs:
   ci-required:
     name: ci-required
     if: ${{ always() }}
-    needs: [web, contracts, go, docker, browser, auth, media, recovery]
+    needs: [web, contracts, go, docker, browser, auth, media, recovery, developer]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -76,7 +76,33 @@ jobs:
           AUTH_RESULT: ${{ needs.auth.result }}
           MEDIA_RESULT: ${{ needs.media.result }}
           RECOVERY_RESULT: ${{ needs.recovery.result }}
-        run: test "$WEB_RESULT" = success && test "$CONTRACTS_RESULT" = success && test "$GO_RESULT" = success && test "$DOCKER_RESULT" = success && test "$BROWSER_RESULT" = success && test "$AUTH_RESULT" = success && test "$MEDIA_RESULT" = success && test "$RECOVERY_RESULT" = success
+          DEVELOPER_RESULT: ${{ needs.developer.result }}
+        run: test "$WEB_RESULT" = success && test "$CONTRACTS_RESULT" = success && test "$GO_RESULT" = success && test "$DOCKER_RESULT" = success && test "$BROWSER_RESULT" = success && test "$AUTH_RESULT" = success && test "$MEDIA_RESULT" = success && test "$RECOVERY_RESULT" = success && test "$DEVELOPER_RESULT" = success
+
+  developer:
+    name: developer-workflow
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .node-version
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+        with:
+          run_install: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: .go-version
+          cache-dependency-path: apps/api/go.sum
+      - name: Install and test safe setup configuration
+        run: |
+          pnpm install --frozen-lockfile
+          node --test tools/dev/local.test.mjs
+      - name: Real pnpm setup/dev/stop and PostgreSQL-photo persistence
+        run: node tools/dev/smoke.mjs
 
   recovery:
     name: restore-railway-config

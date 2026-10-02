@@ -3,10 +3,12 @@
   "private": true,
   "packageManager": "pnpm@11.22.0",
   "scripts": {
-    "dev": "turbo run dev",
+    "setup": "node tools/dev/local.mjs setup",
+    "dev": "node tools/dev/local.mjs dev",
+    "stop": "node tools/dev/local.mjs stop",
     "build": "turbo run build",
     "lint": "turbo run lint",
-    "test": "turbo run test",
+    "test": "node --test tools/dev/*.test.mjs && turbo run test",
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": { "turbo": "2.10.11", "railway": "3.12.0" }

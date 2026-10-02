@@ -11,6 +11,10 @@ límites de autenticación: [identidad pública](../../docs/public-auth.md).
 
 ## Desarrollo nativo
 
+Para el arranque habitual desde la raíz, usar `pnpm setup` y `pnpm dev`:
+[desarrollo local](../../docs/local-development.md). Los comandos siguientes
+son la alternativa manual para una base/configuración propias.
+
 Operación USB/UART y Wi-Fi: [transportes](../../docs/hardware-transports.md).
 
 Instalar Go de [la distribución oficial](https://go.dev/dl/), preparar pnpm e
