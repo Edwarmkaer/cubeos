@@ -40,6 +40,15 @@ type Projection struct {
 	Revision         int64                `json:"revision"`
 	Snapshot         Object               `json:"snapshot"`
 	FreshnessByGroup map[string]Freshness `json:"freshnessByGroup"`
+	State            ProjectionState      `json:"projectionState"`
+}
+
+// Status evidence is separate from last valid measurements: a late valid value
+// may improve a field while a newer failure still makes its sensor unavailable.
+type ProjectionState struct {
+	FrontierEpoch  int64                     `json:"frontierEpoch"`
+	MinimumEpoch   int64                     `json:"minimumEpoch"`
+	StatusEvidence map[string]FieldFreshness `json:"statusEvidence"`
 }
 
 func emptySnapshot(id string) Object {
@@ -63,31 +72,56 @@ func number(v any) int64 {
 	}
 	return 0
 }
-func (s *Projection) refresh(group, path string, p Patch, at time.Time, epoch int64) {
+func evidence(p Patch, at time.Time, epoch int64) FieldFreshness {
+	return FieldFreshness{at.UTC().Format(time.RFC3339Nano), p.Sequence(), p.Uptime(), epoch}
+}
+func newer(candidate, previous FieldFreshness) bool {
+	if previous.ReceivedAt == "" {
+		return true
+	}
+	if candidate.Epoch != previous.Epoch {
+		return candidate.Epoch > previous.Epoch
+	}
+	return forward(candidate.Sequence, previous.Sequence) && (candidate.UptimeMs == previous.UptimeMs || forward(candidate.UptimeMs, previous.UptimeMs))
+}
+func (s *Projection) refresh(group, path string, candidate FieldFreshness) {
 	f := s.FreshnessByGroup[group]
-	f.FieldFreshness = FieldFreshness{at.UTC().Format(time.RFC3339Nano), p.Sequence(), p.Uptime(), epoch}
+	if newer(candidate, f.FieldFreshness) {
+		f.FieldFreshness = candidate
+	}
 	if f.Fields == nil {
 		f.Fields = map[string]FieldFreshness{}
 	}
-	f.Fields[path] = f.FieldFreshness
+	f.Fields[path] = candidate
 	s.FreshnessByGroup[group] = f
 }
-func (s *Projection) merge(dst, src Object, group, path string, p Patch, at time.Time, epoch int64) {
+func (s *Projection) merge(dst, src Object, group, path string, candidate FieldFreshness) bool {
+	changed := false
 	for k, v := range src {
 		if nested, ok := v.(Object); ok {
 			target, ok := dst[k].(Object)
 			if !ok {
 				target = Object{"x": nil, "y": nil, "z": nil}
+			}
+			if s.merge(target, nested, group, path+k+".", candidate) {
 				dst[k] = target
+				changed = true
 			}
-			s.merge(target, nested, group, path+k+".", p, at, epoch)
-		} else {
+		} else if v != nil && newer(candidate, s.FreshnessByGroup[group].Fields[path+k]) {
 			dst[k] = v
-			if v != nil {
-				s.refresh(group, path+k, p, at, epoch)
-			}
+			s.refresh(group, path+k, candidate)
+			changed = true
 		}
 	}
+	return changed
+}
+func (s *Projection) status(key string, dst Object, value string, candidate FieldFreshness) bool {
+	if !newer(candidate, s.State.StatusEvidence[key]) {
+		return false
+	}
+	dst["status"] = value
+	s.State.StatusEvidence[key] = candidate
+	return true
 }
 
 // Apply updates only the fields actually measured in this ordered reception.
@@ -97,37 +131,60 @@ func (s *Projection) Apply(p Patch, at time.Time, meta ReceiverMetadata) {
 	s.ApplyEpoch(p, at, meta, 0)
 }
 func (s *Projection) ApplyEpoch(p Patch, at time.Time, meta ReceiverMetadata, epoch int64) {
+	s.ApplyReception(p, at, meta, epoch, true)
+}
+
+// ApplyReception separates the global frontier from per-field logical order.
+// Persist cause/projected alongside the reception so replay uses this same
+// decision, without rerunning arrival/restart heuristics against today's clock.
+func (s *Projection) ApplyReception(p Patch, at time.Time, meta ReceiverMetadata, epoch int64, advance bool) bool {
+	if epoch < s.State.MinimumEpoch {
+		return false
+	}
+	hadSnapshot := s.Snapshot != nil
 	if s.Snapshot == nil {
 		s.Snapshot = emptySnapshot(p.DeviceID())
 		s.FreshnessByGroup = map[string]Freshness{}
 	}
-	s.Revision++
-	s.Snapshot["receivedAt"] = at.UTC().Format(time.RFC3339Nano)
-	s.Snapshot["lastSequence"] = p["sequence"]
-	for _, k := range []string{"deviceTime", "missionState", "health"} {
-		s.Snapshot[k] = p[k]
+	if s.State.StatusEvidence == nil {
+		s.State.StatusEvidence = map[string]FieldFreshness{}
 	}
+	changed := advance
+	if advance {
+		s.Snapshot["receivedAt"] = at.UTC().Format(time.RFC3339Nano)
+		s.Snapshot["lastSequence"] = p["sequence"]
+		for _, k := range []string{"deviceTime", "missionState", "health"} {
+			s.Snapshot[k] = p[k]
+		}
+		// This is the persisted frontier decision for a confirmed low BOOT.
+		// Sequence wrap alone preserves previous-side measurements and quality.
+		if hadSnapshot && epoch > s.State.FrontierEpoch && p.Group() == "H" && p["missionState"] == "BOOT" && p.Sequence() <= 16 && p.Uptime() <= 5000 {
+			s.State.MinimumEpoch = epoch
+			for _, v := range s.Snapshot["sensors"].(Object) {
+				v.(Object)["status"] = "unverified"
+			}
+			s.Snapshot["power"].(Object)["status"] = "unverified"
+		}
+		s.State.FrontierEpoch = epoch
+	}
+	candidate := evidence(p, at, epoch)
 	flags := number(p["health"].(Object)["flags"])
 	sensors := s.Snapshot["sensors"].(Object)
 	group := map[string]string{"bme680": "E", "bmp280": "E", "tmp102": "E", "bh1750": "O", "guvaS12sd": "O", "mpu6050": "I", "gps": "G"}
-	for k, v := range sensors {
-		if f, ok := s.FreshnessByGroup[group[k]]; ok && f.Epoch < epoch {
-			v.(Object)["status"] = "unverified"
-		}
-	}
-	if f, ok := s.FreshnessByGroup["H"]; ok && f.Epoch < epoch {
-		s.Snapshot["power"].(Object)["status"] = "unverified"
-	}
 	if flags&2 != 0 {
 		for k, v := range sensors {
 			dst := v.(Object)
-			if k != "gps" && (dst["status"] == "available" || dst["status"] == "available_uncalibrated" || dst["status"] == "optional_backup") {
-				dst["status"] = "unavailable"
+			if k != "gps" {
+				value := "unverified"
+				if dst["status"] != "unverified" {
+					value = "unavailable"
+				}
+				changed = s.status("sensors."+k, dst, value, candidate) || changed
 			}
 		}
 	}
 	if flags&1 != 0 {
-		sensors["gps"].(Object)["status"] = "unavailable"
+		changed = s.status("sensors.gps", sensors["gps"].(Object), "unavailable", candidate) || changed
 	}
 	for k, v := range p["sensors"].(Object) {
 		dst := sensors[k].(Object)
@@ -145,27 +202,28 @@ func (s *Projection) ApplyEpoch(p Patch, at time.Time, meta ReceiverMetadata, ep
 			if sa, ok := src["satellites"]; ok {
 				quality["satellites"] = sa
 			}
-			s.merge(dst, quality, "G", "sensors.gps.", p, at, epoch)
+			changed = s.merge(dst, quality, "G", "sensors.gps.", candidate) || changed
 			if flags&1 != 0 || (hasFix && number(fx) == 0) {
-				dst["status"] = "unavailable"
+				changed = s.status("sensors.gps", dst, "unavailable", candidate) || changed
 				continue
 			}
 			if !hasFix || number(fx) < 2 || !la || !lo {
-				dst["status"] = "unverified"
+				changed = s.status("sensors.gps", dst, "unverified", candidate) || changed
 				continue
 			}
 		} else if flags&2 != 0 {
 			continue
 		}
-		s.merge(dst, src, group[k], "sensors."+k+".", p, at, epoch)
-		dst["status"] = "available"
+		changed = s.merge(dst, src, group[k], "sensors."+k+".", candidate) || changed
+		value := "available"
 		if k == "guvaS12sd" {
-			dst["status"] = "available_uncalibrated"
+			value = "available_uncalibrated"
 		}
+		changed = s.status("sensors."+k, dst, value, candidate) || changed
 	}
 	if power, ok := p["power"].(Object); ok {
-		s.merge(s.Snapshot["power"].(Object), power, "H", "power.", p, at, epoch)
-		s.Snapshot["power"].(Object)["status"] = "available"
+		changed = s.merge(s.Snapshot["power"].(Object), power, "H", "power.", candidate) || changed
+		changed = s.status("power", s.Snapshot["power"].(Object), "available", candidate) || changed
 	}
 	if payload, ok := p["payload"].(Object); ok {
 		valid := Object{}
@@ -175,13 +233,13 @@ func (s *Projection) ApplyEpoch(p Patch, at time.Time, meta ReceiverMetadata, ep
 			}
 			valid[k] = v
 		}
-		s.merge(s.Snapshot["payload"].(Object), valid, "H", "payload.", p, at, epoch)
+		changed = s.merge(s.Snapshot["payload"].(Object), valid, "H", "payload.", candidate) || changed
 	}
 	radio := s.Snapshot["radio"].(Object)
 	if flags&32 != 0 {
-		radio["status"] = "unavailable"
-	} else if meta.RSSIDbm != nil || meta.SNRDb != nil || meta.FrequencyMhz != nil {
-		radio["status"] = "available"
+		changed = s.status("radio", radio, "unavailable", candidate) || changed
+	} else if advance && (meta.RSSIDbm != nil || meta.SNRDb != nil || meta.FrequencyMhz != nil) {
+		changed = s.status("radio", radio, "available", candidate) || changed
 		if meta.RSSIDbm != nil {
 			radio["rssiDbm"] = *meta.RSSIDbm
 		}
@@ -192,7 +250,11 @@ func (s *Projection) ApplyEpoch(p Patch, at time.Time, meta ReceiverMetadata, ep
 			radio["frequencyMhz"] = *meta.FrequencyMhz
 		}
 	}
-	if meta.GatewayID != nil {
+	if advance && meta.GatewayID != nil {
 		s.Snapshot["gateway"].(Object)["id"] = *meta.GatewayID
 	}
+	if changed {
+		s.Revision++
+	}
+	return changed
 }

@@ -71,7 +71,7 @@ func (r *Repository) Store(ctx context.Context, sourceID string, input Reception
 		}
 		result.Revision = revision
 	}
-	var logical, projected bool
+	var logical, projected, advance bool
 	if result.Cause == "" && input.Patch.DeviceID() != protocol {
 		result.Cause = "device_mismatch"
 	}
@@ -102,7 +102,7 @@ func (r *Repository) Store(ctx context.Context, sourceID string, input Reception
 				} else {
 					result.Status = "accepted"
 					logical = true
-					projected = decision.Kind == "project"
+					advance = decision.Kind == "project"
 				}
 			}
 			// Persist candidate and frontier even when a restart candidate is rejected;
@@ -115,6 +115,19 @@ func (r *Repository) Store(ctx context.Context, sourceID string, input Reception
 				return result, err
 			}
 		}
+	}
+	if logical {
+		projection, err = telemetry.LoadProjection(ctx, tx, *device)
+		if errors.Is(err, pgx.ErrNoRows) && revision == 0 {
+			projection = telemetry.Projection{}
+		} else if err != nil {
+			return result, err
+		}
+		if projection.Revision != revision {
+			return result, errors.New("snapshot revision differs; rebuild required")
+		}
+		projected = projection.ApplyReception(input.Patch, now, input.Metadata, *result.Epoch, advance)
+		result.Revision = projection.Revision
 	}
 	var group any
 	var sequence, uptime any
@@ -145,23 +158,7 @@ func (r *Repository) Store(ctx context.Context, sourceID string, input Reception
 		return result, err
 	}
 	if projected {
-		var b []byte
-		err = tx.QueryRow(ctx, "SELECT projection FROM device_snapshots WHERE device_id=$1", *device).Scan(&b)
-		if err == nil {
-			if err = json.Unmarshal(b, &projection); err != nil {
-				return result, err
-			}
-		} else if !errors.Is(err, pgx.ErrNoRows) {
-			return result, err
-		} else if revision != 0 {
-			return result, errors.New("snapshot missing; rebuild required")
-		}
-		if projection.Revision != revision {
-			return result, errors.New("snapshot revision differs; rebuild required")
-		}
-		projection.ApplyEpoch(input.Patch, now, input.Metadata, *result.Epoch)
-		result.Revision = projection.Revision
-		b, err = json.Marshal(projection)
+		b, err := json.Marshal(projection)
 		if err != nil {
 			return result, err
 		}

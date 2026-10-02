@@ -93,8 +93,11 @@ El servidor combina la última lectura válida de cada grupo. La forma
 `SnapshotProjectionV2` envuelve `snapshot` con revisión monotónica y
 `freshnessByGroup`: recepción, secuencia, encendido y `receptionEpoch` por grupo
 semántico; `fields` conserva esos metadatos por ruta de campo. Un H con `gx`
-refresca ese eje de I, nunca los demás. La fecha del grupo es la del último campo
-válido recibido; la fecha de cada campo es la autoridad para su antigüedad.
+refresca ese eje de I, nunca los demás. La cabecera conserva la frontera global;
+cada campo se fusiona por su propio orden lógico (época, secuencia y uptime
+modular), no por el orden de llegada. La frescura del grupo corresponde a su
+campo de mayor orden, aunque otro campo más antiguo haya llegado después; la
+fecha de cada campo es la autoridad para su antigüedad de recepción.
 No se fija un umbral de obsolescencia ni se promete simultaneidad. Un grupo sin
 evidencia no aparece en frescura. La frescura no se inyecta en el snapshot legible.
 
@@ -103,9 +106,17 @@ impide confiar en nuevas lecturas de sensores sin identificar cuál falló. Solo
 sensores previamente disponibles pasan a `unavailable`; desconocidos siguen
 `unverified`. GPS/radio usan sus bits específicos. Cámara/SD fallidos conservan
 sus valores previos y flags; ausencia no significa cero ni hardware no instalado.
-BATTERY_LOW no invalida la medición eléctrica. En una nueva época, grupos aún
-no medidos quedan `unverified` con sus valores/fechas anteriores. Las lecturas
+BATTERY_LOW no invalida la medición eléctrica. Después de un reinicio confirmado,
+grupos aún no medidos quedan `unverified` con sus valores/fechas anteriores; un
+wrap de secuencia conserva esa evidencia sin presumir reinicio. Las lecturas
 fallidas, parciales o atrasadas permanecen en el historial normalizado.
+
+`projectionState` conserva `frontierEpoch`, la barrera de último reinicio
+`minimumEpoch` y `statusEvidence` por sensor/power/radio. La evidencia de estado
+se ordena separada de la última medición válida: un E101 sano puede mejorar un
+campo E100 sin quitar una falla I102 posterior. GPS102 con fix válido puede
+mejorar la última posición válida GPS100 sin sustituir un `fx=0` de H103 ni
+marcar esa posición como actualmente utilizable.
 
 ## Orden y evidencia (PR4)
 
@@ -122,7 +133,9 @@ firmware. Raw usa `bytea`, incluso para bytes no UTF-8. No hay purga implícita.
 Cada transacción bloquea la fila del dispositivo: validación/normalización,
 recepción, identidad lógica, estado de orden y proyección se confirman juntos.
 Un fallo DB revierte todo y exige retry; no promete evidencia persistida durante
-una caída de almacenamiento. Revisión aumenta solo en recepciones proyectadas.
+una caída de almacenamiento. Revisión aumenta una vez por recepción que cambie
+la proyección (cabecera, valores, frescura o evidencia de estado), también si
+esa recepción está atrasada respecto de la frontera global.
 La identidad lógica es `(device, reception_epoch, m, n)`. Igual contenido
 canónico conserva nueva recepción duplicada; distinto contenido en la misma
 identidad queda rechazado con `sequence_conflict`. No suma muestra ni revisión.
@@ -131,7 +144,11 @@ identidad queda rechazado con `sequence_conflict`. No suma muestra ni revisión.
 por wrap abre época; un atrasado cercano del lado anterior del wrap conserva
 la época anterior. Wrap de `u` por sí solo no. Para avanzar, incremento de uptime
 debe caber en tiempo de servidor transcurrido +10 s de tolerancia. Retrasados
-dentro de 10 s de uptime se guardan como muestras lógicas sin proyectar; fuera
+dentro de 10 s de uptime se guardan como muestras lógicas y pueden actualizar
+solo campos/estados cuyo orden supere su evidencia guardada, incluso grupos
+ausentes y campos opcionales de otro `m`. E100→I102→E101 produce temperatura de
+E101 y frescura E101, conservando `lastSequence`, `deviceTime`, estado, flags y
+recepción de cabecera I102. Un atraso sin ningún cambio no suma revisión. Fuera
 de esa ventana quedan `ambiguous`, sin atribuirlos a una época de encendido.
 
 Un descenso de uptime **no** prueba reboot. Política conservadora: tras uptime
@@ -147,8 +164,13 @@ dudosa a presentar una posición/lectura nueva sin justificación.
 
 El estado de orden y revisión se persiste separado del snapshot. Reconstrucción
 local bloquea el mismo dispositivo y reproduce solo decisiones `projected` por
-ID de recepción con sus tiempos/metadatos/épocas originales; no reevalúa reboot
-usando el reloj actual ni cambia revisión. Historia e IDs sobreviven reinicios.
+ID de recepción con sus tiempos/metadatos/épocas originales y causa persistida:
+`project` permite avanzar cabecera; `late` fusiona solo campos/estados elegibles.
+No reevalúa reboot usando el reloj actual ni cambia revisión o fecha de última
+mutación. Una época anterior al último reboot no puede revivir campos ausentes.
+Caches previas sin `projectionState` reconstruyen esa procedencia desde sus
+decisiones persistidas; `rebuild` permite guardarla explícitamente. Historia e
+IDs sobreviven reinicios.
 Consultas: [OpenAPI](../packages/contracts/openapi/telemetry.yaml) y
 [operación API](../apps/api/README.md).
 

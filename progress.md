@@ -25,6 +25,12 @@ Runners del head final se reportan en el PR/chat; su evidencia
 temporal queda ignorada en `.superpowers/sdd/2026-10-01-cubeos-backend`.
 Revisión independiente y merge pertenecen al chat raíz. No avanzar PR5 aquí.
 
+Corrección de revisión PR4: una recepción `late` puede mejorar valores/frescura
+por campo sin mover cabecera global. Evidencia de estado ordenada por sensor
+conserva fallas/fix posteriores, y barrera de reboot impide revivir épocas viejas.
+Pruebas PG reproducen E100→I102→E101, grupos ausentes, opcionales parciales,
+errores, GPS, wrap, rollback y rebuild idéntico; política en telemetría.
+
 ## PR 3 — API local y PostgreSQL
 
 PR2 integrado: [PR #3](https://github.com/Edwarmkaer/cubeos/pull/3), merge `d7a14a2`.

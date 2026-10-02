@@ -111,7 +111,18 @@ jobs:
         run: |
           test -z "$(gofmt -l cmd internal)"
           go vet ./...
+          export TEST_PROJECTION_EVIDENCE_DIR="$RUNNER_TEMP/cubeos-projections"
           go test -race -count=1 -v ./...
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .node-version
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+        with:
+          run_install: false
+      - name: Install frozen schema validator dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Validate persisted late snapshots with the shared TypeScript schema
+        run: pnpm --filter @cubeos/contracts exec node tests/verify-postgres-snapshots.ts "$RUNNER_TEMP/cubeos-projections"
 
   docker:
     name: docker-local

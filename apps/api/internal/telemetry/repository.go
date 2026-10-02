@@ -88,17 +88,12 @@ func (r *Repository) GetSnapshot(ctx context.Context, p identity.Principal, id s
 	if err = owned(ctx, tx, p, id, false); err != nil {
 		return Projection{}, err
 	}
-	var b []byte
-	err = tx.QueryRow(ctx, "SELECT projection FROM device_snapshots WHERE device_id=$1", id).Scan(&b)
+	s, err := LoadProjection(ctx, tx, id)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return Projection{}, ErrSnapshotUnavailable
 	}
 	if err != nil {
 		return Projection{}, err
-	}
-	var s Projection
-	if err = json.Unmarshal(b, &s); err != nil {
-		return s, err
 	}
 	return s, tx.Commit(ctx)
 }
@@ -206,33 +201,8 @@ func (r *Repository) Rebuild(ctx context.Context, p identity.Principal, id strin
 	if err != nil {
 		return err
 	}
-	rows, err := tx.Query(ctx, "SELECT normalized_payload,received_at,receiver_metadata,reception_epoch FROM received_packets WHERE device_id=$1 AND projected ORDER BY id", id)
+	s, err := replayProjection(ctx, tx, id)
 	if err != nil {
-		return err
-	}
-	var s Projection
-	var at time.Time
-	for rows.Next() {
-		var patch Patch
-		var meta ReceiverMetadata
-		var b, m []byte
-		var epoch int64
-		if err = rows.Scan(&b, &at, &m, &epoch); err != nil {
-			rows.Close()
-			return err
-		}
-		if err = json.Unmarshal(b, &patch); err != nil {
-			rows.Close()
-			return err
-		}
-		if err = json.Unmarshal(m, &meta); err != nil {
-			rows.Close()
-			return err
-		}
-		s.ApplyEpoch(patch, at, meta, epoch)
-	}
-	rows.Close()
-	if err = rows.Err(); err != nil {
 		return err
 	}
 	if s.Revision != revision {
@@ -241,12 +211,66 @@ func (r *Repository) Rebuild(ctx context.Context, p identity.Principal, id strin
 	if s.Revision == 0 {
 		return ErrSnapshotUnavailable
 	}
+	var updatedAt time.Time
+	if err = tx.QueryRow(ctx, "SELECT received_at FROM received_packets WHERE device_id=$1 AND projected ORDER BY id DESC LIMIT 1", id).Scan(&updatedAt); err != nil {
+		return err
+	}
 	b, err := json.Marshal(s)
 	if err != nil {
 		return err
 	}
-	if _, err = tx.Exec(ctx, "INSERT INTO device_snapshots(device_id,projection,updated_at) VALUES($1,$2,$3) ON CONFLICT(device_id) DO UPDATE SET projection=excluded.projection,updated_at=excluded.updated_at", id, b, at); err != nil {
+	if _, err = tx.Exec(ctx, "INSERT INTO device_snapshots(device_id,projection,updated_at) VALUES($1,$2,$3) ON CONFLICT(device_id) DO UPDATE SET projection=excluded.projection,updated_at=excluded.updated_at", id, b, updatedAt); err != nil {
 		return err
 	}
 	return tx.Commit(ctx)
+}
+
+// LoadProjection upgrades the cache's ordering provenance from persisted
+// decisions when reading a PR4 cache written before per-field late merging.
+// Callers must first authorize or lock the device in this transaction.
+func LoadProjection(ctx context.Context, tx pgx.Tx, id string) (Projection, error) {
+	var b []byte
+	if err := tx.QueryRow(ctx, "SELECT projection FROM device_snapshots WHERE device_id=$1", id).Scan(&b); err != nil {
+		return Projection{}, err
+	}
+	var s Projection
+	if err := json.Unmarshal(b, &s); err != nil {
+		return s, err
+	}
+	if s.State.StatusEvidence == nil {
+		return replayProjection(ctx, tx, id)
+	}
+	return s, nil
+}
+func replayProjection(ctx context.Context, tx pgx.Tx, id string) (Projection, error) {
+	rows, err := tx.Query(ctx, "SELECT normalized_payload,received_at,receiver_metadata,reception_epoch,cause FROM received_packets WHERE device_id=$1 AND projected ORDER BY id", id)
+	if err != nil {
+		return Projection{}, err
+	}
+	defer rows.Close()
+	var s Projection
+	for rows.Next() {
+		var patch Patch
+		var meta ReceiverMetadata
+		var b, m []byte
+		var at time.Time
+		var epoch int64
+		var cause string
+		if err = rows.Scan(&b, &at, &m, &epoch, &cause); err != nil {
+			return s, err
+		}
+		if err = json.Unmarshal(b, &patch); err != nil {
+			return s, err
+		}
+		if err = json.Unmarshal(m, &meta); err != nil {
+			return s, err
+		}
+		if cause != "project" && cause != "late" {
+			return s, errors.New("unknown projection decision")
+		}
+		if !s.ApplyReception(patch, at, meta, epoch, cause == "project") {
+			return s, errors.New("projection decision did not change state")
+		}
+	}
+	return s, rows.Err()
 }

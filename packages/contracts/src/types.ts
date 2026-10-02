@@ -44,7 +44,8 @@ export type ReceivedEnvelopeV1 = { envelopeVersion: 1; payload: import("./index.
 export type FieldFreshness = { receivedAt: string; sequence: number; uptimeMs: number; receptionEpoch: number };
 export type GroupFreshness = FieldFreshness & { fields: Record<string, FieldFreshness> };
 /** The readable source snapshot stays intact inside the server projection. */
-export type SnapshotProjectionV2 = { revision: number; snapshot: SnapshotV2; freshnessByGroup: Partial<Record<MessageType, GroupFreshness>> };
+export type ProjectionState = { frontierEpoch: number; minimumEpoch: number; statusEvidence: Record<string, FieldFreshness> };
+export type SnapshotProjectionV2 = { revision: number; snapshot: SnapshotV2; freshnessByGroup: Partial<Record<MessageType, GroupFreshness>>; projectionState: ProjectionState };
 
 type VectorPatch = Partial<Record<"x" | "y" | "z", number>>;
 /** Conversion reference only: not a persisted/combined snapshot or an ordering algorithm. */

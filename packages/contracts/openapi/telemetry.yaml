@@ -134,9 +134,18 @@ components:
               additionalProperties: {$ref: '#/components/schemas/FieldFreshness'}
     Projection:
       type: object
-      required: [revision, snapshot, freshnessByGroup]
+      required: [revision, snapshot, freshnessByGroup, projectionState]
       properties:
         revision: {type: integer, minimum: 1, format: int64}
+        projectionState:
+          type: object
+          required: [frontierEpoch, minimumEpoch, statusEvidence]
+          properties:
+            frontierEpoch: {type: integer, minimum: 0, format: int64}
+            minimumEpoch: {type: integer, minimum: 0, format: int64, description: Last confirmed restart barrier; sequence wrap does not advance it.}
+            statusEvidence:
+              type: object
+              additionalProperties: {$ref: '#/components/schemas/FieldFreshness'}
         snapshot: {$ref: '../schemas/snapshot-v2.json'}
         freshnessByGroup:
           type: object
