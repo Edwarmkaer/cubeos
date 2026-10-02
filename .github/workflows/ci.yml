@@ -62,7 +62,7 @@ jobs:
   ci-required:
     name: ci-required
     if: ${{ always() }}
-    needs: [web, contracts, go, docker]
+    needs: [web, contracts, go, docker, browser]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -72,7 +72,55 @@ jobs:
           CONTRACTS_RESULT: ${{ needs.contracts.result }}
           GO_RESULT: ${{ needs.go.result }}
           DOCKER_RESULT: ${{ needs.docker.result }}
-        run: test "$WEB_RESULT" = success && test "$CONTRACTS_RESULT" = success && test "$GO_RESULT" = success && test "$DOCKER_RESULT" = success
+          BROWSER_RESULT: ${{ needs.browser.result }}
+        run: test "$WEB_RESULT" = success && test "$CONTRACTS_RESULT" = success && test "$GO_RESULT" = success && test "$DOCKER_RESULT" = success && test "$BROWSER_RESULT" = success
+
+  browser:
+    name: browser-live-telemetry
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+      CUBEOS_WEB_URL: http://localhost:3108
+      CUBEOS_BROWSER_API_PORT: '8087'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .node-version
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+        with:
+          run_install: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: .go-version
+          cache-dependency-path: apps/api/go.sum
+      - name: Prepare browser, API and standalone web
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm --filter web exec playwright install --with-deps chromium
+          cd apps/api
+          go build -o "$RUNNER_TEMP/cubeos-pr7-api" ./cmd/server
+          cd ../..
+          pnpm --filter web build
+      - name: Exclusive PostgreSQL and prepared web
+        run: |
+          POSTGRES_PASSWORD="$(openssl rand -hex 32)"
+          echo "::add-mask::$POSTGRES_PASSWORD"
+          export POSTGRES_PASSWORD
+          docker run -d --name cubeos-browser-pg -e POSTGRES_PASSWORD -p 127.0.0.1:55437:5432 postgres:17.6-alpine
+          for i in $(seq 1 60); do docker exec cubeos-browser-pg pg_isready -U postgres && break; sleep 1; done
+          docker exec cubeos-browser-pg createdb -U postgres cubeos_browser_test
+          echo "TEST_BROWSER_DATABASE_URL=postgres://postgres:$POSTGRES_PASSWORD@localhost:55437/cubeos_browser_test?sslmode=disable" >> "$GITHUB_ENV"
+          echo "CUBEOS_API_BINARY=$RUNNER_TEMP/cubeos-pr7-api" >> "$GITHUB_ENV"
+          echo "CUBEOS_BROWSER_EVIDENCE_DIR=$RUNNER_TEMP/cubeos-browser-evidence" >> "$GITHUB_ENV"
+          pnpm --filter web start --port 3108 > "$RUNNER_TEMP/cubeos-web.log" 2>&1 &
+          for i in $(seq 1 60); do curl -fsS http://localhost:3108/visor > /dev/null && break; sleep 1; done
+          curl -fsS http://localhost:3108/visor > /dev/null
+      - name: Real REST/SSE simulator, local offline and desktop/mobile browser gates
+        run: node apps/web/tests/browser-integration.mjs
 
   go:
     name: go-postgres

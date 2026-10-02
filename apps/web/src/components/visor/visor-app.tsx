@@ -2,10 +2,12 @@
 
 import { AppShell } from "@/components/app-shell";
 import { DashboardGrid } from "@/components/visor/dashboard-grid";
+import { RealDashboard } from "@/components/visor/real-dashboard";
 import { useTelemetry } from "@/lib/use-telemetry";
 
 export function VisorApp() {
-  const { sample, history, connection } = useTelemetry();
+  const state = useTelemetry();
+  const { sample, history, selection } = state;
 
   return (
     <AppShell>
@@ -16,11 +18,7 @@ export function VisorApp() {
         aria-label="Paneles de telemetría"
         tabIndex={0}
       >
-        <DashboardGrid
-          sample={sample}
-          history={history}
-          connection={connection}
-        />
+        {selection.mode === "demo" && sample ? <DashboardGrid sample={sample} history={history} connection="simulated" /> : <RealDashboard state={state} />}
       </div>
     </AppShell>
   );

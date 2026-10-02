@@ -9,7 +9,7 @@ import { IconCurrentLocation, IconMapPin } from "@tabler/icons-react";
 import { useReducedMotion } from "motion/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import type { TelemetrySample } from "@cubeos/telemetry";
+type MapSample = { gps_lat: number; gps_lon: number; gps_alt?: number | null };
 
 const MAP_STYLE =
   process.env.NEXT_PUBLIC_MAP_STYLE_URL ??
@@ -17,7 +17,8 @@ const MAP_STYLE =
 
 type Coordinate = [longitude: number, latitude: number];
 
-function coordinateOf(sample: TelemetrySample): Coordinate | null {
+function coordinateOf(sample: MapSample | null): Coordinate | null {
+  if (!sample) return null;
   const { gps_lat: latitude, gps_lon: longitude } = sample;
 
   if (
@@ -37,9 +38,11 @@ function coordinateOf(sample: TelemetrySample): Coordinate | null {
 export function TelemetryMap({
   sample,
   history,
+  offline = false,
 }: {
-  sample: TelemetrySample;
-  history: TelemetrySample[];
+  sample: MapSample | null;
+  history: MapSample[];
+  offline?: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
@@ -59,7 +62,7 @@ export function TelemetryMap({
   );
 
   useEffect(() => {
-    if (!containerRef.current || !current) return;
+    if (offline || !containerRef.current || !current) return;
     const initialCoordinate = current;
 
     let disposed = false;
@@ -140,7 +143,7 @@ export function TelemetryMap({
     };
     // The map instance is created once for the first valid GPS position.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [Boolean(current)]);
+  }, [Boolean(current), offline]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -170,13 +173,13 @@ export function TelemetryMap({
     }
   }
 
-  if (!current) {
+  if (!current || offline) {
     return (
       <div className="grid min-h-32 flex-1 place-items-center rounded-sm bg-background/55 px-6 text-center">
         <div>
           <IconMapPin className="mx-auto size-5 text-muted-foreground" />
           <p className="mt-2 text-sm text-muted-foreground">
-            Esperando coordenadas GPS
+            {!current ? "Esperando coordenadas GPS" : "Modo sin Internet · mapa base desactivado"}
           </p>
         </div>
       </div>

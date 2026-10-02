@@ -4,7 +4,8 @@ Estado 2026-10-01: web, UI compartida, contratos hardware v2 y simulador de
 reproducción implementados. PR3 añade API Go local con identidad/dispositivos
 persistidos en PostgreSQL; PR4 añade caso de uso de ingestión, historial y snapshots
 reconstruibles con lecturas REST/CSV. PR5 añade serial y HTTP por fuente;
-PR6 añade SSE autorizado y cliente TypeScript; auth pública sigue pendiente.
+PR6 añade SSE autorizado y cliente TypeScript; PR7 conecta el visor a v2 con
+selección explícita de fuente y dispositivo. Auth pública sigue pendiente.
 [ADR 0005](adr/0005-backend-local-cloud-media.md),
 [diseño objetivo](superpowers/specs/2026-10-01-cubeos-backend-design.md),
 [modelo de dominio](domain-model.md) y
@@ -27,16 +28,18 @@ FastAPI/SQLite/WebSocket son antecedentes sustituidos.
 | Cliente API | `packages/api-client` | REST tipado y fetch SSE, contrato validado, cancelación y reconexión |
 | Instalación local | `infra/docker` | Contenedores sin root, PostgreSQL persistente, publicación loopback y runtime verificado sin Internet |
 
-Web todavía usa `TelemetrySource`/`simulatorSource`: el hook inicia y detiene la
-fuente, el store mantiene `latest`, hasta 60 entradas de `history` y `connection`.
-Los widgets no consumen directamente timers ni sockets. No se cambia la apariencia
-ni el paquete legacy en PR2/PR3. La adopción de v2 por web corresponde al PR7.
+Web usa `startTelemetry` desde el hook: selecciona demo o `APIClient`, cancela
+al salir del visor o cambiar la generación de fuente/dispositivo/sesión e ignora
+callbacks anteriores. Zustand separa el snapshot v2 de la muestra demo legacy;
+el estado inicial real no contiene lecturas sintéticas. El cliente API conserva
+REST/SSE, reconexión y revisión int64 exacta. Presentación, historial breve y
+operación del visor tienen dueño en [visor](visor-telemetry.md).
 
 pnpm coordina workspaces `apps/*`, `packages/*`, `tools/*`, con un lockfile raíz.
 Turbo coordina lint/typecheck/build/test; tareas de test dependen de las de sus
 paquetes productores. Los inputs por defecto incluyen esquemas, fuentes y fixtures:
 cambiar contratos invalida consumidores. Desarrollo no se cachea. CI añade el job
-`contracts`, `go-postgres` y `docker-local` al agregador `ci-required`, que exige éxito de todos y falla
+`contracts`, `go-postgres`, `docker-local` y `browser-live-telemetry` al agregador `ci-required`, que exige éxito de todos y falla
 también ante un job omitido/cancelado.
 
 Los puertos de persistencia pertenecen a sus consumidores: HTTP consume
@@ -46,7 +49,7 @@ en ingestión/reconstrucción. Orden, épocas y evidencia tienen un único dueñ
 [telemetría](telemetry.md). Operación, límites, entorno y
 comandos de migración tienen su fuente en [API local](../apps/api/README.md).
 
-## Flujo objetivo pendiente
+## Flujo de telemetría implementado
 
 ```mermaid
 flowchart LR
@@ -75,7 +78,7 @@ dependencias; Clerk en público, sin fallback de autenticación.
 
 El snapshot será una proyección de últimas lecturas válidas por grupo, con
 revisión y frescura fuera del objeto legible. REST/SSE comprobarán propiedad.
-Ingestión, REST y SSE están operativos. El consumo del visor corresponde a PR7.
+Ingestión, REST, SSE y el consumo del visor están operativos en modo local.
 El hub recibe invalidaciones PostgreSQL solo después de commit; cada stream lee
 la proyección actual con propiedad desde DB. Comportamiento de colas, tiempos,
 reconexión y precisión del cliente tiene dueño en [realtime](realtime.md).

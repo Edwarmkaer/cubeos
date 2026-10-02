@@ -1,24 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
-import { simulatorSource } from "@/lib/telemetry-source";
+import { startTelemetry } from "@/lib/telemetry-source";
 import { useTelemetryStore } from "@/lib/telemetry-store";
 
 export function useTelemetry() {
-  const sample = useTelemetryStore((state) => state.latest);
-  const history = useTelemetryStore((state) => state.history);
-  const connection = useTelemetryStore((state) => state.connection);
-  const push = useTelemetryStore((state) => state.push);
-  const setConnection = useTelemetryStore((state) => state.setConnection);
-
-  useEffect(() => {
-    return simulatorSource.start({
-      current: useTelemetryStore.getState().latest,
-      onConnection: setConnection,
-      onSample: push,
-    });
-  }, [push, setConnection]);
-
-  return { sample, history, connection };
+  const state = useTelemetryStore();
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => startTelemetry(useTelemetryStore), [state.generation]);
+  useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(timer); }, []);
+  return { ...state, sample: state.latest, now };
 }

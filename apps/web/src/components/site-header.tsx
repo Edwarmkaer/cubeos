@@ -18,6 +18,10 @@ const connectionLabels = {
   connected: "Conectado",
   disconnected: "Desconectado",
   error: "Error",
+  pending: "Pendiente",
+  reconnecting: "Reconectando API",
+  unauthorized: "Sin autorización",
+  closed: "API cerrada",
 } as const;
 
 export function SiteHeader() {
@@ -66,7 +70,7 @@ export function SiteHeader() {
             ·
           </span>
           <span aria-hidden className="size-1.5 rounded-full bg-muted" />
-          <span>{connectionLabels[connection]}</span>
+          <span>{connection === "simulated" ? "DEMO · sintética" : connectionLabels[connection]}</span>
         </p>
       ) : (
         <span aria-hidden />

@@ -117,11 +117,11 @@ Laboratorio o aula, portátil, luz de clase. Fondo oscuro para que el dato recib
   - Derecha (~46%): Visor 3D (canvas dominante, ~mitad de altura); Telemetría | CubeSat/Paneles; Cámara (franja).
 - Luz, presión, baterías y cámara se reservan en el layout; no se inventan valores (D-001, D-005).
 - Expansiones (GPS, cubo, sensores) siguen siendo detalle, no rutas.
-- Giro y orientación: valores/leyenda arriba y un único chart de líneas debajo. Roll usa cian apagado, Pitch violeta y Yaw ámbar; cada tendencia se normaliza de forma independiente para no aplastar Roll/Pitch frente a Yaw. Los grados reales permanecen visibles y esta representación no se sustituye por medidores radiales ni una animación decorativa.
+- Giro: valores/leyenda arriba y un único chart de líneas debajo. DEMO conserva Roll cian apagado, Pitch violeta y Yaw ámbar; v2 etiqueta X/Y/Z °/s con los mismos colores y trazos. Cada tendencia se normaliza de forma independiente; la lectura numérica conserva su unidad. Aceleración v2 X/Y/Z se lee debajo. No sustituir por medidores radiales ni derivar actitud del giroscopio.
 - UV, temperatura y humedad: valor actual + unidad + tendencia de línea. Los títulos de los pozos no llevan iconos. Comparten grosor con Giro y orientación; los charts no llevan retícula ni marcador final porque el valor actual ya está escrito. No mostrar estado normal/alerta/crítico hasta cerrar D-004.
 - GPS: mapa vectorial plano MapLibre GL JS con OpenFreeMap Dark, marcador actual, trayectoria reciente y coordenadas textuales. Debe poder quedar esperando coordenadas y mostrar fallos del mapa base sin inventar una posición.
-- Telemetría: estado explícito de la Conexión con la estación terrena, frecuencia, última Muestra y tamaño del historial. No replica la tendencia de otro sensor.
-- CubeSat y Paneles: dos pozos de batería con dimensiones idénticas colocados lado a lado. Usan el aro de progreso de Magic UI a 80px, con apertura visible, adaptado a Pozo. Mientras no exista voltaje en el contrato muestran el aro vacío y no inventan nivel.
+- Telemetría: DEMO conserva frecuencia, última Muestra e historial sintético. En v2 muestra conexión API, dispositivo, entrega observada del receptor y metadatos disponibles; radio permanece desconocido sin evidencia. El enlace Configurar fuente queda junto al estado; contenido adicional se desplaza dentro del pozo cuando necesita espacio. No replica la tendencia de otro sensor.
+- CubeSat y Paneles: dos pozos de batería con dimensiones idénticas colocados lado a lado. Aro de 80px con apertura visible, adaptado a Pozo. En v2 voltaje V es texto; aro vacío hasta calibrar SOC (D-007). Paneles no tiene medición independiente. DEMO conserva sus indicadores sintéticos, etiquetados.
 - Cámara: banda horizontal inspirada en React Bits Circular Gallery, con arco mínimo, foco central, scroll/arrastre y teclado. Se implementa con scroll DOM accesible, no con un segundo canvas WebGL. Hasta tres capturas se distribuyen sin scroll; con más capturas se activa el desplazamiento. No muestra scrollbar, instrucciones ni texto sobre las imágenes; nunca hay autoplay.
 
 ### Construcción
@@ -131,7 +131,7 @@ Laboratorio o aula, portátil, luz de clase. Fondo oscuro para que el dato recib
 
 ### Configuración
 
-- `references/ui/SettingsPrincipal.png`: mismo shell y un canvas de fuente de datos. Controles WebSocket no se rellenan (D-006).
+- `references/ui/SettingsPrincipal.png`: mismo shell y pozo de fuente de datos. PR7 integra controles nativos con tokens existentes: origen explícito, URL, modo sin Internet, consulta/selección de dispositivo, registro y renombrado. Estados de carga/error se leen junto a los controles. Este cambio funcional no aprueba una nueva dirección visual.
 
 ## Tipografía
 

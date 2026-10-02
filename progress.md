@@ -2,6 +2,32 @@
 
 Actualizado: 2026-10-01.
 
+## PR 7 — Visor con fuente real
+
+Base PR6 integrada: [PR #7](https://github.com/Edwarmkaer/cubeos/pull/7), merge
+`5aa48ec`. Rama `feat/visor-live-telemetry`. Estado real inicial pendiente;
+Configuración selecciona DEMO/local/pública y UUID propietario desde REST con
+registro/renombrado. `APIClient` entrega current snapshot/SSE; store cancela por
+generación y separa demo, lectura v2, frescura y tendencias por campo. Operación
+tiene dueño en [visor](docs/visor-telemetry.md); contrato original preservado.
+
+Giro X/Y/Z °/s, UV crudo, cero legítimo, fallas/ausencia/edad independientes,
+GPS con calidad válida y fallback offline. Actitud, SOC, Paneles y capturas reales
+permanecen honestamente pendientes. API conectada y entrega del receptor son
+conceptos separados. Pozo conserva bento, colores de charts, dos baterías iguales,
+navegación y scroll horizontal móvil; `DESIGN.md` sigue draft. Landing/Equipo,
+assets NASA y demo legacy no se rediseñan. Identidad pública falla cerrada sin
+sesión; no se implementa PR8 ni medios PR10.
+
+TDD: modelo ausente y API de sesión ausente→green; cambio de identidad con lectura
+previa→red→green. Browser usa API/PG/simulador reales y detectó etiquetas ambiguas
+y enlace cortado en Telemetría; corregidos dentro del pozo, con regresión de bounds.
+Los comandos y capturas finales, Docker y runners se reportan por SHA al entregar,
+sin afirmar que checks pendientes pasaron. Recursos exclusivos PR7: PG
+`cubeos-pr7-test-pg`, puerto 55437, volumen `cubeos-pr7-test-data`; web nativa
+3108/3109, API de prueba 8087. Evidencia ignorada `pr7-*` en workspace SDD.
+Revisión independiente, CI exact SHA y merge corresponden al chat raíz.
+
 ## PR 6 — SSE y cliente API tipado
 
 Base PR5 integrada: [PR #6](https://github.com/Edwarmkaer/cubeos/pull/6), merge
