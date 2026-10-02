@@ -57,7 +57,7 @@ docker run --rm --user "$(id -u):$(id -g)" --network <red-de-esta-instalacion> \
   cubeos-recovery:prepared backup /ruta/privada/copias/copia-nueva --writers-stopped
 ```
 
-Native: preparar `pg_dump`/`pg_restore` 17 y `go build -o /ruta/recovery ./cmd/recovery`
+Native: preparar `pg_dump`/`pg_restore`/`psql` 17 y `go build -o /ruta/recovery ./cmd/recovery`
 desde `apps/api`, cargar envfile confiable sin echo/xtrace, ejecutar el mismo comando.
 Con TLS remoto usar URL/certificados verificados. No poner password en argv.
 
@@ -88,9 +88,16 @@ La herramienta solo emite diagnóstico fijo, no SQL privado, URLs ni secretos.
 3. Ejecutar `restore ARCHIVE --new-disposable-target`. Valida nombre/ruta antes de
    crear directorios; exige DB sin clientes, relaciones, funciones, tipos, schemas
    ajenos o extensiones adicionales y store vacío. Rechaza targets implícitos.
-4. Verifica **todo** el archive antes de mutar destino. Copia/verifica objetos primero,
-   `pg_restore --single-transaction --exit-on-error --no-owner --no-privileges` al
-   final. Mantiene metadata/IDs/hashes/fechas. Roles/globales no se restauran: configurar
+4. Verifica **todo** el archive antes de mutar destino. Copia/verifica objetos primero.
+   `pg_restore --no-owner --no-privileges` genera SQL en un temporal privado 0600;
+   `psql --no-psqlrc --single-transaction --set=ON_ERROR_STOP=1` ejecuta ese SQL y
+   cruza filas `photos` con el inventario verificado **antes del commit**: backend,
+   original ready presente, tamaño/SHA de todo original presente y cada miniatura
+   referenciada presente. Omisión de un objeto en manifest y metadatos distintos
+   revierten la misma transacción y limpian solo objetos de ese intento. Pending
+   sin original y miniatura NULL siguen permitidos. El temporal se elimina al
+   terminar; disponer de espacio privado en disco para SQL sin comprimir (`TMPDIR`).
+   Mantiene metadata/IDs/hashes/fechas. Roles/globales no se restauran: configurar
    acceso administrativo/app en ese nuevo destino por separado.
 5. Verificar migraciones (`/readyz` o comando migrate del mismo SHA), conteos,
    propiedad A/B, progreso/fechas, historial/raw, snapshot/rebuild y downloads SHA.
@@ -123,7 +130,9 @@ Python/openssl y scratch en disco (`CUBEOS_RECOVERY_SCRATCH`, puertos opt-in).
 Prueba datos no vacíos A/B, pasos/progreso, historial válido/rechazado, fuentes,
 credenciales, fotos/miniaturas; igualdad de cada tabla, SHA, reconstrucción y permisos
 restaurados. Incluye corrupción, cliente activo, objetos/DB ocupados, rechazo
-de destino, fallo real de permisos pg_restore con rollback/cleanup y retry.
+de destino, fallo real de permisos de restauración con rollback/cleanup y retry,
+y CLI local/S3 con dump/checksums válidos pero original/miniatura omitidos o
+tamaño/SHA distintos de metadata, sin commit parcial y con retry íntegro.
 Después ejercita la imagen recovery real, PORT/readiness/migraciones/no-root y
 auth runtime de imágenes web/API, más SSE firmado detrás de proxy TLS.
 Cloud real sigue pendiente según [deployment](deployment.md).

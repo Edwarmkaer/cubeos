@@ -460,9 +460,54 @@ func Restore(ctx context.Context, db string, s Inventory, backend, target, direc
 		return refusal
 	}
 	defer f.Close()
-	if e = pgTool(ctx, "pg_restore", db, f, io.Discard, "--dbname=", "--single-transaction", "--exit-on-error", "--no-owner", "--no-privileges"); e != nil {
+	if e = restoreDatabase(ctx, db, f, backend, m.Objects); e != nil {
 		return refusal
 	}
 	committed = true
 	return nil
+}
+
+// psql owns one transaction covering both the restored SQL and validation of
+// photos against the verified object inventory. pg_restore renders the trusted
+// dump first; no target DB commit can occur before the final validation succeeds.
+func restoreDatabase(ctx context.Context, db string, dump io.Reader, backend string, entries []Entry) error {
+	sql, e := os.CreateTemp("", "cubeos-restore-*.sql")
+	if e != nil {
+		return refusal
+	}
+	defer os.Remove(sql.Name())
+	defer sql.Close()
+	if pgTool(ctx, "pg_restore", db, dump, sql, "--file=-", "--no-owner", "--no-privileges") != nil {
+		return refusal
+	}
+	raw, e := json.Marshal(entries)
+	if e != nil {
+		return refusal
+	}
+	// All entry keys/hashes and backend are already validated; quote JSON as a
+	// SQL literal as well. A NULL thumbnail is pending and needs no object. An
+	// absent original is allowed only for a pending photo; present ones must match.
+	inventory := "'" + strings.ReplaceAll(string(raw), "'", "''") + "'::jsonb"
+	validation := `
+DO $cubeos_restore_validation$
+BEGIN
+ IF EXISTS (
+  SELECT 1 FROM public.photos p
+  LEFT JOIN jsonb_to_recordset(` + inventory + `) AS original(key text, sha256 text, size bigint) ON original.key=p.original_key
+  LEFT JOIN jsonb_to_recordset(` + inventory + `) AS thumbnail(key text, sha256 text, size bigint) ON thumbnail.key=p.thumbnail_key
+  WHERE p.storage_backend<>'` + backend + `'
+   OR (p.status='ready' AND original.key IS NULL)
+   OR (original.key IS NOT NULL AND (p.size_bytes<>original.size OR p.sha256<>original.sha256))
+   OR (p.thumbnail_key IS NOT NULL AND thumbnail.key IS NULL)
+ ) THEN RAISE EXCEPTION 'recovery refused'; END IF;
+END
+$cubeos_restore_validation$;
+`
+	if _, e = sql.WriteString(validation); e != nil {
+		return refusal
+	}
+	if _, e = sql.Seek(0, io.SeekStart); e != nil {
+		return refusal
+	}
+	return pgTool(ctx, "psql", db, sql, io.Discard, "--no-psqlrc", "--single-transaction", "--set=ON_ERROR_STOP=1", "--file=-")
 }

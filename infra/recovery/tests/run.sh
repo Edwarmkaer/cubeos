@@ -29,7 +29,7 @@ psql() { docker run --rm --network host -e PGPASSWORD -e PGCONNECT_TIMEOUT postg
 export -f psql
 bash infra/docker/wait-postgres.sh "$pgport"
 for db in railway_test railway_proxy_test railway_container; do docker exec "$pg" createdb -U postgres "$db"; done
-for tool in pg_dump pg_restore; do cp infra/recovery/tests/pg-client.sh "$scratch/bin/$tool"; chmod +x "$scratch/bin/$tool"; done
+for tool in pg_dump pg_restore psql; do cp infra/recovery/tests/pg-client.sh "$scratch/bin/$tool"; chmod +x "$scratch/bin/$tool"; done
 export PATH="$scratch/bin:$PATH"
 export TEST_RECOVERY_DATABASE_URL="postgres://postgres:$POSTGRES_PASSWORD@127.0.0.1:$pgport/postgres?sslmode=disable"
 export TEST_RAILWAY_DATABASE_URL="postgres://postgres:$POSTGRES_PASSWORD@127.0.0.1:$pgport/railway_test?sslmode=disable"

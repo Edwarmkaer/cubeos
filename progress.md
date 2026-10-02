@@ -40,6 +40,15 @@ merge y restore cloud descartable. Pozo/DESIGN draft y schemas originales
 preservados. Revisión independiente y merge pertenecen al chat raíz; no avanzar
 PR12 desde esta entrega.
 
+Corrección de revisión PR11: la restauración inicial validaba solo los objetos
+listados, sin cruzarlos con las referencias de DB. Ocho regresiones CLI reales
+local/S3 reprodujeron éxito indebido para omisión de original/miniatura y SHA/tamaño
+discrepantes. Ahora SQL y validación de `photos` comparten una transacción psql;
+el commit requiere referencias e identidad de originales consistentes. El fallo
+revierte DB y limpia únicamente los objetos copiados. Pending sin original y
+derivado NULL se preservan; se prueban retry válido e igualdad de todas las filas.
+Recovery requiere los tres clientes PostgreSQL 17: pg_dump, pg_restore y psql.
+
 ## PR 10 — Fotografías privadas local/S3
 
 Base PR9 integrada `26649d889d57f2dc12e288558cc4bc2b8f051662`; rama

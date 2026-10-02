@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 	"image"
 	"image/png"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -44,6 +46,11 @@ func TestRecoveryRoundTripAndRefusals(t *testing.T) {
 		t.Fatal("admin connection")
 	}
 	defer admin.Close()
+	binary := filepath.Join(t.TempDir(), "recovery")
+	build := exec.Command("go", "build", "-o", binary, "../../cmd/recovery")
+	if output, err := build.CombinedOutput(); err != nil {
+		t.Fatalf("build real recovery CLI: %v %s", err, output)
+	}
 	for _, backend := range []string{"local", "s3"} {
 		t.Run(backend, func(t *testing.T) {
 			if backend == "s3" && os.Getenv("TEST_S3_ENDPOINT") == "" {
@@ -146,6 +153,16 @@ func TestRecoveryRoundTripAndRefusals(t *testing.T) {
 			if _, e = photos.Upload(ctx, media.Access{Principal: b}, other.ID, bytes.NewReader(data.Bytes()), "image/png", nil, "http"); e != nil {
 				t.Fatal(e)
 			}
+			// Preserve legitimate pending metadata without invented original bytes,
+			// and a ready photo whose derivative is still pending (NULL key).
+			pendingID := uuid.NewString()
+			if _, e = p.Exec(ctx, `INSERT INTO photos(id,device_id,storage_backend,original_key,content_type,size_bytes,width_px,height_px,sha256,import_method,status)
+SELECT $1,device_id,storage_backend,$2,content_type,size_bytes,width_px,height_px,sha256,import_method,'pending' FROM photos WHERE id=$3`, pendingID, "photos/"+pendingID+"/original", photo.ID); e != nil {
+				t.Fatal(e)
+			}
+			if _, e = p.Exec(ctx, "UPDATE photos SET thumbnail_key=NULL WHERE device_id=$1", other.ID); e != nil {
+				t.Fatal(e)
+			}
 			before := databaseEvidence(t, p)
 			archive := filepath.Join(t.TempDir(), "archive")
 			if evidence := os.Getenv("CUBEOS_RECOVERY_EVIDENCE_DIR"); evidence != "" {
@@ -172,6 +189,137 @@ func TestRecoveryRoundTripAndRefusals(t *testing.T) {
 			}
 			if e = Backup(ctx, sourceURL, source, cfg.MediaStorage, archive, true); e != nil {
 				t.Fatal(e)
+			}
+			// A valid dump/checksum cannot make a manifest omission or altered
+			// original consistent with photos rows. Exercise the actual CLI,
+			// real PG and both object backends; failures must leave targets empty.
+			for _, kind := range []string{"missing-ready-original", "missing-thumbnail", "original-sha-mismatch", "original-size-mismatch"} {
+				t.Run(kind, func(t *testing.T) {
+					broken := filepath.Join(t.TempDir(), "archive")
+					if e := os.CopyFS(broken, os.DirFS(archive)); e != nil {
+						t.Fatal(e)
+					}
+					manifestPath := filepath.Join(broken, "manifest.json")
+					raw, err := os.ReadFile(manifestPath)
+					var manifest Manifest
+					if err != nil || json.Unmarshal(raw, &manifest) != nil {
+						t.Fatal("fixture manifest")
+					}
+					key := photo.OriginalKey
+					if kind == "missing-thumbnail" {
+						for _, entry := range manifest.Objects {
+							if strings.HasPrefix(entry.Key, filepath.Dir(photo.OriginalKey)+"/") && strings.HasSuffix(entry.Key, "/thumbnail") {
+								key = entry.Key
+							}
+						}
+						if key == photo.OriginalKey {
+							t.Fatal("fixture thumbnail required")
+						}
+					}
+					if kind == "original-size-mismatch" {
+						// Change only the row size in a fresh valid dump; original
+						// bytes and both original SHA values remain unchanged.
+						changeSize := func(delta int) {
+							pool, err := pgxpool.New(ctx, sourceURL)
+							if err != nil {
+								t.Fatal(err)
+							}
+							defer pool.Close()
+							if _, err := pool.Exec(ctx, "UPDATE photos SET size_bytes=size_bytes+$1 WHERE id=$2", delta, photo.ID); err != nil {
+								t.Fatal(err)
+							}
+						}
+						changeSize(1)
+						dumpPath := filepath.Join(broken, "database.dump")
+						dump, err := os.OpenFile(dumpPath, os.O_WRONLY|os.O_TRUNC, 0600)
+						if err != nil {
+							changeSize(-1)
+							t.Fatal(err)
+						}
+						err = pgTool(ctx, "pg_dump", sourceURL, nil, dump, "--format=custom", "--no-owner", "--no-privileges")
+						dump.Close()
+						changeSize(-1)
+						if err != nil {
+							t.Fatal(err)
+						}
+						root, err := os.OpenRoot(broken)
+						if err != nil {
+							t.Fatal(err)
+						}
+						manifest.Database, err = archiveEntry(root, "database.dump", 1<<50)
+						root.Close()
+						if err != nil {
+							t.Fatal(err)
+						}
+						manifest.Database.Key = "database.dump"
+					}
+					for i, entry := range manifest.Objects {
+						if entry.Key != key {
+							continue
+						}
+						path := filepath.Join(broken, "objects", key)
+						if strings.HasPrefix(kind, "missing-") {
+							manifest.Objects = append(manifest.Objects[:i], manifest.Objects[i+1:]...)
+							if err := os.Remove(path); err != nil {
+								t.Fatal(err)
+							}
+						} else if kind == "original-sha-mismatch" {
+							data, err := os.ReadFile(path)
+							if err != nil {
+								t.Fatal(err)
+							}
+							data[len(data)-1] ^= 1
+							if err := os.WriteFile(path, data, 0600); err != nil {
+								t.Fatal(err)
+							}
+							manifest.Objects[i].Size = int64(len(data))
+							manifest.Objects[i].SHA256 = fmt.Sprintf("%x", sha256.Sum256(data))
+						}
+						break
+					}
+					raw, _ = json.Marshal(manifest)
+					if err := os.WriteFile(manifestPath, raw, 0600); err != nil {
+						t.Fatal(err)
+					}
+					url := db("cubeos_restore_")
+					c := cfg
+					c.MediaLocalRoot = filepath.Join(t.TempDir(), "cubeos-restore-"+uuid.NewString())
+					s := makeStore(&c, "cubeos-restore-")
+					cli := func(directory string) ([]byte, error) {
+						cmd := exec.Command(binary, "restore", directory, "--new-disposable-target")
+						cmd.Env = append(os.Environ(), "RECOVERY_DATABASE_URL="+url, "RECOVERY_STORAGE="+backend, "RECOVERY_LOCAL_ROOT="+c.MediaLocalRoot, "RECOVERY_S3_ENDPOINT="+c.MediaEndpoint, "RECOVERY_S3_REGION="+c.MediaRegion, "RECOVERY_S3_BUCKET="+c.MediaBucket, "RECOVERY_S3_ACCESS_KEY="+c.MediaAccessKey, "RECOVERY_S3_SECRET_KEY="+c.MediaSecretKey, "RECOVERY_TEMP_ROOT="+c.MediaTempRoot)
+						return cmd.CombinedOutput()
+					}
+					if output, err := cli(broken); err == nil {
+						t.Errorf("inconsistent %s CLI returned success: %s", kind, output)
+					}
+					if keys, err := s.Keys(ctx); err != nil || len(keys) != 0 {
+						t.Errorf("inconsistent restore left %d objects: %v", len(keys), err)
+					}
+					verify, err := pgxpool.New(ctx, url)
+					if err != nil {
+						t.Fatal(err)
+					}
+					var relations int
+					if err := verify.QueryRow(ctx, "SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public'").Scan(&relations); err != nil || relations != 0 {
+						t.Errorf("failed restore committed %d relations: %v", relations, err)
+					}
+					verify.Close()
+					if t.Failed() {
+						return
+					}
+					if output, err := cli(archive); err != nil {
+						t.Fatalf("valid retry failed: %v %s", err, output)
+					}
+					verify, err = pgxpool.New(ctx, url)
+					if err != nil {
+						t.Fatal(err)
+					}
+					defer verify.Close()
+					if databaseEvidence(t, verify) != before {
+						t.Fatal("retry changed database evidence")
+					}
+				})
 			}
 			targetCfg := cfg
 			targetCfg.MediaLocalRoot = filepath.Join(t.TempDir(), "cubeos-restore-"+uuid.NewString())
