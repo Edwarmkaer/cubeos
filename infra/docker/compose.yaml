@@ -16,7 +16,7 @@ services:
     networks: [local]
     restart: unless-stopped
   migrate:
-    image: cubeos-api:pr6
+    image: cubeos-api:pr7
     build:
       context: ../..
       dockerfile: infra/docker/Dockerfile.api
@@ -33,7 +33,7 @@ services:
       db: {condition: service_healthy}
     networks: [local]
   api:
-    image: cubeos-api:pr6
+    image: cubeos-api:pr7
     build:
       context: ../..
       dockerfile: infra/docker/Dockerfile.api
@@ -44,7 +44,7 @@ services:
     networks: [local]
     restart: unless-stopped
   web:
-    image: cubeos-web:pr6
+    image: cubeos-web:pr7
     build:
       context: ../..
       dockerfile: infra/docker/Dockerfile.web

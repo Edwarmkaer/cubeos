@@ -19,7 +19,7 @@ export function BatteryIndicator({
         label={
           hasLevel
             ? `Nivel de batería: ${Math.round(levelPercent ?? 0)} por ciento`
-            : "Nivel de batería pendiente de voltaje"
+            : "Nivel de batería pendiente de calibración"
         }
       >
         {hasLevel ? Math.round(levelPercent ?? 0) : "—"}

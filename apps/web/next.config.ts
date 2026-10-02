@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  transpilePackages: ["@cubeos/telemetry", "@cubeos/ui"],
+  transpilePackages: ["@cubeos/telemetry", "@cubeos/ui", "@cubeos/contracts", "@cubeos/api-client"],
   images: {
     remotePatterns: [
       {
