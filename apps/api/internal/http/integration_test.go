@@ -21,6 +21,9 @@ import (
 func TestPostgresHTTPIsolationReadinessAndLocalIdentity(t *testing.T) {
 	url := os.Getenv("TEST_DATABASE_URL")
 	if url == "" {
+		if os.Getenv("CI") != "" {
+			t.Fatal("TEST_DATABASE_URL required")
+		}
 		t.Skip("TEST_DATABASE_URL required for integration")
 	}
 	ctx := context.Background()

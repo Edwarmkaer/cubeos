@@ -1,0 +1,198 @@
+openapi: 3.1.0
+info:
+  title: CubeOS local telemetry reads
+  version: 0.4.0
+  description: >-
+    PR4 local installation only. A persistent installation principal is resolved
+    by the server; no individual-user or bearer authentication is available yet.
+    All routes require loopback Host and the configured Origin when supplied.
+    Repository queries enforce device ownership. There is no network ingestion
+    endpoint in PR4. Serial and credentialed HTTP ingestion belong to PR5.
+servers:
+  - url: http://127.0.0.1:8080
+paths:
+  /api/v1/devices/{deviceId}/snapshot:
+    parameters:
+      - $ref: '#/components/parameters/DeviceId'
+    get:
+      operationId: getSnapshot
+      description: Latest committed projection; 404 also means no snapshot evidence yet.
+      responses:
+        '200':
+          description: Projection with monotonic per-device revision and field provenance.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Projection'
+        '400': {$ref: '#/components/responses/InvalidQuery'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /api/v1/devices/{deviceId}/packets:
+    parameters:
+      - $ref: '#/components/parameters/DeviceId'
+      - $ref: '#/components/parameters/Group'
+      - $ref: '#/components/parameters/From'
+      - $ref: '#/components/parameters/To'
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/Limit'
+    get:
+      operationId: listPackets
+      description: >-
+        Ascending reception ID keyset, including accepted/duplicated/rejected
+        evidence attributed to this device. Unknown-source evidence is not
+        exposed. Inclusive interval uses server receivedAt. A first page fixes
+        a committed per-device watermark; later concurrent receptions are
+        excluded until a new traversal. Repeat the same filters with nextCursor.
+        Empty final page has no nextCursor. Unknown/repeated query keys fail.
+      responses:
+        '200':
+          description: Bounded reception page, bytes encoded in base64.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page'
+        '400': {$ref: '#/components/responses/InvalidQuery'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /api/v1/devices/{deviceId}/packets.csv:
+    parameters:
+      - $ref: '#/components/parameters/DeviceId'
+      - name: m
+        in: query
+        required: true
+        schema: {type: string, enum: [H, E, O, I, G]}
+      - $ref: '#/components/parameters/From'
+      - $ref: '#/components/parameters/To'
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/Limit'
+    get:
+      operationId: exportPacketPage
+      description: >-
+        Streams logical samples in one bounded reception page, at most 200
+        receptions scanned. Retransmissions/rejections are omitted. A page may
+        therefore contain only the header while X-Next-Cursor remains present.
+        Continue with the same filters and cursor, keeping only the first CSV
+        header. Per-message columns include units; missing fields are empty,
+        measured zero remains zero. Uses each packet patch, not the snapshot.
+        No alignment/filling between groups. Request cancellation stops export;
+        failed writes stop streaming. Server request timeout is five seconds.
+      responses:
+        '200':
+          description: CSV page with standard escaping, UTC reception time and explicit units.
+          headers:
+            X-Next-Cursor: {description: Next reception page token; empty at end., schema: {type: string}}
+            X-History-Watermark: {description: Fixed upper reception ID., schema: {type: integer, format: int64}}
+          content:
+            text/csv:
+              schema: {type: string}
+        '400': {$ref: '#/components/responses/InvalidQuery'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+components:
+  parameters:
+    DeviceId: {name: deviceId, in: path, required: true, schema: {type: string, format: uuid}}
+    Group: {name: m, in: query, schema: {type: string, enum: [H, E, O, I, G]}}
+    From: {name: from, in: query, description: Inclusive UTC receivedAt lower bound., schema: {type: string, format: date-time}}
+    To: {name: to, in: query, description: Inclusive UTC receivedAt upper bound; must be at least from., schema: {type: string, format: date-time}}
+    Cursor: {name: cursor, in: query, description: Opaque base64url keyset tied to device and filters., schema: {type: string, maxLength: 2048}}
+    Limit: {name: limit, in: query, schema: {type: integer, minimum: 1, maximum: 200, default: 100}}
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code]
+          properties:
+            code: {type: string}
+    FieldFreshness:
+      type: object
+      required: [receivedAt, sequence, uptimeMs, receptionEpoch]
+      properties:
+        receivedAt: {type: string, format: date-time}
+        sequence: {type: integer, minimum: 0, maximum: 4294967295}
+        uptimeMs: {type: integer, minimum: 0, maximum: 4294967295}
+        receptionEpoch: {type: integer, minimum: 0, format: int64}
+    GroupFreshness:
+      allOf:
+        - $ref: '#/components/schemas/FieldFreshness'
+        - type: object
+          required: [fields]
+          properties:
+            fields:
+              type: object
+              additionalProperties: {$ref: '#/components/schemas/FieldFreshness'}
+    Projection:
+      type: object
+      required: [revision, snapshot, freshnessByGroup, projectionState]
+      properties:
+        revision: {type: integer, minimum: 1, format: int64}
+        projectionState:
+          type: object
+          required: [frontierEpoch, minimumEpoch, statusEvidence]
+          properties:
+            frontierEpoch: {type: integer, minimum: 0, format: int64}
+            minimumEpoch: {type: integer, minimum: 0, format: int64, description: Last confirmed restart barrier; sequence wrap does not advance it.}
+            statusEvidence:
+              type: object
+              additionalProperties: {$ref: '#/components/schemas/FieldFreshness'}
+        snapshot: {$ref: '../schemas/snapshot-v2.json'}
+        freshnessByGroup:
+          type: object
+          propertyNames: {enum: [H, E, O, I, G]}
+          additionalProperties: {$ref: '#/components/schemas/GroupFreshness'}
+    Packet:
+      type: object
+      required: [id, receivedAt, status, cause, receptionEpoch, messageType, sequence, uptimeMs, rawBase64, rawSize, rawTruncated, rawSha256, logicalSample, projected]
+      properties:
+        id: {type: integer, minimum: 1, format: int64}
+        receivedAt: {type: string, format: date-time}
+        status: {type: string, enum: [accepted, duplicated, rejected]}
+        cause: {type: string}
+        receptionEpoch: {type: [integer, 'null'], minimum: 0, format: int64}
+        messageType: {type: [string, 'null'], enum: [H, E, O, I, G, null]}
+        sequence: {type: [integer, 'null'], minimum: 0, maximum: 4294967295}
+        uptimeMs: {type: [integer, 'null'], minimum: 0, maximum: 4294967295}
+        rawBase64: {type: string, contentEncoding: base64}
+        rawSize: {type: integer, minimum: 0, format: int64}
+        rawTruncated: {type: boolean}
+        rawSha256: {type: string, pattern: '^[0-9a-f]{64}$'}
+        normalized: {type: object, description: Presence-preserving readable patch; see NormalizedUplinkV2 in src/types.ts.}
+        logicalSample: {type: boolean}
+        projected: {type: boolean}
+    Page:
+      type: object
+      required: [packets, watermark]
+      properties:
+        packets: {type: array, maxItems: 200, items: {$ref: '#/components/schemas/Packet'}}
+        nextCursor: {type: string}
+        watermark: {type: integer, minimum: 0, format: int64}
+  responses:
+    InvalidQuery:
+      description: Invalid UUID, type, interval, pagination/cursor, duplicate/unknown query key, or missing CSV group.
+      content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}
+    Unauthorized:
+      description: No usable principal.
+      content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}
+    Forbidden:
+      description: Invalid local Host, Origin or cross-site request.
+      content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}
+    NotFound:
+      description: Missing device, device owned by another principal, or snapshot without evidence.
+      content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}
+    MethodNotAllowed:
+      description: Resource only accepts GET.
+      content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}
+    Unavailable:
+      description: Database/migrations/identity unavailable; errors do not expose SQL or secrets.
+      content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}

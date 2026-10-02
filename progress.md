@@ -2,6 +2,35 @@
 
 Actualizado: 2026-10-01.
 
+## PR 4 — Ingestión, historial y snapshots
+
+PR3 integrado: [PR #4](https://github.com/Edwarmkaer/cubeos/pull/4), merge `94fb955`.
+Rama `feat/telemetry-ingestion`. Validación Go del esquema hardware v2 intacto,
+normalización con fixtures TS/Go, caso de uso por fuente registrada y recepción
+raw trazable. PostgreSQL serializa dispositivo, evidencia, identidad lógica y
+proyección en una transacción; snapshots con revisión y frescura por campo/grupo.
+Lecturas REST/CSV paginadas con propiedad, cursor atado a filtros/dispositivo y
+watermark estable. Política conservadora de orden/épocas y límites tienen su
+dueño en [telemetría](docs/telemetry.md); rutas en
+[OpenAPI](packages/contracts/openapi/telemetry.yaml). CLI local `fixture/rebuild`
+en [API](apps/api/README.md), sin endpoint de transporte ni cambio de frontend.
+
+Verificación local: Go race/vet/formato con tres bases exclusivas, fixtures y
+rangos completos, rechazos, raw intacto/acotado, conflictos/duplicados, atraso,
+wrap/reboot conservador, fallos transaccionales, concurrencia, reconstrucción,
+API restart y REST/CSV A/B. Frozen install, lint/tipos/tests JS sin caché y build
+web pasan. Docker verifica raw/historial/snapshot idénticos tras reinicio DB/API
+con volumen, reconstrucción sin cambiar revisión y runtime preparado sin egress.
+Runners del head final se reportan en el PR/chat; su evidencia
+temporal queda ignorada en `.superpowers/sdd/2026-10-01-cubeos-backend`.
+Revisión independiente y merge pertenecen al chat raíz. No avanzar PR5 aquí.
+
+Corrección de revisión PR4: una recepción `late` puede mejorar valores/frescura
+por campo sin mover cabecera global. Evidencia de estado ordenada por sensor
+conserva fallas/fix posteriores, y barrera de reboot impide revivir épocas viejas.
+Pruebas PG reproducen E100→I102→E101, grupos ausentes, opcionales parciales,
+errores, GPS, wrap, rollback y rebuild idéntico; política en telemetría.
+
 ## PR 3 — API local y PostgreSQL
 
 PR2 integrado: [PR #3](https://github.com/Edwarmkaer/cubeos/pull/3), merge `d7a14a2`.

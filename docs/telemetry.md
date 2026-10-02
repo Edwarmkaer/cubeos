@@ -3,8 +3,10 @@
 Estado 2026-10-01: contratos Chasqui v2 y simulador reproducible en
 `packages/contracts` y `tools/simulator`. Web todavía consume la demo legacy de
 `packages/telemetry`; su migración corresponde al PR7 del
-[plan](superpowers/plans/2026-10-01-cubeos-backend.md). Backend y persistencia aún
-no están implementados. Arquitectura objetivo: [ADR 0005](adr/0005-backend-local-cloud-media.md).
+[plan](superpowers/plans/2026-10-01-cubeos-backend.md). PR3 implementó identidad y
+dispositivos; PR4 implementa validación/normalización Go, recepciones e historial
+PostgreSQL, proyección reconstruible y lecturas REST/CSV con propiedad. Los
+adaptadores serial/HTTP pertenecen a PR5. Arquitectura: [ADR 0005](adr/0005-backend-local-cloud-media.md).
 
 ## Trama compacta de hardware v2
 
@@ -12,7 +14,8 @@ Autoridad: [esquema original](../packages/contracts/schemas/uplink-v2.json),
 preservado byte a byte, con [procedencia y checksums](../packages/contracts/fixtures/chasqui-v2/PROVENANCE.md).
 Campos comunes obligatorios: `v=2`, `id` de vuelo, `m`, secuencia uint32 `n`,
 encendido uint32 `u` en ms, UTC Unix `t` en s, estado `st` y bitmask `fl`.
-`t=0` significa UTC no válida; `receivedAt` lo asignará el servidor.
+`t=0` significa UTC no válida; `receivedAt` lo asigna PostgreSQL con reloj del
+servidor después de adquirir el lock del dispositivo.
 
 | Tipo | Campos obligatorios específicos | Cadencia inicial de prueba |
 | --- | --- | --- |
@@ -54,8 +57,10 @@ Casos de referencia: `t1=2465 → 24.65 °C`, `gz=18 → 0.018 grados/s`,
 `al=81240 → 812.4 m`. No se deriva índice UV sin calibración, orientación a partir
 de velocidades angulares ni porcentaje de batería sin modelo aprobado. No hay
 medición independiente de Paneles. G no se emite por defecto en el simulador;
-no se presume GPS instalado hasta recibir y evaluar un G válido. Un G sin fix
-no prueba posición utilizable: esa decisión de calidad será del proyector Go.
+no se presume GPS instalado por ausencia. El proyector acepta posición solo con
+latitud, longitud y `fx=2/3` presentes en la misma recepción, aun fuera de G.
+Conserva calidad `fx/sa` medida, pero `fx=0` expresa indisponibilidad y `fx=1` o
+coordenadas parciales expresan incertidumbre; no refrescan posición utilizable.
 
 `st`: 0 BOOT, 1 SAFE, 2 ARMED, 3 RELEASED, 4 DESCENT, 5 LANDED, 6 ERROR.
 `dp`: 0 SAFE, 1 ARMED, 2 TRIGGERED, 3 CONFIRMED, 4 FAULT.
@@ -84,12 +89,90 @@ ausentes en sensores opcionales o nulas; energía/GPS ausentes conservan nulos.
 No se rellenan con ceros, 915 MHz ni `GS01`: esos últimos valores pertenecen al
 ejemplo entregado, no son defaults del backend.
 
-El servidor futuro combinará la última lectura válida de cada grupo. La forma
+El servidor combina la última lectura válida de cada grupo. La forma
 `SnapshotProjectionV2` envuelve `snapshot` con revisión monotónica y
-`freshnessByGroup`: recepción, secuencia y encendido por tipo. La frescura no se
-inyecta en el snapshot legible; grupos de distintas edades no son simultáneos.
-Validez semántica, discontinuidades, wrap, conflictos y persistencia pertenecen
-al PR4 conforme al [modelo](domain-model.md).
+`freshnessByGroup`: recepción, secuencia, encendido y `receptionEpoch` por grupo
+semántico; `fields` conserva esos metadatos por ruta de campo. Un H con `gx`
+refresca ese eje de I, nunca los demás. La cabecera conserva la frontera global;
+cada campo se fusiona por su propio orden lógico (época, secuencia y uptime
+modular), no por el orden de llegada. La frescura del grupo corresponde a su
+campo de mayor orden, aunque otro campo más antiguo haya llegado después; la
+fecha de cada campo es la autoridad para su antigüedad de recepción.
+No se fija un umbral de obsolescencia ni se promete simultaneidad. Un grupo sin
+evidencia no aparece en frescura. La frescura no se inyecta en el snapshot legible.
+
+Fallas mantienen último valor válido y fechas; el bit global SENSOR_FAILURE
+impide confiar en nuevas lecturas de sensores sin identificar cuál falló. Solo
+sensores previamente disponibles pasan a `unavailable`; desconocidos siguen
+`unverified`. GPS/radio usan sus bits específicos. Cámara/SD fallidos conservan
+sus valores previos y flags; ausencia no significa cero ni hardware no instalado.
+BATTERY_LOW no invalida la medición eléctrica. Después de un reinicio confirmado,
+grupos aún no medidos quedan `unverified` con sus valores/fechas anteriores; un
+wrap de secuencia conserva esa evidencia sin presumir reinicio. Las lecturas
+fallidas, parciales o atrasadas permanecen en el historial normalizado.
+
+`projectionState` conserva `frontierEpoch`, la barrera de último reinicio
+`minimumEpoch` y `statusEvidence` por sensor/power/radio. La evidencia de estado
+se ordena separada de la última medición válida: un E101 sano puede mejorar un
+campo E100 sin quitar una falla I102 posterior. GPS102 con fix válido puede
+mejorar la última posición válida GPS100 sin sustituir un `fx=0` de H103 ni
+marcar esa posición como actualmente utilizable.
+
+## Orden y evidencia (PR4)
+
+La fuente registrada determina el UUID permitido y su identificador de vuelo;
+`CS01` no es globalmente único. Fuente inexistente/revocada, `id` incompatible,
+payload inválido y metadatos inválidos conservan recepción con causa. El límite
+previo es 8192 bytes: un exceso conserva prefijo, tamaño original, SHA-256 completo
+y `rawTruncated=true`, sin almacenar bytes ilimitados. JSON ambiguo con claves
+duplicadas se rechaza. Los enteros sin máximo en el esquema se conservan exactos;
+se limita expansión numérica a 32768 bits y exponente decimal absoluto a 10000 para evitar consumo
+desproporcionado. Es una cuota de recursos de la instalación, no otro campo del
+firmware. Raw usa `bytea`, incluso para bytes no UTF-8. No hay purga implícita.
+
+Cada transacción bloquea la fila del dispositivo: validación/normalización,
+recepción, identidad lógica, estado de orden y proyección se confirman juntos.
+Un fallo DB revierte todo y exige retry; no promete evidencia persistida durante
+una caída de almacenamiento. Revisión aumenta una vez por recepción que cambie
+la proyección (cabecera, valores, frescura o evidencia de estado), también si
+esa recepción está atrasada respecto de la frontera global.
+La identidad lógica es `(device, reception_epoch, m, n)`. Igual contenido
+canónico conserva nueva recepción duplicada; distinto contenido en la misma
+identidad queda rechazado con `sequence_conflict`. No suma muestra ni revisión.
+
+`n/u` usan comparación modular uint32 con media ventana (2³¹). `n` avanzando
+por wrap abre época; un atrasado cercano del lado anterior del wrap conserva
+la época anterior. Wrap de `u` por sí solo no. Para avanzar, incremento de uptime
+debe caber en tiempo de servidor transcurrido +10 s de tolerancia. Retrasados
+dentro de 10 s de uptime se guardan como muestras lógicas y pueden actualizar
+solo campos/estados cuyo orden supere su evidencia guardada, incluso grupos
+ausentes y campos opcionales de otro `m`. E100→I102→E101 produce temperatura de
+E101 y frescura E101, conservando `lastSequence`, `deviceTime`, estado, flags y
+recepción de cabecera I102. Un atraso sin ningún cambio no suma revisión. Fuera
+de esa ventana quedan `ambiguous`, sin atribuirlos a una época de encendido.
+
+Un descenso de uptime **no** prueba reboot. Política conservadora: tras uptime
+≥30 s, dos H con BOOT, `n≤16`, `u≤5000`, secuencia/uptime crecientes y separados
+≤10 s confirman una época nueva. El primero queda `restart_candidate` rechazado
+y trazable; solo el segundo se proyecta. Retransmisión exacta de una época
+anterior se reconoce antes de esa heurística y permanece duplicada en su época.
+Después de reboot, un paquete antiguo con uptime incompatible no avanza latest.
+Sin boot ID hay ambigüedad real: reboots muy cortos, payload idéntico entre boots
+o dos BOOT antiguos desconocidos no se identifican perfectamente. No se inventa
+esa garantía ni se modifica el uplink. La política prefiere retener evidencia
+dudosa a presentar una posición/lectura nueva sin justificación.
+
+El estado de orden y revisión se persiste separado del snapshot. Reconstrucción
+local bloquea el mismo dispositivo y reproduce solo decisiones `projected` por
+ID de recepción con sus tiempos/metadatos/épocas originales y causa persistida:
+`project` permite avanzar cabecera; `late` fusiona solo campos/estados elegibles.
+No reevalúa reboot usando el reloj actual ni cambia revisión o fecha de última
+mutación. Una época anterior al último reboot no puede revivir campos ausentes.
+Caches previas sin `projectionState` reconstruyen esa procedencia desde sus
+decisiones persistidas; `rebuild` permite guardarla explícitamente. Historia e
+IDs sobreviven reinicios.
+Consultas: [OpenAPI](../packages/contracts/openapi/telemetry.yaml) y
+[operación API](../apps/api/README.md).
 
 `ReceivedEnvelopeV1` lleva `envelopeVersion=1`, `payload` intacto y `receiver`
 opcional con `gatewayId`, `rssiDbm`, `snrDb`, `frequencyMhz`. Su

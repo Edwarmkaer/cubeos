@@ -1,8 +1,9 @@
-# API local (PR3)
+# API local (PR3–PR4)
 
 Go 1.27.1 (misma versión en `.go-version`, `go.mod`, Docker y CI), PostgreSQL
-17.6. Esta entrega persiste identidad y dispositivos. La web conserva su demo;
-todavía no consume esta API. Ingestión, SSE, Clerk, progreso y medios pertenecen
+17.6. Persiste identidad/dispositivos, recepciones e historial de telemetría y
+snapshots reconstruibles. La web conserva su demo; todavía no consume esta API.
+Los adaptadores de ingestión, SSE, Clerk, progreso y medios pertenecen
 a los PRs siguientes del [plan](../../docs/superpowers/plans/2026-10-01-cubeos-backend.md).
 
 ## Desarrollo nativo
@@ -23,6 +24,46 @@ arrancar. Sin migraciones, las rutas de negocio devuelven 503. `migrate` aplica
 todo en una transacción bajo advisory lock de PostgreSQL, verifica el checksum
 de cada versión y crea el perfil local de forma idempotente. No hay downgrade
 automático: restaurar backup y corregir una migración fallida antes de reintentar.
+
+## Lecturas de telemetría y fixtures locales
+
+No hay endpoint de ingestión hasta PR5. Con acceso administrativo a la base local,
+el comando explícito `fixture` crea un dispositivo/fuente propios e ingiere un
+array de 1..200 uplinks (máximo 1 MiB) por el mismo caso de uso transaccional.
+Valida todo el input antes de crear el dispositivo; no modifica fuentes existentes
+ni entrega credenciales de red. Si falla DB durante el replay, revisar el UUID
+creado antes de repetir: las recepciones ya confirmadas quedan conservadas.
+
+```sh
+pnpm --filter @cubeos/api fixture < packages/contracts/fixtures/chasqui-v2/uplink-examples-v2.json
+# Copiar deviceId UUID de la salida, no usar "CS01" en las rutas:
+curl --fail http://127.0.0.1:8080/api/v1/devices/DEVICE_UUID/snapshot
+curl --fail 'http://127.0.0.1:8080/api/v1/devices/DEVICE_UUID/packets?m=E&limit=100'
+curl --fail 'http://127.0.0.1:8080/api/v1/devices/DEVICE_UUID/packets.csv?m=E&limit=100'
+pnpm --filter @cubeos/api rebuild DEVICE_UUID
+```
+
+`fixture` devuelve resultados y proyección en JSON; `rebuild` exige propiedad del
+perfil local y reproduce evidencia sin cambiar revisión. Usar el binario `server`
+directamente en Docker (pnpm añade su propio texto a stdout). Consultas autorizadas
+de UUID ajeno devuelven 404. Snapshot sin evidencia también devuelve 404.
+REST no expone raw de fuentes inexistentes sin dispositivo atribuible.
+
+Historial pagina por recepción, incluyendo rechazos/duplicados del dispositivo;
+solo `logicalSample=true` cuenta como muestra. Primera página fija watermark,
+posteriores mantienen límite superior aun con ingestión concurrente. Filtros
+`m/from/to` (intervalo inclusivo de recepción UTC), `cursor`, `limit=1..200`
+(default 100); cursor exige mismo dispositivo/filtros y tipos/rangos válidos.
+CSV requiere `m`, escribe solo muestras lógicas de una página, sin valores de
+otros grupos ni relleno; campos ausentes quedan vacíos. Continuar usando
+`X-Next-Cursor` y conservar una única cabecera. Una página de solo rechazos puede
+tener solo cabecera y cursor siguiente. Cancelación y error de escritura detienen
+el flujo; timeout de consulta/export de 5 s y máximo de 200 recepciones por página.
+No se carga todo historial en memoria ni se elimina automáticamente.
+
+Rutas/errores/formas: [OpenAPI](../../packages/contracts/openapi/telemetry.yaml).
+Campos, frescura, cuotas de payload y política conservadora de orden/reboot:
+[telemetría](../../docs/telemetry.md).
 
 ## Docker y operación sin Internet
 
@@ -98,13 +139,15 @@ un navegador. CORS no sustituye estas validaciones. No hay TLS local.
 ## Verificación
 
 Tests de configuración/validación se ejecutan siempre. Los tests PostgreSQL
-se omiten explícitamente sin las variables siguientes. Usar dos bases
+se omiten explícitamente sin las variables siguientes; CI falla si falta una.
+Usar tres bases
 **descartables exclusivas**: los tests eliminan y recrean su schema `public`.
-CI proporciona ambas y ejecuta formato, vet, tests y race detector.
+CI proporciona las tres y ejecuta formato, vet, tests y race detector.
 
 ```sh
 export TEST_DATABASE_URL=postgres://test:password@127.0.0.1:5432/cubeos_http_test
 export TEST_MIGRATION_DATABASE_URL=postgres://test:password@127.0.0.1:5432/cubeos_migrations_test
+export TEST_INGESTION_DATABASE_URL=postgres://test:password@127.0.0.1:5432/cubeos_ingestion_test
 pnpm --filter @cubeos/api test
 pnpm --filter @cubeos/api lint
 ```

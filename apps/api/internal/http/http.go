@@ -9,6 +9,7 @@ import (
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/devices"
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/identity"
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/storage"
+	"github.com/Edwarmkaer/cubeos/apps/api/internal/telemetry"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"io"
@@ -31,6 +32,9 @@ type DeviceStore interface {
 }
 
 func New(c config.Config, p *pgxpool.Pool, d DeviceStore, resolve Resolver) http.Handler {
+	return NewWithTelemetry(c, p, d, telemetry.NewRepository(p), resolve)
+}
+func NewWithTelemetry(c config.Config, p *pgxpool.Pool, d DeviceStore, readings TelemetryStore, resolve Resolver) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Cache-Control", "no-store")
@@ -128,6 +132,15 @@ func New(c config.Config, p *pgxpool.Pool, d DeviceStore, resolve Resolver) http
 			return
 		}
 		id := strings.TrimPrefix(r.URL.Path, collection+"/")
+		parts := strings.Split(id, "/")
+		if len(parts) == 2 {
+			if !uuid(parts[0]) {
+				problem(w, 400, "invalid_id")
+				return
+			}
+			serveTelemetry(ctx, w, r, readings, principal, parts[0], parts[1])
+			return
+		}
 		if !uuid(id) {
 			problem(w, 400, "invalid_id")
 			return
@@ -204,6 +217,10 @@ func handleError(w http.ResponseWriter, err error) bool {
 		problem(w, 404, "not_found")
 	case errors.Is(err, devices.ErrInvalid):
 		problem(w, 400, "invalid_device")
+	case errors.Is(err, telemetry.ErrQuery):
+		problem(w, 400, "invalid_query")
+	case errors.Is(err, telemetry.ErrSnapshotUnavailable):
+		problem(w, 404, "snapshot_unavailable")
 	default:
 		problem(w, 503, "storage_unavailable")
 	}

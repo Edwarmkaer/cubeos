@@ -15,6 +15,7 @@ import (
 	api "github.com/Edwarmkaer/cubeos/apps/api/internal/http"
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/identity"
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/storage"
+	"github.com/Edwarmkaer/cubeos/apps/api/internal/telemetry"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -43,8 +44,21 @@ func run() error {
 	}
 	defer pool.Close()
 	if len(os.Args) > 1 {
+		if len(os.Args) == 2 && os.Args[1] == "fixture" {
+			return fixture(ctx, pool, os.Stdin, os.Stdout)
+		}
+		if len(os.Args) == 3 && os.Args[1] == "rebuild" {
+			principal, e := identity.Local(ctx, pool)
+			if e != nil {
+				return errors.New("local profile unavailable")
+			}
+			if e = telemetry.NewRepository(pool).Rebuild(ctx, principal, os.Args[2]); e != nil {
+				return errors.New("rebuild failed; check ownership, database and evidence")
+			}
+			return nil
+		}
 		if len(os.Args) != 2 || os.Args[1] != "migrate" {
-			return errors.New("usage: server [migrate]")
+			return errors.New("usage: server [migrate | fixture | rebuild DEVICE_UUID]")
 		}
 		migrationCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
 		defer cancel()
