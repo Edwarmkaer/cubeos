@@ -77,7 +77,8 @@ func NewWithMedia(c config.Config, p *pgxpool.Pool, d DeviceStore, readings Tele
 		w.Header().Set("Cache-Control", "no-store")
 		host, port, err := net.SplitHostPort(r.Host)
 		ip := net.ParseIP(host)
-		if (c.Mode == "public" && r.Host != c.PublicAPIHost) || (c.Mode != "public" && (err != nil || port != c.Port || (host != "localhost" && (ip == nil || !ip.IsLoopback())))) {
+		railwayReady := c.Mode == "public" && c.RailwayHealthcheck && r.Host == "healthcheck.railway.app" && r.Method == "GET" && r.URL.Path == "/readyz" && r.URL.RawQuery == ""
+		if (c.Mode == "public" && r.Host != c.PublicAPIHost && !railwayReady) || (c.Mode != "public" && (err != nil || port != c.Port || (host != "localhost" && (ip == nil || !ip.IsLoopback())))) {
 			problem(w, 403, "host_forbidden")
 			return
 		}

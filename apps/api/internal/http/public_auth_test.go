@@ -61,6 +61,9 @@ func TestPublicIdentityOwnershipRevocationAndBrowser(t *testing.T) {
 	}
 	provider := authfixture.New(t)
 	origin := "http://localhost:3118"
+	if override := os.Getenv("CUBEOS_AUTH_BROWSER_ORIGIN"); override != "" {
+		origin = override
+	}
 	server := httptest.NewUnstartedServer(nil)
 	server.StartTLS()
 	defer server.Close()

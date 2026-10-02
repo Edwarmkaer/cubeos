@@ -10,7 +10,7 @@ let input="";for await(const chunk of process.stdin)input+=chunk;const f=JSON.pa
 const root=fileURLToPath(new URL("../",import.meta.url));
 const bundle=await build({absWorkingDir:root,entryPoints:["tests/media-browser-fixture.tsx"],bundle:true,write:false,platform:"browser",jsx:"automatic",define:{"process.env.NODE_ENV":'"production"'},alias:{"next/image":fileURLToPath(new URL("./media-test-image.tsx",import.meta.url))}});
 const server=createServer((req,res)=>{res.setHeader("Content-Type",req.url==="/fixture.js"?"text/javascript":"text/html");res.end(req.url==="/fixture.js"?bundle.outputFiles[0].text:'<!doctype html><html><div id="root"></div><script src="/fixture.js"></script></html>')});
-server.listen(3134,"127.0.0.1");await once(server,"listening");let browser;
+server.listen(Number(new URL(f.origin).port),"127.0.0.1");await once(server,"listening");let browser;
 const original=Buffer.from(f.original,"base64");
 try{
  browser=await chromium.launch({headless:true});const context=await browser.newContext({ignoreHTTPSErrors:true,acceptDownloads:true});await context.addInitScript(v=>{window.mediaFixture=v},f);

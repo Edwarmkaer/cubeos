@@ -108,7 +108,8 @@ local/secrets de la instalación, nunca por browser persistent storage ni Git.
 No cambiar backend/root/bucket esperando una migración automática. Filas de otro
 backend se muestran pendientes y no se leen del proveedor actual. Una instalación
 no sincroniza con otra. No hay purga automática ni garantía de durabilidad del
-proveedor/costo cero; backups de DB **y objetos** corresponden a PR11.
+proveedor/costo cero; backups operativos de DB **y objetos**:
+[recuperación](backups.md).
 
 ## Fallos y reconciliación
 

@@ -62,7 +62,7 @@ jobs:
   ci-required:
     name: ci-required
     if: ${{ always() }}
-    needs: [web, contracts, go, docker, browser, auth, media]
+    needs: [web, contracts, go, docker, browser, auth, media, recovery]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -75,7 +75,33 @@ jobs:
           BROWSER_RESULT: ${{ needs.browser.result }}
           AUTH_RESULT: ${{ needs.auth.result }}
           MEDIA_RESULT: ${{ needs.media.result }}
-        run: test "$WEB_RESULT" = success && test "$CONTRACTS_RESULT" = success && test "$GO_RESULT" = success && test "$DOCKER_RESULT" = success && test "$BROWSER_RESULT" = success && test "$AUTH_RESULT" = success && test "$MEDIA_RESULT" = success
+          RECOVERY_RESULT: ${{ needs.recovery.result }}
+        run: test "$WEB_RESULT" = success && test "$CONTRACTS_RESULT" = success && test "$GO_RESULT" = success && test "$DOCKER_RESULT" = success && test "$BROWSER_RESULT" = success && test "$AUTH_RESULT" = success && test "$MEDIA_RESULT" = success && test "$RECOVERY_RESULT" = success
+
+  recovery:
+    name: restore-railway-config
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .node-version
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+        with:
+          run_install: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: .go-version
+          cache-dependency-path: apps/api/go.sum
+      - name: Evaluate offline Railway configuration with pinned SDK
+        run: |
+          pnpm install --frozen-lockfile
+          node --experimental-strip-types --test infra/railway/config.test.mjs
+      - name: Real private recovery, TLS proxy and container gates
+        run: bash infra/recovery/tests/run.sh
 
   browser:
     name: browser-live-telemetry

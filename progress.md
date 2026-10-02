@@ -2,6 +2,53 @@
 
 Actualizado: 2026-10-02.
 
+## PR 11 — Preparación Railway y recuperación
+
+Base PR10 integrada `fca07e8641adb6289d3817743fd0d82f09c18531`; rama
+`chore/railway-deployment`. Configuración IaC evaluable sin red, imágenes por SHA,
+predeploy de migración, readiness y autenticación pública runtime. Operación y
+costes tienen dueño en [despliegue](docs/deployment.md); procedimiento consistente,
+guardas, variables y límites en [backups](docs/backups.md). El workflow publica
+GHCR exclusivamente desde main/tags confiables; no ejecuta despliegues.
+
+Recovery conserva dump con datos y objetos privados no vacíos con SHA/tamaño,
+propiedad A/B, credenciales, progreso, raw/historial y proyecciones. Restauración
+solo a DB/store nuevos explícitos y vacíos; valida archive antes de escribir,
+objetos primero y DB transaccional al final. Fallo ordinario limpia solo objetos
+de ese intento; retry probado tras reparar permisos, sin sobrescribir destinos.
+CI añade `restore-railway-config` obligatorio sin retirar gates anteriores.
+
+Verificación local: lint/tipos/tests estrictos sin caché (17 tareas), Go race con
+PG y objetos locales/S3, proxy TLS/SSE firmado con expiración, uploads acotados y
+original SHA, tres imágenes sin root con PORT/runtime auth/migración/readiness,
+restore con clientes PostgreSQL reales dentro de la imagen. También gates de
+navegador firmado para identidad, progreso y fotografías, y web runtime local
+sin autenticación remota/público fail-closed. Compose offline/persistencia y
+cold-start TCP con navegador real desktop/móvil también pasan. Resultados finales
+de CI se reportan en la entrega por SHA.
+
+Recursos exclusivos en `/home/edwar/cubeos-snapshots/pr11`: archives privados,
+logs y envfiles efímeros; PG 55471–55473, S3 59071–59072, web/API y fixtures en
+3148–3158/8148–8150. Se detienen solo recursos propios; se conservan volúmenes.
+Build web inicial falló por builder legacy; plugin BuildKit privado verificado
+por checksum oficial permitió repetir el build completo. Turbo inicial filtró
+variables de pruebas PG/S3: se corrigió su allowlist, sin relajar ejecución.
+
+Pendientes externos explícitos: cuentas/destino Railway, volumen/políticas reales,
+Google/Clerk autorizado, smoke HTTPS del edge/proveedor, publicación GHCR tras
+merge y restore cloud descartable. Pozo/DESIGN draft y schemas originales
+preservados. Revisión independiente y merge pertenecen al chat raíz; no avanzar
+PR12 desde esta entrega.
+
+Corrección de revisión PR11: la restauración inicial validaba solo los objetos
+listados, sin cruzarlos con las referencias de DB. Ocho regresiones CLI reales
+local/S3 reprodujeron éxito indebido para omisión de original/miniatura y SHA/tamaño
+discrepantes. Ahora SQL y validación de `photos` comparten una transacción psql;
+el commit requiere referencias e identidad de originales consistentes. El fallo
+revierte DB y limpia únicamente los objetos copiados. Pending sin original y
+derivado NULL se preservan; se prueban retry válido e igualdad de todas las filas.
+Recovery requiere los tres clientes PostgreSQL 17: pg_dump, pg_restore y psql.
+
 ## PR 10 — Fotografías privadas local/S3
 
 Base PR9 integrada `26649d889d57f2dc12e288558cc4bc2b8f051662`; rama

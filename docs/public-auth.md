@@ -34,7 +34,8 @@ En local, web no monta ni solicita Clerk y API no consulta JWKS/sesiones. El
 Compose local mantiene su perfil y puertos loopback. No convertir ese Compose
 en público cambiando únicamente la publicación de puertos: público necesita
 TLS, origen/Host y todas las variables anteriores. Tras el proxy, conservar el
-Host configurado; `X-Forwarded-Host` no concede permisos. Readiness comprueba DB
+Host configurado; `X-Forwarded-Host` no concede permisos. La excepción limitada
+de healthcheck Railway vive en [deployment](deployment.md). Readiness comprueba DB
 y migraciones; no acredita conectividad/configuración del proveedor.
 
 Público con key web ausente/formato roto muestra acceso cerrado. SDK/configuración

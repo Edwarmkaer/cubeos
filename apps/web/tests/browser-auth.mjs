@@ -15,7 +15,7 @@ const server = createServer((req, res) => {
   if (req.url === "/fixture.js") { res.setHeader("Content-Type", "text/javascript"); res.end(bundle.outputFiles[0].text); }
   else { res.setHeader("Content-Type", "text/html"); res.end('<!doctype html><html lang="es"><meta charset="utf-8"><title>Isolated signed auth fixture</title><div id="root"></div><script src="/fixture.js"></script></html>'); }
 });
-server.listen(3118, "127.0.0.1"); await once(server, "listening");
+server.listen(Number(new URL(fixture.origin).port), "127.0.0.1"); await once(server, "listening");
 let browser;
 try {
   browser = await chromium.launch({ headless: true });
