@@ -24,6 +24,12 @@ Recursos exclusivos PR6: PostgreSQL `cubeos-pr6-test-pg`, puerto 55436, volumen
 borran volúmenes. Revisión independiente y merge corresponden al chat raíz.
 No iniciar PR7 ni afirmar hardware físico probado desde este chat.
 
+Corrección PR6: las colas del hub normalizan únicamente la clave UUID de
+dispositivo. Alias de URL en mayúsculas reciben el NOTIFY canónico de PostgreSQL
+sin esperar heartbeat; el ID SSE conserva el UUID solicitado y el cliente lo
+comprueba exactamente. Identidad/bearer no se normalizan. Regresión PG red sin
+normalización→green, dos streams simultáneos y CLI tipado con UUID uppercase.
+
 ## PR 5 — Serial USB/UART y HTTP Wi-Fi
 
 Base PR4 integrada: [PR #5](https://github.com/Edwarmkaer/cubeos/pull/5), merge

@@ -4,6 +4,7 @@ package realtime
 import (
 	"context"
 	"github.com/jackc/pgx/v5"
+	"strings"
 	"sync"
 	"time"
 )
@@ -18,6 +19,7 @@ type Hub struct {
 
 func NewHub() *Hub { return &Hub{subscribers: make(map[string]map[chan struct{}]struct{})} }
 func (h *Hub) Subscribe(device string) (<-chan struct{}, func()) {
+	device = strings.ToLower(device)
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	ch := make(chan struct{}, 1)
@@ -45,6 +47,7 @@ func (h *Hub) Subscribe(device string) (<-chan struct{}, func()) {
 	}
 }
 func (h *Hub) Notify(device string) {
+	device = strings.ToLower(device)
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	for ch := range h.subscribers[device] {

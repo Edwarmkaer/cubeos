@@ -46,3 +46,16 @@ func TestHubConcurrentCleanup(t *testing.T) {
 		t.Fatal("closed hub admitted connection")
 	}
 }
+
+func TestHubUUIDCaseAliasesReceiveCommittedInvalidation(t *testing.T) {
+	h := NewHub()
+	defer h.Close()
+	ch, cancel := h.Subscribe("AAAAAAAA-AAAA-4AAA-8AAA-AAAAAAAAAAAA")
+	defer cancel()
+	h.Notify("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa")
+	select {
+	case <-ch:
+	default:
+		t.Fatal("valid uppercase UUID missed committed update")
+	}
+}

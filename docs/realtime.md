@@ -43,6 +43,10 @@ SSE con Bearer en header; en local `getToken` devuelve null. Deduplica ambos por
 revisión exacta. El wire mantiene los números originales: `revisionId` es un
 string decimal adicional del cliente, apto para `BigInt`, porque `revision` como
 number pierde precisión sobre 2^53. No usar ese number para ordenar o deduplicar.
+El hub normaliza solo su clave de dispositivo: URLs con UUID en mayúsculas
+reciben avisos del UUID canónico de PostgreSQL. El evento conserva el UUID
+solicitado en su ID, que el cliente compara exactamente; bearer/identidad no se
+transforman.
 Los esquemas y fixtures originales de hardware se conservan intactos.
 
 EOF, cortes de red y HTTP 408/429/5xx reconectan con backoff 250 ms→10 s. HTTP

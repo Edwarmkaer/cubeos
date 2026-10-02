@@ -129,6 +129,64 @@ func TestPostgresCommittedIngestionToAuthorizedSSE(t *testing.T) {
 	if _, err = notice.Exec(ctx, "LISTEN cubeos_snapshot"); err != nil {
 		t.Fatal(err)
 	}
+	// Both LISTEN sessions must be ready before subscribing. Otherwise the hub's
+	// reconnect reconciliation could hide a broken UUID notification key.
+	listenDeadline := time.Now().Add(3 * time.Second)
+	for {
+		var listening int
+		if err = pool.QueryRow(ctx, "SELECT count(*) FROM pg_stat_activity WHERE datname=current_database() AND query='LISTEN cubeos_snapshot' AND state='idle'").Scan(&listening); err != nil {
+			t.Fatal(err)
+		}
+		if listening >= 2 {
+			break
+		}
+		if time.Now().After(listenDeadline) {
+			t.Fatal("hub listener not ready")
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	uppercaseID := strings.ToUpper(d.ID)
+	upperRequest, err := http.NewRequestWithContext(ctx, "GET", server.URL+"/api/v1/devices/"+uppercaseID+"/events", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	upperRequest.Host = "127.0.0.1:8080"
+	upperRequest.Header.Set("Authorization", "Bearer owner-A")
+	upperResponse, err := server.Client().Do(upperRequest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer upperResponse.Body.Close()
+	if upperResponse.StatusCode != 200 {
+		t.Fatal("uppercase UUID refused", upperResponse.StatusCode)
+	}
+	type upperEvent struct{ id, data string }
+	upperUpdates := make(chan upperEvent, 8)
+	go func() {
+		scanner := bufio.NewScanner(upperResponse.Body)
+		eventID := ""
+		for scanner.Scan() {
+			line := scanner.Text()
+			if strings.HasPrefix(line, "id: ") {
+				eventID = strings.TrimPrefix(line, "id: ")
+			}
+			if strings.HasPrefix(line, "data: ") {
+				upperUpdates <- upperEvent{eventID, strings.TrimPrefix(line, "data: ")}
+			}
+		}
+	}()
+	expectUpper := func(revision int64) {
+		t.Helper()
+		select {
+		case event := <-upperUpdates:
+			var payload realtime.SnapshotEvent
+			if err := json.Unmarshal([]byte(event.data), &payload); err != nil || payload.Revision != revision || event.id != fmt.Sprintf("%s:%d", uppercaseID, revision) {
+				t.Fatal("uppercase event identity/revision", event, err)
+			}
+		case <-time.After(time.Second):
+			t.Fatal("uppercase UUID stream missed committed notification before heartbeat")
+		}
+	}
 	response, err := request("/events", "owner-A")
 	if err != nil {
 		t.Fatal(err)
@@ -186,6 +244,7 @@ func TestPostgresCommittedIngestionToAuthorizedSSE(t *testing.T) {
 		t.Fatal("first rejected")
 	}
 	expect(1)
+	expectUpper(1)
 	wait, c := context.WithTimeout(ctx, time.Second)
 	notification, e := notice.WaitForNotification(wait)
 	c()
@@ -231,6 +290,7 @@ func TestPostgresCommittedIngestionToAuthorizedSSE(t *testing.T) {
 		t.Fatal("revision")
 	}
 	expect(2)
+	expectUpper(2)
 	wait, c = context.WithTimeout(ctx, time.Second)
 	notification, e = notice.WaitForNotification(wait)
 	c()

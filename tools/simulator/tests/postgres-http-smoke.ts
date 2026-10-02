@@ -40,7 +40,9 @@ try {
   const revisions: bigint[] = [];
   let connected!: () => void;
   const connection = new Promise<void>(resolve => { connected = resolve; });
-  const streaming = new APIClient(base).subscribeTelemetry(device.id, {
+  // The URL alias remains valid and its exact event ID matches this consumer;
+  // PostgreSQL NOTIFY uses the canonical lowercase UUID independently.
+  const streaming = new APIClient(base).subscribeTelemetry(device.id.toUpperCase(), {
     getToken: () => null, signal: AbortSignal.any([streamAbort.signal, AbortSignal.timeout(15000)]),
     onConnection: state => { if (state === "connected") connected(); },
     onSnapshot: event => { revisions.push(BigInt(event.revisionId)); if (event.revisionId === "10") streamAbort.abort(); },
