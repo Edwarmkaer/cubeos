@@ -1,7 +1,7 @@
 import type { SnapshotEvent } from "@cubeos/api-client";
 import type { FieldFreshness } from "@cubeos/contracts";
 
-export type ReadingState = "pending" | "current" | "stale" | "unknown_age" | "not_installed" | "unavailable";
+export type ReadingState = "pending" | "unverified" | "current" | "stale" | "unknown_age" | "not_installed" | "unavailable";
 export type Reading = { value: number | null; state: ReadingState; ageSeconds: number | null };
 export type ReadingHistory = Record<string, { value: number; evidence: FieldFreshness }[]>;
 export const chartFields = [
@@ -30,6 +30,7 @@ export function reading(event: SnapshotEvent | null, path: string, now: number):
   const sensor = path.startsWith("sensors.") ? path.split(".").slice(0, 2).join(".") : path.split(".")[0];
   const status = valueAt(event.snapshot, `${sensor}.status`);
   const { ageSeconds, state } = fieldAge(event, path, now);
+  if (status === "unverified") return { value: null, state: "unverified", ageSeconds };
   if (status === "unavailable" || status === "not_installed" || status === "monitor_not_installed") {
     return { value: null, state: status === "unavailable" ? "unavailable" : "not_installed", ageSeconds };
   }

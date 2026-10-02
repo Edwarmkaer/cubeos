@@ -10,7 +10,7 @@ let tokenGetter: (() => string | null | Promise<string | null>) | null = null;
 export function setPublicTokenGetter(getter: typeof tokenGetter) {
   tokenGetter = getter;
   const s = useTelemetryStore.getState();
-  if (s.selection.mode === "public") s.select(s.selection);
+  if (s.selection.mode === "public") s.select({ ...s.selection, deviceId: "", deviceName: "" });
 }
 export async function sourceToken(mode: SourceSelection["mode"]) {
   if (mode !== "public") return null;

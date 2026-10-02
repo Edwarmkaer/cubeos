@@ -2,9 +2,10 @@
 import assert from "node:assert/strict";
 import { spawn, execFileSync } from "node:child_process";
 import { once } from "node:events";
-import { mkdir } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { setTimeout as delay } from "node:timers/promises";
 import { chromium } from "playwright";
+import { reading, appendReadings, chartFields, gpsPosition } from "../src/lib/real-telemetry.ts";
 
 const binary = process.env.CUBEOS_API_BINARY;
 const database = process.env.TEST_BROWSER_DATABASE_URL;
@@ -25,9 +26,9 @@ async function ready() {
   for (let i = 0; i < 100; i++) { try { if ((await fetch(base + "/readyz")).ok) return; } catch { /* bounded startup */ } if (api.exitCode !== null) throw new Error("API exited"); await delay(100); }
   throw new Error("API readiness timeout");
 }
-async function request(path, method = "GET", body, credential) {
+async function request(path, method = "GET", body, credential, expectedStatus) {
   const response = await fetch(base + path, { method, signal: AbortSignal.timeout(5000), headers: { "Content-Type": "application/json", ...(credential && { Authorization: `Bearer ${credential}` }) }, ...(body && { body: JSON.stringify(body) }) });
-  assert.ok(response.ok, `HTTP ${response.status} on ${path}`); return response.status === 204 ? null : response.json();
+  assert.ok(expectedStatus ? response.status === expectedStatus : response.ok, `HTTP ${response.status} on ${path}`); return response.status === 204 ? null : response.json();
 }
 let browser;
 try {
@@ -52,6 +53,56 @@ try {
   await page.screenshot({ path: `${evidence}/waiting-desktop.png` });
   await page.getByRole("link", { name: "Configurar fuente" }).click();
   await page.getByLabel("URL de API").fill(base);
+  await page.getByRole("button", { name: "Consultar dispositivos" }).click();
+  await page.getByLabel("Dispositivo", { exact: true }).selectOption(device.id);
+  // Delay an actual successful API write response. User intent must beat its old draft.
+  await page.getByLabel("Modo sin Internet (sin mapa remoto)").uncheck();
+  await page.getByLabel("Nombre visible").fill("PR7 Delayed Create");
+  await page.getByLabel("Identificador de vuelo").fill("CS04");
+  let releaseCreate;
+  const createHeld = new Promise(resolve => { releaseCreate = resolve; });
+  let createdResponse;
+  const createWritten = new Promise(resolve => { createdResponse = resolve; });
+  const holdCreate = async route => {
+    if (route.request().method() !== "POST") return route.continue();
+    const response = await route.fetch();
+    assert.equal(response.status(), 201);
+    createdResponse(); await createHeld;
+    await route.fulfill({ response }).catch(() => {}); // client may have cancelled after the server write
+  };
+  await context.route(base + "/api/v1/devices", holdCreate);
+  await page.getByRole("button", { name: "Registrar dispositivo", exact: true }).click();
+  await createWritten;
+  await page.getByLabel("Modo sin Internet (sin mapa remoto)").check();
+  releaseCreate(); await delay(500);
+  assert.equal(await page.getByLabel("Modo sin Internet (sin mapa remoto)").isChecked(), true, "late create restored the old offline choice");
+  assert.equal(await page.getByLabel("Dispositivo", { exact: true }).inputValue(), device.id, "late create changed the user's selected device");
+  assert.equal(await page.getByLabel("Dispositivo", { exact: true }).locator("option").filter({ hasText: "PR7 Delayed Create" }).count(), 0, "late create leaked stale owned rows");
+  assert.equal(await page.locator("main").getByRole("alert").count(), 0);
+  assert.ok((await request("/api/v1/devices")).some(d => d.name === "PR7 Delayed Create"), "cancel must not pretend to undo the server write");
+  await context.unroute(base + "/api/v1/devices", holdCreate);
+  await page.getByRole("button", { name: "Consultar dispositivos" }).click();
+  await page.getByLabel("Dispositivo", { exact: true }).selectOption(device.id);
+  // A mode change clears already loaded private rows and ignores an in-flight list.
+  let releaseList; const listHeld = new Promise(resolve => { releaseList = resolve; });
+  let listResponse; const listRead = new Promise(resolve => { listResponse = resolve; });
+  const holdList = async route => {
+    const response = await route.fetch(); listResponse(); await listHeld;
+    await route.fulfill({ response }).catch(() => {});
+  };
+  await context.route(base + "/api/v1/devices", holdList);
+  await page.getByRole("button", { name: "Consultar dispositivos" }).click();
+  await listRead;
+  await page.getByLabel("Origen", { exact: true }).selectOption("public");
+  releaseList(); await delay(500);
+  assert.equal(await page.getByLabel("Origen", { exact: true }).inputValue(), "public");
+  assert.equal(await page.getByLabel("Dispositivo", { exact: true }).inputValue(), "");
+  assert.doesNotMatch(await page.getByLabel("Dispositivo", { exact: true }).innerText(), /PR7 Browser|PR7 Delayed/);
+  assert.equal(await page.getByLabel("Nombre visible").inputValue(), "");
+  assert.equal(await page.locator("main").getByRole("alert").count(), 0);
+  assert.equal(await page.getByRole("button", { name: "Consultar dispositivos" }).isEnabled(), true);
+  await context.unroute(base + "/api/v1/devices", holdList);
+  await page.getByLabel("Origen", { exact: true }).selectOption("local");
   await page.getByRole("button", { name: "Consultar dispositivos" }).click();
   await page.getByLabel("Dispositivo", { exact: true }).selectOption(device.id);
   // Browser REST creation and rename go through exact-origin CORS/Host checks.
@@ -109,6 +160,68 @@ try {
   await request("/api/v1/ingestion/packets", "POST", { envelopeVersion: 1, payload: { ...h, n: 12, u: 3000, fl: 24, cam: 0, fx: 3 } }, source.credential);
   await expectText(/Revisión 13/);
   assert.match(await tile("Cámara").innerText(), /Estado de cámara: fallo.*SD fallo/s);
+  // Exercise the actual persisted confirmed-restart projection, not a hand-built snapshot.
+  const rebootDevice = await request("/api/v1/devices", "POST", { name: "PR7 Reboot CubeSat", protocolDeviceId: "CS03" });
+  const rebootSource = await request(`/api/v1/devices/${rebootDevice.id}/sources`, "POST", { transport: "http", gatewayId: "SIMULATOR" });
+  const ingestReboot = payload => request("/api/v1/ingestion/packets", "POST", { envelopeVersion: 1, payload }, rebootSource.credential);
+  const currentReboot = async () => { const projection = await request(`/api/v1/devices/${rebootDevice.id}/snapshot`); return { ...projection, revisionId: String(projection.revision) }; };
+  const beforeBoot = { ...h, id: "CS03", n: 100, u: 60000, fl: 0, fx: 3, t1: 2465, rh: 5210, p1: 100843, gr: 128400, t2: 2459, p2: 100827, ti: 2300, lx: 341, uvr: 1830, uvm: 1474, ax: 0, ay: 0, az: 1000 };
+  await ingestReboot(beforeBoot);
+  const verified = await currentReboot();
+  const rebootPaths = [...chartFields, "sensors.bmp280.temperatureC", "sensors.bmp280.pressurePa", "sensors.tmp102.temperatureC", "sensors.guvaS12sd.sensorMv", "power.batteryVoltageV", "power.batteryCurrentA", "power.batteryPowerW"];
+  const verifiedHistory = appendReadings({}, verified);
+  await page.getByRole("link", { name: "Configurar fuente" }).click();
+  await page.getByRole("button", { name: "Consultar dispositivos" }).click();
+  await page.getByLabel("Dispositivo", { exact: true }).selectOption(rebootDevice.id);
+  await page.getByRole("link", { name: "Visor", exact: true }).first().click();
+  await expectText(/Revisión 1/);
+  const chartBeforeBoot = await tile("Temp").locator("path").evaluateAll(paths => paths.map(p => p.getAttribute("d")));
+  const boot = { v: 2, id: "CS03", m: "H", n: 0, u: 0, t: 0, st: 0, fl: 0, cam: 1, sd: 0, dp: 0 };
+  const candidate = await request("/api/v1/ingestion/packets", "POST", { envelopeVersion: 1, payload: boot }, rebootSource.credential, 422);
+  assert.equal(candidate.cause, "restart_candidate");
+  await ingestReboot({ ...boot, n: 1, u: 500 });
+  const uncertain = await currentReboot();
+  await writeFile(`${evidence}/reboot-projection.json`, JSON.stringify({ verified, uncertain }, null, 2));
+  assert.equal(uncertain.snapshot.missionState, "BOOT");
+  for (const path of rebootPaths) {
+    const priorReading = reading(verified, path, Date.now());
+    assert.notEqual(priorReading.value, null, `pre-restart measurement missing: ${path}`);
+    const uncertainReading = reading(uncertain, path, Date.now());
+    assert.equal(uncertainReading.state, "unverified", `${path} must not appear current after BOOT`);
+    assert.equal(uncertainReading.value, null, `${path} must not be presented as a verified measurement`);
+    assert.notEqual(uncertainReading.ageSeconds, null, `${path} retains its old receipt age`);
+  }
+  assert.equal(gpsPosition(uncertain), null);
+  assert.deepEqual(appendReadings(verifiedHistory, uncertain), verifiedHistory, "BOOT adds no chart evidence");
+  await expectText(/Revisión 2/);
+  for (const title of ["Luz", "Luz UV", "Velocidad angular", "Presión", "Temp", "Humedad", "CubeSat", "GPS"]) assert.match(await tile(title).innerText(), /No verificado/);
+  assert.doesNotMatch(await tile("CubeSat").innerText(), /7\.62|0\.100|0\.762/);
+  assert.deepEqual(await tile("Temp").locator("path").evaluateAll(paths => paths.map(p => p.getAttribute("d"))), chartBeforeBoot);
+  assert.match(await tile("Visor 3D").innerText(), /Actitud pendiente/);
+  await page.screenshot({ path: `${evidence}/reboot-desktop.png` });
+  // E recovery restores only its measured sensors; I, O, power and GPS wait independently.
+  await ingestReboot({ v: 2, id: "CS03", m: "E", n: 2, u: 1000, t: 0, st: 1, fl: 0, t1: 0, rh: 0, p1: 100843, gr: 128400, t2: 2459, p2: 100827 });
+  const environmental = await currentReboot();
+  assert.equal(reading(environmental, "sensors.bme680.temperatureC", Date.now()).value, 0);
+  assert.equal(reading(environmental, "sensors.bme680.temperatureC", Date.now()).state, "current");
+  const environmentHistory = appendReadings(verifiedHistory, environmental);
+  assert.equal(environmentHistory["sensors.bme680.temperatureC"].length, 2);
+  assert.equal(environmentHistory["sensors.mpu6050.angularRateDps.x"].length, 1);
+  for (const path of ["sensors.mpu6050.angularRateDps.x", "sensors.bh1750.illuminanceLux", "sensors.tmp102.temperatureC", "power.batteryVoltageV"]) assert.equal(reading(environmental, path, Date.now()).state, "unverified");
+  await expectText(/Revisión 3/);
+  assert.match(await tile("Temp").innerText(), /0\.00.*°C/s);
+  await ingestReboot({ v: 2, id: "CS03", m: "I", n: 3, u: 1500, t: 0, st: 1, fl: 0, ax: 0, ay: 0, az: 1000, gx: 0, gy: 0, gz: 0 });
+  const inertial = await currentReboot();
+  assert.equal(reading(inertial, "sensors.mpu6050.angularRateDps.x", Date.now()).state, "current");
+  assert.equal(reading(inertial, "sensors.mpu6050.angularRateDps.x", Date.now()).value, 0);
+  assert.equal(reading(inertial, "power.batteryVoltageV", Date.now()).state, "unverified");
+  assert.equal(reading(inertial, "sensors.guvaS12sd.adcRaw", Date.now()).state, "unverified");
+  assert.equal(gpsPosition(inertial), null);
+  const inertialHistory = appendReadings(environmentHistory, inertial);
+  assert.equal(inertialHistory["sensors.mpu6050.angularRateDps.x"].length, 2);
+  assert.equal(inertialHistory["sensors.bme680.temperatureC"].length, 2);
+  assert.equal(inertialHistory["sensors.guvaS12sd.adcRaw"].length, 1);
+  await expectText(/Revisión 4/);
   // Device change removes all old state immediately; no synthetic fallback.
   await page.getByRole("link", { name: "Configurar fuente" }).focus();
   await page.keyboard.press("Enter");

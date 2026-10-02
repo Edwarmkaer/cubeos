@@ -28,6 +28,13 @@ sin afirmar que checks pendientes pasaron. Recursos exclusivos PR7: PG
 3108/3109, API de prueba 8087. Evidencia ignorada `pr7-*` en workspace SDD.
 Revisión independiente, CI exact SHA y merge corresponden al chat raíz.
 
+Correcciones de revisión en la misma PR: reinicio confirmado con grupos
+`unverified` y respuestas tardías en Configuración tuvieron regresiones rojas
+antes del arreglo. Proyección API/PG, recuperación E/I, cancelación de creación/
+lista y cambio de modo pasan en navegador; cambio de identidad borra UUID/nombre.
+Semántica y operación siguen en [visor](docs/visor-telemetry.md). Revisión y CI
+deben repetirse para el SHA corregido; el resultado del head anterior no lo valida.
+
 ## PR 6 — SSE y cliente API tipado
 
 Base PR5 integrada: [PR #6](https://github.com/Edwarmkaer/cubeos/pull/6), merge

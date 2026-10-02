@@ -19,7 +19,14 @@ export function SettingsView() {
   const [name, setName] = useState("");
   const [protocolId, setProtocolId] = useState("");
   const operation = useRef<AbortController | null>(null);
-  useEffect(() => () => operation.current?.abort(), []);
+  useEffect(() => {
+    const unsubscribe = useTelemetryStore.subscribe((next, previous) => {
+      if (next.generation === previous.generation) return;
+      operation.current?.abort(); operation.current = null;
+      setDraft(next.selection); setDevices([]); setError(null); setBusy(false); setName(""); setProtocolId("");
+    });
+    return () => { unsubscribe(); operation.current?.abort(); };
+  }, []);
   function change(next: SourceSelection) {
     operation.current?.abort(); setBusy(false); setError(null); setDevices([]);
     const empty = { ...next, deviceId: "", deviceName: "" };
@@ -27,18 +34,26 @@ export function SettingsView() {
   }
   async function request(kind: "list" | "create" | "rename") {
     operation.current?.abort(); const c = new AbortController(); operation.current = c;
+    const generation = useTelemetryStore.getState().generation;
+    const live = () => !c.signal.aborted && operation.current === c && useTelemetryStore.getState().generation === generation;
     setError(null); setBusy(true);
     try {
-      validateSelection(draft); const token = await sourceToken(draft.mode); c.signal.throwIfAborted();
+      validateSelection(draft); const token = await sourceToken(draft.mode); if (!live()) return;
       const api = new APIClient(draft.apiURL);
       const device = kind === "create" ? await api.createDevice({ name, protocolDeviceId: protocolId }, token, c.signal)
         : kind === "rename" ? await api.renameDevice(draft.deviceId, name, token, c.signal) : null;
+      if (!live()) return;
       const rows = await api.listDevices(token, c.signal);
-      if (c.signal.aborted) return;
+      if (!live()) return;
+      if (device) {
+        // This synchronous selection is this operation's result. External changes
+        // already invalidate it, including identity changes with the same origin.
+        operation.current = null; setBusy(false);
+        select({ ...draft, deviceId: device.id, deviceName: device.name });
+      }
       setDevices(rows);
-      if (device) { const next = { ...draft, deviceId: device.id, deviceName: device.name }; setDraft(next); select(next); }
-    } catch (e) { if (!c.signal.aborted) setError(e instanceof Error ? e.message : "No se pudo consultar la API"); }
-    finally { if (!c.signal.aborted) setBusy(false); }
+    } catch (e) { if (live()) setError(e instanceof Error ? e.message : "No se pudo consultar la API"); }
+    finally { if (live()) { operation.current = null; setBusy(false); } }
   }
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">

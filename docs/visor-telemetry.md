@@ -23,6 +23,10 @@ Clerk corresponde a PR8; sin sesión, la consulta falla antes de contactar al
 servidor. No existe token de prueba en producción, fallback local, credencial en
 URL ni almacenamiento de bearer. Cambiar el getter invalida la sesión del visor.
 Las credenciales de ingestión pertenecen al receptor; no se introducen en web.
+Cambiar identidad pública borra también UUID/nombre elegidos. Mientras está abierta,
+Configuración invalida operaciones pendientes y vacía lista, campos de formulario
+y errores al cambiar la generación de fuente, dispositivo o identidad. Una escritura
+ya aceptada por el servidor no se deshace al cancelar; puede consultarse de nuevo.
 
 El visor hace REST current snapshot y fetch SSE con `@cubeos/api-client`. Al
 reconectar recibe el estado actual, sin replay de historia. La revisión decimal
@@ -49,6 +53,10 @@ evidencia se indica antigüedad desconocida. Las tendencias guardan hasta 60 pun
 válidos por campo, solo cuando su evidencia avanza; rechazos, duplicados y cambios
 de otros campos no agregan ceros ni repiten puntos. Los campos omitidos conservan
 su recibo previo y su edad independiente.
+El estado `unverified` se presenta como **No verificado**, con la edad del recibo
+retenido y sin mostrarlo como medición vigente ni agregar puntos a las tendencias.
+La regla del backend para reinicios y recuperación de grupos está en
+[telemetría](telemetry.md); recibir evidencia nueva de un grupo no verifica los demás.
 
 GPS acepta coordenadas cero con calidad `fx=2/3`. `fx=0`, `fx=1`, ausencia o fallo
 dejan el mapa esperando; `fx=1` dice calidad desconocida. La trayectoria contiene
@@ -77,6 +85,8 @@ el simulador CLI por HTTP y verifica REST/SSE en Chromium. Incluye pendiente ant
 de ingestión, conversiones, ausencia/falla/fx1/cero, duplicados, reconexión y edad
 durante silencio, cambio de dispositivo/modo, identidad pública cerrada, control
 por teclado y móvil con desplazamiento horizontal intencional del bento.
+Incluye una respuesta tardía de creación real y la proyección PostgreSQL de dos
+BOOT que confirman reinicio, con recuperación independiente por E e I.
 El gate local intercepta y falla ante cualquier intento de egress externo.
 `browser-live-telemetry` ejecuta este flujo con PostgreSQL exclusivo en CI; no
 reemplaza la integración por mocks. `ci-required` exige todos los jobs exitosos.

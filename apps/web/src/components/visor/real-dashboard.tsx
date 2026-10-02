@@ -10,7 +10,7 @@ import { fieldAge, gpsPosition, reading } from "@/lib/real-telemetry";
 import type { Reading } from "@/lib/real-telemetry";
 import type { TelemetryState } from "@/lib/telemetry-store";
 
-const states = { pending: "Esperando lectura", current: "", stale: "Antigua", unknown_age: "Antigüedad desconocida", not_installed: "No instalado", unavailable: "Fallo de sensor" };
+const states = { pending: "Esperando lectura", unverified: "No verificado", current: "", stale: "Antigua", unknown_age: "Antigüedad desconocida", not_installed: "No instalado", unavailable: "Fallo de sensor" };
 function Evidence({ r }: { r: Pick<Reading, "state" | "ageSeconds"> }) {
   return <p className="text-[11px] text-muted-foreground">{states[r.state]}{r.ageSeconds !== null ? ` · hace ${r.ageSeconds} s` : ""}</p>;
 }
@@ -50,7 +50,7 @@ export function RealDashboard({ state }: { state: TelemetryState & { now: number
       <TelemetryMap sample={gps} history={positions} offline={selection.offline} />
       <p className="mt-2 shrink-0 font-mono text-sm text-muted-foreground">{gps ? `${formatValue(gps.gps_lat, 7)}°, ${formatValue(gps.gps_lon, 7)}° · ${gps.gps_alt === null ? "—" : formatValue(gps.gps_alt, 2)} m` : g?.status === "not_installed" ? "GPS no instalado" : g?.status === "unavailable" ? "Fallo de GPS" : g?.fix === 1 ? "Calidad de fix desconocida" : "Sin fix válido"}</p>
       <Evidence r={r("sensors.gps.latitudeDeg")} />
-      <p className="text-xs text-muted-foreground">{gps ? `${value("sensors.gps.speedMps")} m/s · ${value("sensors.gps.headingDeg")}° · ` : ""}{g?.satellites ?? "—"} satélites</p>
+      <p className="text-xs text-muted-foreground">{gps ? `${value("sensors.gps.speedMps")} m/s · ${value("sensors.gps.headingDeg")}° · ` : ""}{value("sensors.gps.satellites", 0)} satélites</p>
       {gps ? <div className="flex flex-wrap gap-x-3 text-[11px] text-muted-foreground">{[["Lon", "longitudeDeg"], ["Alt", "altitudeM"], ["Vel", "speedMps"], ["Rumbo", "headingDeg"], ["Sat", "satellites"]].map(([label, key]) => <div key={key}>{label}<Evidence r={r(`sensors.gps.${key}`)} /></div>)}</div> : null}
     </Tile>
     <Tile title="Presión" className="[grid-area:presion]">{metric("sensors.bme680.pressurePa", "Pa", 0)}

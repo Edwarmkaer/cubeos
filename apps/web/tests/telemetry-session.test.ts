@@ -49,6 +49,8 @@ test("changing public identity clears the old snapshot; public never falls back 
   setPublicTokenGetter(() => "fresh-session-token");
   assert.equal(useTelemetryStore.getState().event, null);
   assert.ok(useTelemetryStore.getState().generation > generation);
+  assert.equal(useTelemetryStore.getState().selection.deviceId, "", "previous account UUID must not survive identity change");
+  assert.equal(useTelemetryStore.getState().selection.deviceName, "", "previous account private device name must not survive identity change");
   assert.equal(await sourceToken("public"), "fresh-session-token");
   setPublicTokenGetter(null);
   await assert.rejects(sourceToken("public"), /Sesión no disponible/);
