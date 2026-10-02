@@ -2,6 +2,41 @@
 
 Actualizado: 2026-10-01.
 
+## PR 5 — Serial USB/UART y HTTP Wi-Fi
+
+Base PR4 integrada: [PR #5](https://github.com/Edwarmkaer/cubeos/pull/5), merge
+`3e4c2d0`. Rama `feat/hardware-transports`. Envelopes v1 NDJSON en reader/puerto
+configurable y POST autenticado invocan el mismo Ingest. Aprovisionamiento y
+revocación por propietario, secreto una sola vez/hash persistido, fuente ligada
+al UUID y gateway registrado. Gestión conserva loopback; escucha privada opt-in
+solo para ingestión. Operación y aceptación pendiente de hardware tienen dueño
+en [transportes](docs/hardware-transports.md); API en [OpenAPI](packages/contracts/openapi/telemetry.yaml).
+
+Red/green: adaptadores inexistentes, transportes CLI inexistentes, receiver null
+aceptado indebidamente y arranque con puerto de ingestión ocupado devolviendo 0.
+Verificación actual: Go formato/vet/race completo con tres bases exclusivas PR5,
+sin skips; reader/PTY y HTTP/PG A/B con CS01 compartido, límites/metadata/revocado,
+paridad de snapshot/historial y cuota de fuentes. CLI real TCP→Go→PG con escucha
+separada, gestión inaccesible en ese borde y diez proyecciones validadas por TS.
+Frozen install, lint/tipos/tests/build JS sin caché pasan. Docker build inicial
+falló descargando módulos Go con HTTP2 INTERNAL_ERROR; reintento/smoke offline y
+runners se reportan al publicar la entrega, no se dan por aprobados aquí.
+Recursos exclusivos: `cubeos-pr5-test-pg`, puerto 55435 y volumen propio; Compose
+`cubeos-pr5-smoke`, API 8085/web 3106. No se borran volúmenes. Evidencia ignorada
+en `.superpowers/sdd/2026-10-01-cubeos-backend/pr5-*`. Frontend, fixtures originales
+y DESIGN draft preservados. Revisión independiente y merge a cargo de raíz;
+no avanzar PR6 desde este chat.
+
+Correcciones de revisión PR5: envelope/receiver validan claves exactas antes del
+decoder Go, evitando aliases case-insensitive y sobrescritura de RSSI. Serial
+acota cada escritura/evidencia y lookup de fuente a 5 s; el worker conserva vida
+independiente y recupera con backoff. Regresiones red/green reproducen variantes
+inválidas y locks PostgreSQL; esquema TS coincide, inválidos auditados no cambian
+proyección. Verificación del nuevo SHA/run se reporta al entregar corrección;
+el CI previo `36953752686` corresponde exclusivamente a `5a8196a`.
+Const numérica del envelope acepta 1.0/1e0 por comparación racional exacta con
+exponente acotado; no coerciona strings ni redondea números diferentes a 1.
+
 ## PR 4 — Ingestión, historial y snapshots
 
 PR3 integrado: [PR #4](https://github.com/Edwarmkaer/cubeos/pull/4), merge `94fb955`.

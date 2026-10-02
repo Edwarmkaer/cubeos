@@ -91,6 +91,7 @@ jobs:
       TEST_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_http_test?sslmode=disable
       TEST_MIGRATION_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_migrations_test?sslmode=disable
       TEST_INGESTION_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_ingestion_test?sslmode=disable
+      TEST_TRANSPORT_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_transport_test?sslmode=disable
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -106,6 +107,7 @@ jobs:
           createdb -h localhost -U postgres cubeos_http_test
           createdb -h localhost -U postgres cubeos_migrations_test
           createdb -h localhost -U postgres cubeos_ingestion_test
+          createdb -h localhost -U postgres cubeos_transport_test
       - name: Format, vet and race tests against PostgreSQL
         working-directory: apps/api
         run: |
@@ -123,6 +125,12 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Validate persisted late snapshots with the shared TypeScript schema
         run: pnpm --filter @cubeos/contracts exec node tests/verify-postgres-snapshots.ts "$RUNNER_TEMP/cubeos-projections"
+      - name: Actual simulator CLI through HTTP and PostgreSQL
+        run: |
+          cd apps/api
+          go build -o "$RUNNER_TEMP/cubeos-api" ./cmd/server
+          cd ../..
+          CUBEOS_API_BINARY="$RUNNER_TEMP/cubeos-api" node tools/simulator/tests/postgres-http-smoke.ts
 
   docker:
     name: docker-local

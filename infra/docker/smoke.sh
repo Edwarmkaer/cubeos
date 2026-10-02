@@ -27,8 +27,14 @@ test "$("${compose[@]}" exec -T web id -u)" != 0
 device=$("${curl_probe[@]}" --fail --silent -H 'Content-Type: application/json' -d '{"name":"Smoke persistente","protocolDeviceId":"CS01"}' "$api_url/api/v1/devices")
 device_id=$(jq -er .id <<<"$device")
 profile_before=$("${compose[@]}" exec -T db psql -U cubeos -d cubeos -Atc "SELECT user_id FROM auth_identities WHERE provider='local' AND subject='installation'")
-# Trusted local fixture command exercises the same transactional ingestion use
-# case as future transports, without adding a credential-free HTTP endpoint.
+# Fixture and authenticated HTTP use the same transactional ingestion service.
+provisioned=$("${curl_probe[@]}" --fail --silent -H 'Content-Type: application/json' -d '{"transport":"http","gatewayId":"docker-smoke"}' "$api_url/api/v1/devices/$device_id/sources")
+source_id=$(jq -er .id <<<"$provisioned")
+source_credential=$(jq -er .credential <<<"$provisioned")
+frame='{"envelopeVersion":1,"payload":{"v":2,"id":"CS01","m":"H","n":0,"u":0,"t":0,"st":1,"fl":0,"cam":0,"sd":0,"dp":0}}'
+ingested=$("${curl_probe[@]}" --fail --silent -H "Authorization: Bearer $source_credential" -H 'Content-Type: application/json' -d "$frame" "$api_url/api/v1/ingestion/packets")
+test "$(jq -er .status <<<"$ingested")" = accepted
+transport_before=$("${curl_probe[@]}" --fail --silent "$api_url/api/v1/devices/$device_id/snapshot" | jq -cS .)
 fixture=$("${compose[@]}" exec -T api server fixture < packages/contracts/fixtures/chasqui-v2/uplink-examples-v2.json)
 telemetry_id=$(jq -er .deviceId <<<"$fixture")
 snapshot_before=$("${curl_probe[@]}" --fail --silent "$api_url/api/v1/devices/$telemetry_id/snapshot" | jq -cS .)
@@ -56,6 +62,9 @@ snapshot_after=$("${offline[@]}" exec -T api wget -T 6 -q -O - "http://127.0.0.1
 history_after=$("${offline[@]}" exec -T api wget -T 6 -q -O - "http://127.0.0.1:${API_PORT:-8080}/api/v1/devices/$telemetry_id/packets" | jq -cS .)
 test "$snapshot_before" = "$snapshot_after"
 test "$history_before" = "$history_after"
+transport_after=$("${offline[@]}" exec -T api wget -T 6 -q -O - "http://127.0.0.1:${API_PORT:-8080}/api/v1/devices/$device_id/snapshot" | jq -cS .)
+test "$transport_before" = "$transport_after"
+test "$("${compose[@]}" exec -T db psql -U cubeos -d cubeos -Atc "SELECT count(*) FROM ingestion_sources WHERE id='$source_id' AND revoked_at IS NULL")" = 1
 "${offline[@]}" exec -T api server rebuild "$telemetry_id"
 rebuilt=$("${offline[@]}" exec -T api wget -T 6 -q -O - "http://127.0.0.1:${API_PORT:-8080}/api/v1/devices/$telemetry_id/snapshot" | jq -cS .)
 test "$snapshot_before" = "$rebuilt"
@@ -77,4 +86,9 @@ done
 "${offline[@]}" down
 "${compose[@]}" up --no-build --pull never -d
 wait_ready
+duplicated=$("${curl_probe[@]}" --fail --silent -H "Authorization: Bearer $source_credential" -H 'Content-Type: application/json' -d "$frame" "$api_url/api/v1/ingestion/packets")
+test "$(jq -er .status <<<"$duplicated")" = duplicated
+"${curl_probe[@]}" --fail --silent -X DELETE "$api_url/api/v1/devices/$device_id/sources/$source_id" >/dev/null
+test "$("${curl_probe[@]}" --silent -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $source_credential" -H 'Content-Type: application/json' -d "$frame" "$api_url/api/v1/ingestion/packets")" = 401
+unset source_credential provisioned
 echo "Smoke passed: non-root, DB-down readiness, persistent device/profile/raw/history/snapshot, deterministic rebuild, blocked-egress boot, offline visor/font and six original photos; loopback installation restored."

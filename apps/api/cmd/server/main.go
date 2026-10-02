@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,9 +15,12 @@ import (
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/devices"
 	api "github.com/Edwarmkaer/cubeos/apps/api/internal/http"
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/identity"
+	"github.com/Edwarmkaer/cubeos/apps/api/internal/ingestion"
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/storage"
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/telemetry"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"go.bug.st/serial"
+	"io"
 )
 
 func main() {
@@ -75,11 +79,63 @@ func run() error {
 		return identity.Local(ctx, pool)
 	}
 	server := &http.Server{Addr: c.Address, Handler: api.New(c, pool, devices.NewRepository(pool), resolver), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 15 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
+	service := ingestion.NewService(ingestion.NewRepository(pool))
+	sources := ingestion.NewSources(pool)
+	var ingress *http.Server
+	if c.SerialPort != "" {
+		startup, cancel := context.WithTimeout(ctx, ingestion.TransportOperationTimeout)
+		principal, e := identity.Local(startup, pool)
+		if e != nil {
+			cancel()
+			return errors.New("serial local identity unavailable")
+		}
+		_, e = sources.ActiveSerial(startup, principal, c.SerialSourceID)
+		cancel()
+		if e != nil {
+			return errors.New("serial source must be active and owned by local profile")
+		}
+		go func() {
+			e := ingestion.RunSerial(ctx, func() (io.ReadCloser, error) {
+				if _, e := sources.ActiveSerial(ctx, principal, c.SerialSourceID); e != nil {
+					return nil, e
+				}
+				port, e := serial.Open(c.SerialPort, &serial.Mode{BaudRate: c.SerialBaud, DataBits: 8, Parity: serial.NoParity, StopBits: serial.OneStopBit})
+				if e != nil {
+					return nil, e
+				}
+				if e = port.SetReadTimeout(250 * time.Millisecond); e != nil {
+					port.Close()
+					return nil, e
+				}
+				return port, nil
+			}, service, c.SerialSourceID, time.Second)
+			if e != nil && !errors.Is(e, context.Canceled) {
+				log.Print("serial adapter stopped")
+			}
+		}()
+	}
+	if c.IngestionAddress != "" {
+		ingress = &http.Server{Addr: c.IngestionAddress, Handler: ingestion.RestrictedHTTP(c.IngestionAddress, ingestion.NewHTTP(service, sources)), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 15 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
+		listener, e := net.Listen("tcp", c.IngestionAddress)
+		if e != nil {
+			return errors.New("ingestion listener cannot bind; refusing startup")
+		}
+		defer listener.Close()
+		go func() {
+			if e := ingress.Serve(listener); e != nil && !errors.Is(e, http.ErrServerClosed) {
+				log.Print("ingestion listener failed")
+				stop()
+			}
+		}()
+	}
 	go func() {
 		<-ctx.Done()
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		_ = server.Shutdown(shutdownCtx)
+		if ingress != nil {
+			_ = ingress.Shutdown(shutdownCtx)
+		}
 	}()
 	log.Printf("local API listening on %s", c.Address)
 	if err = server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {

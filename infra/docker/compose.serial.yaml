@@ -1,0 +1,11 @@
+# Opt-in Linux physical serial device only. No privileged/host network or mounts.
+services:
+  api:
+    devices:
+      - "${SERIAL_HOST_DEVICE:?Choose one physical serial device}:/dev/cubeos-serial:rw"
+    group_add:
+      - "${SERIAL_DEVICE_GID:?Set numeric owning group of the selected device}"
+    environment:
+      SERIAL_PORT: /dev/cubeos-serial
+      SERIAL_BAUD: ${SERIAL_BAUD:?Confirm baudrate with firmware}
+      SERIAL_SOURCE_ID: ${SERIAL_SOURCE_ID:?Provision an owned serial source first}

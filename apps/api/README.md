@@ -1,12 +1,14 @@
-# API local (PR3–PR4)
+# API local (PR3–PR5)
 
 Go 1.27.1 (misma versión en `.go-version`, `go.mod`, Docker y CI), PostgreSQL
 17.6. Persiste identidad/dispositivos, recepciones e historial de telemetría y
 snapshots reconstruibles. La web conserva su demo; todavía no consume esta API.
-Los adaptadores de ingestión, SSE, Clerk, progreso y medios pertenecen
+Serial y HTTP autenticado están disponibles; SSE, Clerk, progreso y medios pertenecen
 a los PRs siguientes del [plan](../../docs/superpowers/plans/2026-10-01-cubeos-backend.md).
 
 ## Desarrollo nativo
+
+Operación USB/UART y Wi-Fi: [transportes](../../docs/hardware-transports.md).
 
 Instalar Go de [la distribución oficial](https://go.dev/dl/), preparar pnpm e
 iniciar PostgreSQL propio. Exportar las variables de `.env.example` en el shell
@@ -27,7 +29,7 @@ automático: restaurar backup y corregir una migración fallida antes de reinten
 
 ## Lecturas de telemetría y fixtures locales
 
-No hay endpoint de ingestión hasta PR5. Con acceso administrativo a la base local,
+Con acceso administrativo a la base local,
 el comando explícito `fixture` crea un dispositivo/fuente propios e ingiere un
 array de 1..200 uplinks (máximo 1 MiB) por el mismo caso de uso transaccional.
 Valida todo el input antes de crear el dispositivo; no modifica fuentes existentes

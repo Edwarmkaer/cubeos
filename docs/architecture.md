@@ -3,7 +3,8 @@
 Estado 2026-10-01: web, UI compartida, contratos hardware v2 y simulador de
 reproducción implementados. PR3 añade API Go local con identidad/dispositivos
 persistidos en PostgreSQL; PR4 añade caso de uso de ingestión, historial y snapshots
-reconstruibles con lecturas REST/CSV. Adaptadores, SSE y auth pública siguen pendientes.
+reconstruibles con lecturas REST/CSV. PR5 añade serial y HTTP por fuente;
+SSE y auth pública siguen pendientes.
 [ADR 0005](adr/0005-backend-local-cloud-media.md),
 [diseño objetivo](superpowers/specs/2026-10-01-cubeos-backend-design.md),
 [modelo de dominio](domain-model.md) y
@@ -20,7 +21,7 @@ FastAPI/SQLite/WebSocket son antecedentes sustituidos.
 | Contrato hardware | `packages/contracts` | Esquemas JSON, tipos y fixtures compartidos TS/Go |
 | Reproducción | `tools/simulator` | Envelopes v1 deterministas NDJSON o fixtures con tiempo lógico |
 | API local | `apps/api` | Health/readiness, identidad/dispositivos, snapshot/historial/CSV con propiedad |
-| Ingestión | `apps/api/internal/ingestion` | Validación/normalización y transacción por fuente registrada; sin transporte expuesto |
+| Ingestión | `apps/api/internal/ingestion` | Validación/normalización y transacción por fuente; adaptadores serial y HTTP |
 | Telemetría | `apps/api/internal/telemetry` | Orden, proyección, procedencia por campo, consultas y reconstrucción |
 | Instalación local | `infra/docker` | Contenedores sin root, PostgreSQL persistente, publicación loopback y runtime verificado sin Internet |
 
@@ -58,7 +59,8 @@ flowchart LR
   Contracts -.-> Client
 ```
 
-Ambos adaptadores de recepción invocarán el mismo `Ingest` ya implementado. Payload compacto
+Ambos adaptadores invocan el mismo `Ingest`. Operación y separación LAN/gestión:
+[transportes](hardware-transports.md). Payload compacto
 intacto, metadatos externos y fuente/tiempo del servidor: [contrato y unidades](telemetry.md).
 LoRa pertenece a la cadena de hardware documental; CubeOS no implementa un
 receptor LoRa. NDJSON serial es una propuesta de framing pendiente con el firmware.
@@ -71,4 +73,4 @@ dependencias; Clerk en público, sin fallback de autenticación.
 
 El snapshot será una proyección de últimas lecturas válidas por grupo, con
 revisión y frescura fuera del objeto legible. REST/SSE comprobarán propiedad.
-Nada de este flujo se presenta todavía como endpoint operativo.
+Ingestión y lecturas REST están operativas; SSE y consumo web quedan pendientes.

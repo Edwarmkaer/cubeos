@@ -67,13 +67,14 @@ export function simulate(options: SimulationOptions = {}): ScheduledPacket[] {
   return packets;
 }
 
-function main() {
+async function main() {
   const { values } = parseArgs({ options: {
     seed: { type: "string" }, "duration-ms": { type: "string" }, gps: { type: "boolean" },
     scenario: { type: "string" }, format: { type: "string", default: "ndjson" }, help: { type: "boolean" },
+    transport: { type: "string" }, url: { type: "string" }, rate: { type: "string" },
   }, allowPositionals: false });
   if (values.help) {
-    process.stdout.write("CubeOS simulator: --seed uint32 --duration-ms 2000..3600000 --gps --scenario normal|duplicate|out-of-order|reboot|failures --format ndjson|fixture\n");
+    process.stdout.write("CubeOS simulator: --seed uint32 --duration-ms 2000..3600000 --gps --scenario normal|duplicate|out-of-order|reboot|failures --format ndjson|fixture [--transport http|serial --url URL --rate 0.1..100]; HTTP credential: CUBEOS_SOURCE_CREDENTIAL; serial streams stdout at rate\n");
     return;
   }
   if (values.format !== "ndjson" && values.format !== "fixture") throw new Error("format must be ndjson or fixture");
@@ -83,13 +84,21 @@ function main() {
     gps: values.gps ?? false,
     scenario: (values.scenario ?? "normal") as Scenario,
   });
-  if (values.format === "fixture") process.stdout.write(`${JSON.stringify(packets, null, 2)}\n`);
+  if (values.transport) {
+    if (values.transport !== "http" && values.transport !== "serial") throw new Error("transport must be http or serial");
+    if (values.format !== "ndjson") throw new Error("transport requires ndjson");
+    const { deliver } = await import("./transports.ts");
+    const controller = new AbortController();
+    const abort = () => controller.abort(); process.once("SIGINT", abort); process.once("SIGTERM", abort);
+    try { await deliver(packets, { transport: values.transport, writer: process.stdout, url: values.url, credential: process.env.CUBEOS_SOURCE_CREDENTIAL, rate: values.rate === undefined ? 1 : Number(values.rate), signal: controller.signal }); }
+    finally { process.removeListener("SIGINT", abort); process.removeListener("SIGTERM", abort); }
+  } else if (values.format === "fixture") process.stdout.write(`${JSON.stringify(packets, null, 2)}\n`);
   else for (const { envelope } of packets) process.stdout.write(`${JSON.stringify(envelope)}\n`);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  try { main(); } catch (error) {
-    process.stderr.write(`CubeOS simulator: ${error instanceof Error ? error.message : String(error)}\n`);
+  main().catch(() => {
+    process.stderr.write("CubeOS simulator: delivery or configuration failed; check input, endpoint and source credential\n");
     process.exitCode = 1;
-  }
+  });
 }

@@ -2,6 +2,22 @@ package config
 
 import "testing"
 
+func TestTransportConfigurationRequiresExplicitPhysicalSettings(t *testing.T) {
+	load := func(extra map[string]string) (Config, error) {
+		extra["DATABASE_URL"] = "postgres://test@localhost/db"
+		return Load(func(k string) string { return extra[k] })
+	}
+	for _, extra := range []map[string]string{{"SERIAL_PORT": "/dev/ttyUSB0"}, {"SERIAL_BAUD": "115200"}, {"SERIAL_SOURCE_ID": "bad"}, {"INGESTION_ADDRESS": "0.0.0.0:8081"}, {"INGESTION_ADDRESS": "8.8.8.8:8081"}, {"INGESTION_ADDRESS": "192.168.1.2:8080"}, {"INGESTION_ADDRESS": "localhost:8081"}, {"SERIAL_PORT": "/dev/ttyUSB0", "SERIAL_BAUD": "0", "SERIAL_SOURCE_ID": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"}} {
+		if _, err := load(extra); err == nil {
+			t.Fatal("unsafe/incomplete transport config", extra)
+		}
+	}
+	c, err := load(map[string]string{"SERIAL_PORT": "/dev/ttyUSB0", "SERIAL_BAUD": "57600", "SERIAL_SOURCE_ID": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", "INGESTION_ADDRESS": "192.168.1.2:8081"})
+	if err != nil || c.SerialBaud != 57600 || c.Address != "127.0.0.1:8080" || c.IngestionAddress != "192.168.1.2:8081" {
+		t.Fatal(c, err)
+	}
+}
+
 func TestLocalDefaultsAndInvalidConfigurations(t *testing.T) {
 	base := map[string]string{"DATABASE_URL": "postgres://test@localhost/db"}
 	load := func(m map[string]string) (Config, error) { return Load(func(k string) string { return m[k] }) }
