@@ -3,7 +3,8 @@
 PR6 implementa `GET /api/v1/devices/{UUID}/events` en la API de gestión. La
 escucha LAN de ingestión sigue exponiendo únicamente POST packets. Este enlace
 es navegador→API; su conexión no prueba conexión ESP32→CubeSat ni estado de radio.
-El visor conserva su fuente demo hasta PR7. Public/Clerk sigue cerrado hasta PR8.
+El visor consume v2 desde PR7 y conserva demo explícita. PR8 incorpora
+[identidad pública](public-auth.md) sin fallback local.
 
 El evento `snapshot` entrega `{revision,snapshot,freshnessByGroup}` completo,
 sin raw rechazado ni procedencia interna `projectionState`. Contrato de campos:
@@ -26,7 +27,10 @@ La autorización se comprueba antes de abrir y en cada aviso/heartbeat. UUID de
 otro dueño responde 404. La identidad local no usa bearer y rechaza credenciales
 de fuente como identidad de usuario. El puerto de resolver admite `ExpiresAt`:
 una sesión verificada expirada o revocada cierra el stream, sin extender su
-duración. Fixtures prueban esa capacidad; no constituyen implementación de Clerk.
+duración. En público el límite es el mínimo entre `exp` verificado y 5 minutos
+desde apertura. Clerk/inscripción/propiedad se revalidan en cada aviso y heartbeat;
+revocación idle se observa en hasta 15 s más el presupuesto de operación 5 s.
+La expiración inicial tiene timer propio y nunca se extiende por revalidar.
 Los query parameters se rechazan, incluido cualquier token en URL.
 
 Heartbeat es un comentario cada 15 s. Cada operación DB/identidad y escritura

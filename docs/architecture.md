@@ -5,7 +5,9 @@ reproducción implementados. PR3 añade API Go local con identidad/dispositivos
 persistidos en PostgreSQL; PR4 añade caso de uso de ingestión, historial y snapshots
 reconstruibles con lecturas REST/CSV. PR5 añade serial y HTTP por fuente;
 PR6 añade SSE autorizado y cliente TypeScript; PR7 conecta el visor a v2 con
-selección explícita de fuente y dispositivo. Auth pública sigue pendiente.
+selección explícita de fuente y dispositivo. PR8 añade Clerk/Google con inscripción
+explícita, JWT verificado y revalidación de sesión sin fallback local; operación
+y variables tienen dueño en [identidad pública](public-auth.md).
 [ADR 0005](adr/0005-backend-local-cloud-media.md),
 [diseño objetivo](superpowers/specs/2026-10-01-cubeos-backend-design.md),
 [modelo de dominio](domain-model.md) y
@@ -39,7 +41,8 @@ pnpm coordina workspaces `apps/*`, `packages/*`, `tools/*`, con un lockfile raí
 Turbo coordina lint/typecheck/build/test; tareas de test dependen de las de sus
 paquetes productores. Los inputs por defecto incluyen esquemas, fuentes y fixtures:
 cambiar contratos invalida consumidores. Desarrollo no se cachea. CI añade el job
-`contracts`, `go-postgres`, `docker-local` y `browser-live-telemetry` al agregador `ci-required`, que exige éxito de todos y falla
+`contracts`, `go-postgres`, `docker-local`, `browser-live-telemetry` y
+`auth-browser-isolation` al agregador `ci-required`, que exige éxito de todos y falla
 también ante un job omitido/cancelado.
 
 Los puertos de persistencia pertenecen a sus consumidores: HTTP consume

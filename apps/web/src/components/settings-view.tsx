@@ -6,10 +6,12 @@ import { Tile } from "@/components/visor/tile";
 import { useTelemetryStore } from "@/lib/telemetry-store";
 import type { SourceSelection } from "@/lib/telemetry-store";
 import { sourceToken, validateSelection } from "@/lib/telemetry-source";
+import { usePublicSession } from "./public-session";
 
 const control = "w-full rounded-md bg-background px-3 py-2 text-base text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground disabled:opacity-50";
 
 export function SettingsView() {
+  const session = usePublicSession();
   const selection = useTelemetryStore(s => s.selection);
   const select = useTelemetryStore(s => s.select);
   const [draft, setDraft] = useState(selection);
@@ -31,6 +33,11 @@ export function SettingsView() {
     operation.current?.abort(); setBusy(false); setError(null); setDevices([]);
     const empty = { ...next, deviceId: "", deviceName: "" };
     setDraft(empty); select(empty);
+  }
+  function authenticate(action: (() => Promise<void>) | undefined, message: string) {
+    const pending = action?.();
+    const generation = useTelemetryStore.getState().generation;
+    void pending?.catch(() => { if (useTelemetryStore.getState().generation === generation) setError(message); });
   }
   async function request(kind: "list" | "create" | "rename") {
     operation.current?.abort(); const c = new AbortController(); operation.current = c;
@@ -70,7 +77,10 @@ export function SettingsView() {
             </label>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={draft.offline} onChange={e => { const next = { ...draft, offline: e.target.checked }; setDraft(next); select(next); }} />Modo sin Internet (sin mapa remoto)</label>
             <p className="text-sm text-muted-foreground">La API local usa el perfil de esta instalación. La conexión API no prueba el enlace del receptor con el CubeSat.</p>
-            {draft.mode === "public" ? <p className="text-sm text-muted-foreground">Identidad pública pendiente. Se requiere una sesión autorizada; esta entrega no inicia sesión.</p> : null}
+            {draft.mode === "public" ? <div className="space-y-2 text-sm text-muted-foreground">
+              <p>{session.state === "unavailable" ? "Esta instalación local no carga autenticación online. Abre la instalación pública para iniciar sesión." : session.state === "loading" ? "Cargando sesión…" : session.state === "signed-in" ? "Sesión pública activa. El acceso requiere inscripción autorizada." : "Inicia sesión para consultar tus dispositivos."}</p>
+              {session.state === "signed-in" ? <button type="button" className={control} onClick={() => authenticate(session.signOut, "No se pudo cerrar la sesión remota. El acceso a la cuenta se ha cerrado.")}>Cerrar sesión</button> : session.state === "signed-out" ? <button type="button" className={control} onClick={() => authenticate(session.signIn, "No se pudo iniciar sesión. Intenta de nuevo.")}>Iniciar sesión con Google</button> : null}
+            </div> : null}
             <button type="button" className={control} disabled={busy || !draft.apiURL} onClick={() => void request("list")}>{busy ? "Consultando…" : "Consultar dispositivos"}</button>
             <label className="block text-sm text-muted-foreground">Dispositivo
               <select aria-label="Dispositivo" className={control} value={draft.deviceId} disabled={busy} onChange={e => { const d = devices.find(row => row.id === e.target.value); const next = { ...draft, deviceId: d?.id ?? "", deviceName: d?.name ?? "" }; setDraft(next); select(next); setName(d?.name ?? ""); }}>

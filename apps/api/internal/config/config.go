@@ -9,10 +9,12 @@ import (
 )
 
 type Config struct {
-	Address, DatabaseURL, Origin                 string
-	Port                                         string
-	IngestionAddress, SerialPort, SerialSourceID string
-	SerialBaud                                   int
+	Mode, PublicAPIHost                                      string
+	ClerkIssuer, ClerkJWKSURL, ClerkAudience, ClerkSecretKey string
+	Address, DatabaseURL, Origin                             string
+	Port                                                     string
+	IngestionAddress, SerialPort, SerialSourceID             string
+	SerialBaud                                               int
 }
 
 func Load(get func(string) string) (Config, error) {
@@ -30,8 +32,8 @@ func Load(get func(string) string) (Config, error) {
 	if mode == "public" && auth == "local" {
 		return Config{}, errors.New("public deployment requires Clerk")
 	}
-	if auth != "local" {
-		return Config{}, errors.New("Clerk authentication is not implemented; refusing startup")
+	if (mode == "local" && auth != "local") || (mode == "public" && auth != "clerk") {
+		return Config{}, errors.New("authentication must match deployment mode")
 	}
 	port := value("PORT", "8080")
 	n, err := strconv.Atoi(port)
@@ -44,12 +46,12 @@ func Load(get func(string) string) (Config, error) {
 		return Config{}, errors.New("invalid container flag")
 	}
 	ip := net.ParseIP(host)
-	if (ip == nil || !ip.IsLoopback()) && !(container == "true" && host == "0.0.0.0") {
+	if mode == "local" && (ip == nil || !ip.IsLoopback()) && !(container == "true" && host == "0.0.0.0") {
 		return Config{}, errors.New("local listener must be loopback or explicit isolated container")
 	}
 	origin := value("ALLOWED_ORIGIN", "http://localhost:3000")
 	o, err := url.Parse(origin)
-	if err != nil || o.Scheme != "http" || o.User != nil || o.Path != "" || o.RawQuery != "" || o.Fragment != "" || (o.Hostname() != "localhost" && !isLoopback(o.Hostname())) || o.Port() == "" {
+	if mode == "local" && (err != nil || o.Scheme != "http" || o.User != nil || o.Path != "" || o.RawQuery != "" || o.Fragment != "" || (o.Hostname() != "localhost" && !isLoopback(o.Hostname())) || o.Port() == "") {
 		return Config{}, errors.New("allowed origin must be a local http origin with explicit port")
 	}
 	db := get("DATABASE_URL")
@@ -58,6 +60,20 @@ func Load(get func(string) string) (Config, error) {
 		return Config{}, errors.New("DATABASE_URL must be a PostgreSQL connection URL")
 	}
 	c := Config{Address: net.JoinHostPort(host, port), DatabaseURL: db, Origin: origin, Port: port, IngestionAddress: get("INGESTION_ADDRESS"), SerialPort: get("SERIAL_PORT"), SerialSourceID: get("SERIAL_SOURCE_ID")}
+	c.Mode = mode
+	if mode == "public" {
+		c.PublicAPIHost = get("PUBLIC_API_HOST")
+		c.ClerkIssuer = get("CLERK_ISSUER")
+		c.ClerkJWKSURL = get("CLERK_JWKS_URL")
+		c.ClerkAudience = get("CLERK_AUDIENCE")
+		c.ClerkSecretKey = get("CLERK_SECRET_KEY")
+		issuer, e := url.Parse(c.ClerkIssuer)
+		jwks, e2 := url.Parse(c.ClerkJWKSURL)
+		public, e3 := url.Parse("https://" + c.PublicAPIHost)
+		if err != nil || !httpsOrigin(o) || e != nil || !httpsOrigin(issuer) || e2 != nil || jwks.Scheme != "https" || jwks.Host != issuer.Host || jwks.User != nil || jwks.Path != "/.well-known/jwks.json" || jwks.RawQuery != "" || jwks.Fragment != "" || e3 != nil || !httpsOrigin(public) || c.PublicAPIHost == "" || c.ClerkAudience == "" || len(c.ClerkAudience) > 256 || c.ClerkSecretKey == "" || c.SerialPort != "" || c.SerialSourceID != "" || get("SERIAL_BAUD") != "" || container == "true" {
+			return Config{}, errors.New("public deployment requires HTTPS origins, trusted Clerk issuer/JWKS, audience, secret and public API host; no local serial/profile")
+		}
+	}
 	if c.IngestionAddress != "" {
 		h, p, e := net.SplitHostPort(c.IngestionAddress)
 		ip := net.ParseIP(h)
@@ -78,3 +94,6 @@ func Load(get func(string) string) (Config, error) {
 	return c, nil
 }
 func isLoopback(host string) bool { ip := net.ParseIP(host); return ip != nil && ip.IsLoopback() }
+func httpsOrigin(u *url.URL) bool {
+	return u != nil && u.Scheme == "https" && u.Host != "" && u.User == nil && u.Path == "" && u.RawQuery == "" && u.Fragment == ""
+}

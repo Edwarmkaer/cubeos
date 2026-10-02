@@ -46,3 +46,31 @@ func TestLocalDefaultsAndInvalidConfigurations(t *testing.T) {
 		t.Fatalf("container: %v", err)
 	}
 }
+
+func TestPublicClerkConfiguration(t *testing.T) {
+	base := map[string]string{"DATABASE_URL": "postgres://test@localhost/db", "DEPLOYMENT_MODE": "public", "AUTH_MODE": "clerk", "LISTEN_HOST": "0.0.0.0", "ALLOWED_ORIGIN": "https://web.example", "PUBLIC_API_HOST": "api.example", "CLERK_ISSUER": "https://auth.example", "CLERK_JWKS_URL": "https://auth.example/.well-known/jwks.json", "CLERK_AUDIENCE": "cubeos", "CLERK_SECRET_KEY": "fixture-only"}
+	load := func(m map[string]string) (Config, error) { return Load(func(k string) string { return m[k] }) }
+	if _, err := load(base); err != nil {
+		t.Fatalf("valid public config rejected: %v", err)
+	}
+	for _, field := range []string{"CLERK_ISSUER", "CLERK_JWKS_URL", "CLERK_AUDIENCE", "CLERK_SECRET_KEY", "PUBLIC_API_HOST"} {
+		m := map[string]string{}
+		for k, v := range base {
+			m[k] = v
+		}
+		delete(m, field)
+		if _, err := load(m); err == nil {
+			t.Fatal("accepted missing", field)
+		}
+	}
+	for k, v := range map[string]string{"AUTH_MODE": "local", "CLERK_ISSUER": "http://auth.example", "CLERK_JWKS_URL": "https://evil.example/jwks", "ALLOWED_ORIGIN": "http://web.example", "SERIAL_PORT": "/dev/ttyUSB0", "PUBLIC_API_HOST": "api.example/path"} {
+		m := map[string]string{}
+		for key, value := range base {
+			m[key] = value
+		}
+		m[k] = v
+		if _, err := load(m); err == nil {
+			t.Fatal("accepted unsafe", k)
+		}
+	}
+}

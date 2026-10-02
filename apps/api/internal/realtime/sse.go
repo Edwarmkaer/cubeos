@@ -71,6 +71,10 @@ func (s *SSE) ServeDevice(w http.ResponseWriter, r *http.Request, id string) {
 		return
 	}
 	controller := http.NewResponseController(w)
+	// net/http writes the final chunk after the handler returns. An idle stream
+	// can exit well after its last per-write deadline; refresh that deadline so
+	// TLS can complete the response without a truncated/malformed final record.
+	defer func() { _ = controller.SetWriteDeadline(time.Now().Add(s.WriteTimeout)) }()
 	// Replace server's finite REST write timeout with a fresh deadline per write.
 	write := func(message string) error {
 		if err := controller.SetWriteDeadline(time.Now().Add(s.WriteTimeout)); err != nil && !errors.Is(err, http.ErrNotSupported) {
