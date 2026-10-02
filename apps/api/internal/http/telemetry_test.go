@@ -184,11 +184,11 @@ func TestTelemetryRESTIsolationFiltersCursorAndCSV(t *testing.T) {
 	if out.Code == 200 {
 		t.Fatal("cancelled export succeeded")
 	}
-	// PR4 must not accidentally expose credential-free ingress.
+	// PR5 ingress requires a source credential even on the local listener.
 	out = httptest.NewRecorder()
 	h.ServeHTTP(out, httptest.NewRequest("POST", "http://127.0.0.1:8080/api/v1/ingestion/packets", strings.NewReader(string(raw))))
-	if out.Code != 404 {
-		t.Fatal("ingress exposed")
+	if out.Code != 401 {
+		t.Fatal("credential-free ingress exposed")
 	}
 	// Trusted local fixture CLI is the usable PR4 path, without exposing PR5's
 	// credentialed transport endpoint. Exercise the real process and shared input.

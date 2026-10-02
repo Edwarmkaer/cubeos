@@ -16,7 +16,20 @@ pnpm --filter @cubeos/simulator test
 Para guardar NDJSON puro (pnpm puede escribir el anuncio de script según versión),
 usar desde la raíz `node tools/simulator/src/index.ts --seed 42 --duration-ms 4000 > /tmp/chasqui-v2.ndjson`.
 Los tests comparan la salida real de la CLI y validan cada envelope normal.
-No se implementa envío HTTP antes de existir la API.
+PR5 añade entrega HTTP y stream serial con cadencia real:
+
+```sh
+# CUBEOS_SOURCE_CREDENTIAL proviene del aprovisionamiento privado, no de argv.
+node tools/simulator/src/index.ts --transport http --url http://127.0.0.1:8080/api/v1/ingestion/packets --seed 42 --duration-ms 4000
+node tools/simulator/src/index.ts --transport serial --seed 42 --duration-ms 4000 --rate 1 > /tmp/cubeos-serial.ndjson
+```
+
+Serial escribe stdout NDJSON a pipe/PTY/puerto previamente configurado por el
+operador; no cambia baudrate de destino. `--rate` 0.1..100 escala cadencia;
+SIGINT/SIGTERM cancela esperas/HTTP. HTTP secuencial, timeout 5 s, sin redirects
+ni credenciales en URLs. 422 continúa para escenarios de rechazo; otros errores
+detienen. Seed/escenarios/unidades intactos. No afirma aceptación de radio.
+Operación: [transportes](../../docs/hardware-transports.md).
 
 Frecuencias y unidades: [telemetría](../../docs/telemetry.md). G está apagado por
 defecto. `--gps` solo habilita un escenario sintético y no afirma instalación de

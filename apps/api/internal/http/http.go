@@ -8,6 +8,7 @@ import (
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/config"
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/devices"
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/identity"
+	"github.com/Edwarmkaer/cubeos/apps/api/internal/ingestion"
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/storage"
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/telemetry"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -35,6 +36,8 @@ func New(c config.Config, p *pgxpool.Pool, d DeviceStore, resolve Resolver) http
 	return NewWithTelemetry(c, p, d, telemetry.NewRepository(p), resolve)
 }
 func NewWithTelemetry(c config.Config, p *pgxpool.Pool, d DeviceStore, readings TelemetryStore, resolve Resolver) http.Handler {
+	sources := ingestion.NewSources(p)
+	packets := ingestion.NewHTTP(ingestion.NewService(ingestion.NewRepository(p)), sources)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Cache-Control", "no-store")
@@ -65,6 +68,10 @@ func NewWithTelemetry(c config.Config, p *pgxpool.Pool, d DeviceStore, readings 
 			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 			w.WriteHeader(204)
+			return
+		}
+		if r.URL.Path == "/api/v1/ingestion/packets" {
+			packets.ServeHTTP(w, r)
 			return
 		}
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
@@ -133,6 +140,10 @@ func NewWithTelemetry(c config.Config, p *pgxpool.Pool, d DeviceStore, readings 
 		}
 		id := strings.TrimPrefix(r.URL.Path, collection+"/")
 		parts := strings.Split(id, "/")
+		if len(parts) >= 2 && parts[1] == "sources" {
+			serveSources(ctx, w, r, sources, principal, parts)
+			return
+		}
 		if len(parts) == 2 {
 			if !uuid(parts[0]) {
 				problem(w, 400, "invalid_id")

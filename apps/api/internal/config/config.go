@@ -2,14 +2,17 @@ package config
 
 import (
 	"errors"
+	"github.com/jackc/pgx/v5/pgtype"
 	"net"
 	"net/url"
 	"strconv"
 )
 
 type Config struct {
-	Address, DatabaseURL, Origin string
-	Port                         string
+	Address, DatabaseURL, Origin                 string
+	Port                                         string
+	IngestionAddress, SerialPort, SerialSourceID string
+	SerialBaud                                   int
 }
 
 func Load(get func(string) string) (Config, error) {
@@ -54,6 +57,24 @@ func Load(get func(string) string) (Config, error) {
 	if err != nil || (u.Scheme != "postgres" && u.Scheme != "postgresql") || u.Host == "" {
 		return Config{}, errors.New("DATABASE_URL must be a PostgreSQL connection URL")
 	}
-	return Config{Address: net.JoinHostPort(host, port), DatabaseURL: db, Origin: origin, Port: port}, nil
+	c := Config{Address: net.JoinHostPort(host, port), DatabaseURL: db, Origin: origin, Port: port, IngestionAddress: get("INGESTION_ADDRESS"), SerialPort: get("SERIAL_PORT"), SerialSourceID: get("SERIAL_SOURCE_ID")}
+	if c.IngestionAddress != "" {
+		h, p, e := net.SplitHostPort(c.IngestionAddress)
+		ip := net.ParseIP(h)
+		n, e2 := strconv.Atoi(p)
+		if e != nil || e2 != nil || ip == nil || (!ip.IsLoopback() && !ip.IsPrivate()) || n < 1 || n > 65535 || p == port {
+			return Config{}, errors.New("ingestion listener needs explicit interface IP and distinct port")
+		}
+	}
+	baud := get("SERIAL_BAUD")
+	if c.SerialPort != "" || c.SerialSourceID != "" || baud != "" {
+		var u pgtype.UUID
+		n, e := strconv.Atoi(baud)
+		if c.SerialPort == "" || len(c.SerialSourceID) != 36 || u.Scan(c.SerialSourceID) != nil || !u.Valid || e != nil || n < 1 || n > 4000000 {
+			return Config{}, errors.New("serial needs port, source UUID and explicit baudrate")
+		}
+		c.SerialBaud = n
+	}
+	return c, nil
 }
 func isLoopback(host string) bool { ip := net.ParseIP(host); return ip != nil && ip.IsLoopback() }

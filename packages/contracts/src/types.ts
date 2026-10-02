@@ -41,6 +41,10 @@ export type SnapshotV2 = {
 export type ReceiverMetadata = { gatewayId?: string; rssiDbm?: number; snrDb?: number; frequencyMhz?: number };
 /** Client input: source identity and receivedAt must be assigned by the authenticated server. */
 export type ReceivedEnvelopeV1 = { envelopeVersion: 1; payload: import("./index.ts").UplinkV2; receiver?: ReceiverMetadata };
+export type IngestResult = { status: "accepted" | "duplicated" | "rejected"; cause: string; receptionId: number; revision: number; receptionEpoch: number | null };
+export type IngestionSourceInput = { transport: "serial" | "http"; gatewayId?: string };
+export type IngestionSource = { id: string; deviceId: string; transport: "serial" | "http"; gatewayId: string | null; revokedAt: string | null };
+export type ProvisionedIngestionSource = IngestionSource & { credential: string };
 export type FieldFreshness = { receivedAt: string; sequence: number; uptimeMs: number; receptionEpoch: number };
 export type GroupFreshness = FieldFreshness & { fields: Record<string, FieldFreshness> };
 /** The readable source snapshot stays intact inside the server projection. */
