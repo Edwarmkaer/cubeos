@@ -4,9 +4,15 @@ import (
 	"context"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"time"
 )
 
-type Principal struct{ UserID string }
+// ExpiresAt is zero for the offline local profile. Public resolvers must supply
+// the verified session expiry; prolonged streams never extend that session.
+type Principal struct {
+	UserID    string
+	ExpiresAt time.Time
+}
 
 func Local(ctx context.Context, p *pgxpool.Pool) (Principal, error) {
 	tx, err := p.Begin(ctx)

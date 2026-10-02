@@ -2,6 +2,28 @@
 
 Actualizado: 2026-10-01.
 
+## PR 6 — SSE y cliente API tipado
+
+Base PR5 integrada: [PR #6](https://github.com/Edwarmkaer/cubeos/pull/6), merge
+`94a166b`. Rama `feat/telemetry-realtime`. Hub con invalidaciones PostgreSQL
+transaccionales y colas de una posición; SSE lee proyecciones autorizadas desde
+DB, revalida dueño/sesión, acota operaciones/escrituras y se cancela en shutdown.
+Cliente fetch REST/SSE con token por conexión, parser incremental limitado,
+reconnect por estado actual, dedup int64 exacto y cancelación. Contrato en
+OpenAPI; operación y límites tienen dueño en [realtime](docs/realtime.md).
+
+Red/green: hub/SSE/endpoint/client inexistentes y timeout de stream silencioso.
+PostgreSQL real propio prueba fuente HTTP→DB→SSE, dueño A/B, notices solo commit,
+duplicados/rechazos/no-op/rollback, cambio de propietario y reconnect. Race y
+TCP lento verifican limpieza/deadline sin bloquear otro dispositivo. CLI real
+TCP→Go→PostgreSQL→cliente SSE verifica revisión final y monotonicidad. La suite
+completa y Docker/runners se informan por SHA en la entrega; esta nota no afirma
+que un runner pendiente haya pasado. Frontend/demo/fixtures/DESIGN draft intactos.
+Recursos exclusivos PR6: PostgreSQL `cubeos-pr6-test-pg`, puerto 55436, volumen
+`cubeos-pr6-test-data`; evidencia ignorada `pr6-*` en el workspace SDD. No se
+borran volúmenes. Revisión independiente y merge corresponden al chat raíz.
+No iniciar PR7 ni afirmar hardware físico probado desde este chat.
+
 ## PR 5 — Serial USB/UART y HTTP Wi-Fi
 
 Base PR4 integrada: [PR #5](https://github.com/Edwarmkaer/cubeos/pull/5), merge

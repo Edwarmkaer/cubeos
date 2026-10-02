@@ -38,6 +38,9 @@ transport_before=$("${curl_probe[@]}" --fail --silent "$api_url/api/v1/devices/$
 fixture=$("${compose[@]}" exec -T api server fixture < packages/contracts/fixtures/chasqui-v2/uplink-examples-v2.json)
 telemetry_id=$(jq -er .deviceId <<<"$fixture")
 snapshot_before=$("${curl_probe[@]}" --fail --silent "$api_url/api/v1/devices/$telemetry_id/snapshot" | jq -cS .)
+events_before=$(curl --connect-timeout 2 --max-time 1 --no-buffer --silent --fail "$api_url/api/v1/devices/$telemetry_id/events") || test "$?" = 28
+event_before=$(sed -n 's/^data: //p' <<<"$events_before" | jq -cS .)
+test "$event_before" = "$(jq -cS '{revision,snapshot,freshnessByGroup}' <<<"$snapshot_before")"
 history_before=$("${curl_probe[@]}" --fail --silent "$api_url/api/v1/devices/$telemetry_id/packets" | jq -cS .)
 test "$(jq -er .revision <<<"$snapshot_before")" = 5
 test "$(jq -er '.packets | length' <<<"$history_before")" = 5
@@ -59,6 +62,9 @@ profile_after=$("${compose[@]}" exec -T db psql -U cubeos -d cubeos -Atc "SELECT
 test -n "$profile_before"
 test "$profile_before" = "$profile_after"
 snapshot_after=$("${offline[@]}" exec -T api wget -T 6 -q -O - "http://127.0.0.1:${API_PORT:-8080}/api/v1/devices/$telemetry_id/snapshot" | jq -cS .)
+events_offline=$("${offline[@]}" exec -T api wget -T 1 -q -O - "http://127.0.0.1:${API_PORT:-8080}/api/v1/devices/$telemetry_id/events" 2>/dev/null) || test "$?" = 1
+event_offline=$(sed -n 's/^data: //p' <<<"$events_offline" | jq -cS .)
+test "$event_before" = "$event_offline"
 history_after=$("${offline[@]}" exec -T api wget -T 6 -q -O - "http://127.0.0.1:${API_PORT:-8080}/api/v1/devices/$telemetry_id/packets" | jq -cS .)
 test "$snapshot_before" = "$snapshot_after"
 test "$history_before" = "$history_after"
@@ -86,9 +92,11 @@ done
 "${offline[@]}" down
 "${compose[@]}" up --no-build --pull never -d
 wait_ready
+events_restored=$(curl --connect-timeout 2 --max-time 1 --no-buffer --silent --fail "$api_url/api/v1/devices/$telemetry_id/events") || test "$?" = 28
+test "$event_before" = "$(sed -n 's/^data: //p' <<<"$events_restored" | jq -cS .)"
 duplicated=$("${curl_probe[@]}" --fail --silent -H "Authorization: Bearer $source_credential" -H 'Content-Type: application/json' -d "$frame" "$api_url/api/v1/ingestion/packets")
 test "$(jq -er .status <<<"$duplicated")" = duplicated
 "${curl_probe[@]}" --fail --silent -X DELETE "$api_url/api/v1/devices/$device_id/sources/$source_id" >/dev/null
 test "$("${curl_probe[@]}" --silent -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $source_credential" -H 'Content-Type: application/json' -d "$frame" "$api_url/api/v1/ingestion/packets")" = 401
 unset source_credential provisioned
-echo "Smoke passed: non-root, DB-down readiness, persistent device/profile/raw/history/snapshot, deterministic rebuild, blocked-egress boot, offline visor/font and six original photos; loopback installation restored."
+echo "Smoke passed: non-root, DB-down readiness, persistent device/profile/raw/history/snapshot/SSE after restart, deterministic rebuild, blocked-egress boot, offline SSE/visor/font and six original photos; loopback installation restored."

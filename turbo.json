@@ -17,14 +17,14 @@
     },
     "@cubeos/api#dev": {
       "cache": false, "persistent": true,
-      "env": ["DATABASE_URL", "DEPLOYMENT_MODE", "AUTH_MODE", "LOCAL_CONTAINER", "LISTEN_HOST", "PORT", "ALLOWED_ORIGIN"]
+      "env": ["DATABASE_URL", "DEPLOYMENT_MODE", "AUTH_MODE", "LOCAL_CONTAINER", "LISTEN_HOST", "PORT", "ALLOWED_ORIGIN", "INGESTION_ADDRESS", "SERIAL_PORT", "SERIAL_SOURCE_ID", "SERIAL_BAUD"]
     },
     "@cubeos/api#migrate": { "cache": false, "env": ["DATABASE_URL"] },
     "@cubeos/api#build": { "inputs": ["$TURBO_DEFAULT$"], "outputs": ["dist/**"] },
     "@cubeos/api#test": {
       "cache": false,
       "inputs": ["$TURBO_DEFAULT$", "../../packages/contracts/**"],
-      "env": ["TEST_DATABASE_URL", "TEST_MIGRATION_DATABASE_URL", "TEST_INGESTION_DATABASE_URL", "TEST_PROJECTION_EVIDENCE_DIR", "CI"]
+      "env": ["TEST_DATABASE_URL", "TEST_MIGRATION_DATABASE_URL", "TEST_INGESTION_DATABASE_URL", "TEST_TRANSPORT_DATABASE_URL", "TEST_REALTIME_DATABASE_URL", "TEST_PROJECTION_EVIDENCE_DIR", "CI"]
     },
     "web#typecheck": {
       "dependsOn": ["^typecheck"],

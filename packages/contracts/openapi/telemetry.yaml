@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
-  title: CubeOS local telemetry and source transports
-  version: 0.5.0
+  title: CubeOS local telemetry, source transports and realtime
+  version: 0.6.0
   description: >-
     Local management resolves a persistent installation principal and requires
     loopback Host and configured Origin when supplied. Source credentials only
@@ -11,6 +11,39 @@ info:
 servers:
   - url: http://127.0.0.1:8080
 paths:
+  /api/v1/devices/{deviceId}/events:
+    parameters:
+      - $ref: '#/components/parameters/DeviceId'
+      - name: Last-Event-ID
+        in: header
+        required: false
+        schema: {type: string}
+        description: Optional device UUID colon decimal revision hint. Always receives current state; no historical replay guarantee.
+    get:
+      operationId: subscribeTelemetry
+      description: >-
+        Owner-authorized current snapshots after commit. GET only, no query parameters
+        or URL tokens. Local profile requires no bearer; public identity remains disabled
+        until PR8. SourceBearer never authorizes this endpoint. SSE snapshot data uses
+        SnapshotEvent; id is device UUID colon exact decimal int64 revision. A device
+        without telemetry stays open with comments until its first projection. Revision
+        is monotonic per device, intermediate states can be coalesced. Ownership and
+        identity are rechecked on every hint and heartbeat (15 seconds); session expiry
+        closes promptly. A write has a five-second deadline; request cancellation or
+        server shutdown closes it. Last-Event-ID does not request full replay: use REST
+        packets/history. Freshness receipt evidence is stable; consumer computes age.
+      responses:
+        '200':
+          description: SSE snapshot events and comment heartbeats; a repeated initial revision may appear on reconnect.
+          content:
+            text/event-stream:
+              schema: {type: string, description: 'id, event snapshot, data JSON matching SnapshotEvent, blank line terminator.'}
+        '400': {$ref: '#/components/responses/InvalidQuery'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+        '503': {$ref: '#/components/responses/Unavailable'}
   /api/v1/ingestion/packets:
     post:
       operationId: ingestPacket
@@ -195,6 +228,17 @@ components:
     Cursor: {name: cursor, in: query, description: Opaque base64url keyset tied to device and filters., schema: {type: string, maxLength: 2048}}
     Limit: {name: limit, in: query, schema: {type: integer, minimum: 1, maximum: 200, default: 100}}
   schemas:
+    SnapshotEvent:
+      type: object
+      additionalProperties: false
+      required: [revision, snapshot, freshnessByGroup]
+      properties:
+        revision: {type: integer, minimum: 1, maximum: 9223372036854775807, format: int64}
+        snapshot: {$ref: '../schemas/snapshot-v2.json'}
+        freshnessByGroup:
+          type: object
+          propertyNames: {enum: [H, E, O, I, G]}
+          additionalProperties: {$ref: '#/components/schemas/GroupFreshness'}
     IngestResult:
       type: object
       required: [status, cause, receptionId, revision, receptionEpoch]

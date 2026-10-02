@@ -57,7 +57,7 @@ jobs:
       - name: Install frozen dependencies
         run: pnpm install --frozen-lockfile
       - name: Validate contracts and deterministic simulator
-        run: pnpm exec turbo run lint typecheck test --filter=@cubeos/contracts --filter=@cubeos/simulator
+        run: pnpm exec turbo run lint typecheck test --filter=@cubeos/contracts --filter=@cubeos/simulator --filter=@cubeos/api-client
 
   ci-required:
     name: ci-required
@@ -92,6 +92,7 @@ jobs:
       TEST_MIGRATION_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_migrations_test?sslmode=disable
       TEST_INGESTION_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_ingestion_test?sslmode=disable
       TEST_TRANSPORT_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_transport_test?sslmode=disable
+      TEST_REALTIME_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_realtime_test?sslmode=disable
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -108,6 +109,7 @@ jobs:
           createdb -h localhost -U postgres cubeos_migrations_test
           createdb -h localhost -U postgres cubeos_ingestion_test
           createdb -h localhost -U postgres cubeos_transport_test
+          createdb -h localhost -U postgres cubeos_realtime_test
       - name: Format, vet and race tests against PostgreSQL
         working-directory: apps/api
         run: |

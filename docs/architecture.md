@@ -4,7 +4,7 @@ Estado 2026-10-01: web, UI compartida, contratos hardware v2 y simulador de
 reproducción implementados. PR3 añade API Go local con identidad/dispositivos
 persistidos en PostgreSQL; PR4 añade caso de uso de ingestión, historial y snapshots
 reconstruibles con lecturas REST/CSV. PR5 añade serial y HTTP por fuente;
-SSE y auth pública siguen pendientes.
+PR6 añade SSE autorizado y cliente TypeScript; auth pública sigue pendiente.
 [ADR 0005](adr/0005-backend-local-cloud-media.md),
 [diseño objetivo](superpowers/specs/2026-10-01-cubeos-backend-design.md),
 [modelo de dominio](domain-model.md) y
@@ -23,6 +23,8 @@ FastAPI/SQLite/WebSocket son antecedentes sustituidos.
 | API local | `apps/api` | Health/readiness, identidad/dispositivos, snapshot/historial/CSV con propiedad |
 | Ingestión | `apps/api/internal/ingestion` | Validación/normalización y transacción por fuente; adaptadores serial y HTTP |
 | Telemetría | `apps/api/internal/telemetry` | Orden, proyección, procedencia por campo, consultas y reconstrucción |
+| Realtime | `apps/api/internal/realtime` | Avisos transaccionales PostgreSQL, colas acotadas y SSE con autorización prolongada |
+| Cliente API | `packages/api-client` | REST tipado y fetch SSE, contrato validado, cancelación y reconexión |
 | Instalación local | `infra/docker` | Contenedores sin root, PostgreSQL persistente, publicación loopback y runtime verificado sin Internet |
 
 Web todavía usa `TelemetrySource`/`simulatorSource`: el hook inicia y detiene la
@@ -73,4 +75,7 @@ dependencias; Clerk en público, sin fallback de autenticación.
 
 El snapshot será una proyección de últimas lecturas válidas por grupo, con
 revisión y frescura fuera del objeto legible. REST/SSE comprobarán propiedad.
-Ingestión y lecturas REST están operativas; SSE y consumo web quedan pendientes.
+Ingestión, REST y SSE están operativos. El consumo del visor corresponde a PR7.
+El hub recibe invalidaciones PostgreSQL solo después de commit; cada stream lee
+la proyección actual con propiedad desde DB. Comportamiento de colas, tiempos,
+reconexión y precisión del cliente tiene dueño en [realtime](realtime.md).
