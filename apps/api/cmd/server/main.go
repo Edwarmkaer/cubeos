@@ -49,6 +49,21 @@ func run() error {
 	}
 	defer pool.Close()
 	if len(os.Args) > 1 {
+		if len(os.Args) == 4 && os.Args[1] == "enroll" {
+			if c.Mode != "public" {
+				return errors.New("enrollment requires public mode")
+			}
+			enrollCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+			defer cancel()
+			if _, e := identity.Enroll(enrollCtx, pool, os.Args[2], os.Args[3]); e != nil {
+				return errors.New("enrollment failed; check subject, display name and migrations")
+			}
+			log.Print("public identity enrolled")
+			return nil
+		}
+		if c.Mode == "public" && os.Args[1] != "migrate" {
+			return errors.New("local fixture/rebuild commands are disabled in public mode")
+		}
 		if len(os.Args) == 2 && os.Args[1] == "fixture" {
 			return fixture(ctx, pool, os.Stdin, os.Stdout)
 		}
@@ -70,10 +85,12 @@ func run() error {
 		if err = storage.Migrate(migrationCtx, pool); err != nil {
 			return errors.New("migration failed; check database availability and migration versions")
 		}
-		if _, err = identity.Local(migrationCtx, pool); err != nil {
-			return errors.New("local profile initialization failed")
+		if c.Mode == "local" {
+			if _, err = identity.Local(migrationCtx, pool); err != nil {
+				return errors.New("local profile initialization failed")
+			}
 		}
-		log.Print("migrations and local profile ready")
+		log.Print("migrations ready")
 		return nil
 	}
 	resolver := func(ctx context.Context, r *http.Request) (identity.Principal, error) {
@@ -83,6 +100,9 @@ func run() error {
 			return identity.Principal{}, nil
 		}
 		return identity.Local(ctx, pool)
+	}
+	if c.Mode == "public" {
+		resolver = identity.NewClerk(pool, c.ClerkIssuer, c.ClerkJWKSURL, c.ClerkAudience, c.Origin, c.ClerkSecretKey).Resolve
 	}
 	hub := realtime.NewHub()
 	go hub.Run(ctx, c.DatabaseURL)
@@ -146,7 +166,7 @@ func run() error {
 			_ = ingress.Shutdown(shutdownCtx)
 		}
 	}()
-	log.Printf("local API listening on %s", c.Address)
+	log.Printf("%s API listening on %s", c.Mode, c.Address)
 	if err = server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}

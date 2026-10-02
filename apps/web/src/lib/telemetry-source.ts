@@ -7,15 +7,18 @@ import { useTelemetryStore } from "./telemetry-store.ts";
 
 // PR8 supplies a fresh Clerk token getter. Credentials stay only in memory.
 let tokenGetter: (() => string | null | Promise<string | null>) | null = null;
+let identityGeneration = 0;
 export function setPublicTokenGetter(getter: typeof tokenGetter) {
+  identityGeneration++;
   tokenGetter = getter;
   const s = useTelemetryStore.getState();
   if (s.selection.mode === "public") s.select({ ...s.selection, deviceId: "", deviceName: "" });
 }
 export async function sourceToken(mode: SourceSelection["mode"]) {
   if (mode !== "public") return null;
+  const generation = identityGeneration;
   const token = await tokenGetter?.();
-  if (!token) throw new Error("Identidad pública pendiente (PR8). Sesión no disponible.");
+  if (!token || generation !== identityGeneration) throw new Error("Sesión no disponible. Inicia sesión de nuevo.");
   return token;
 }
 export function validateSelection(selection: SourceSelection) {
@@ -35,6 +38,7 @@ export function startTelemetry(store: StoreApi<TelemetryState>, makeClient: (url
   }
   if (!selection.apiURL || !selection.deviceId) return () => {};
   const controller = new AbortController();
+  const unsubscribe = store.subscribe(next => { if (next.generation !== generation) controller.abort(); });
   const live = () => !controller.signal.aborted && store.getState().generation === generation;
   const connection: SubscriptionOptions["onConnection"] = state => {
     if (!live()) return;
@@ -51,5 +55,6 @@ export function startTelemetry(store: StoreApi<TelemetryState>, makeClient: (url
   return () => {
     if (live() && !["error", "unauthorized"].includes(store.getState().connection)) store.getState().setConnection("closed", generation);
     controller.abort();
+    unsubscribe();
   };
 }

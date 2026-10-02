@@ -1,6 +1,33 @@
 # Progreso — CubeOS
 
-Actualizado: 2026-10-01.
+Actualizado: 2026-10-02.
+
+## PR 8 — Identidad pública y permisos
+
+Base PR7 integrada `d06f50e`; rama `feat/google-auth`, checkout nativo.
+Clerk/Google condicional en web pública, getter en memoria, inscripción explícita
+por CLI y RS256/JWKS/issuer/audience/azp/tiempos/sid en Go. Estado de sesión activo
+ligado al subject, sin aceptar automáticamente identidades desconocidas ni caer
+al perfil local. Operación/variables/setup tienen dueño en
+[identidad pública](docs/public-auth.md); semántica de stream en
+[realtime](docs/realtime.md). Pozo y DESIGN draft se preservan.
+
+Regresiones RED→GREEN: config pública antes rechazada, verificador ausente,
+token tardío de A después de B y abort inmediato SSE, límite público de stream.
+Tests firmados generan claves efímeras, sin credenciales reales. HTTP/PG y
+Chromium usan API y propiedad reales; sustituyen solo el proveedor externo.
+Inscripción, A/B REST/snapshot/historia/CSV/SSE/fuentes, revocación/expiración,
+lista/creación/token tardíos y logout tienen checks ejecutables. Se conserva
+browser local sin egress y se añade auth-browser-isolation a ci-required.
+
+Recursos propios: `cubeos-pr8-test-pg`, puerto 55438, volumen
+`cubeos-pr8-test-data`; Compose smoke propio y puertos 8098/3120;
+fixture browser 3118, runtime web 3119/3121–3124. No se tocan recursos PR7/otros
+proyectos. Evidencia ignorada en `.superpowers/sdd/pr8-auth/`. El handoff reporta
+comandos finales, SHA, capturas y runners reales; esta nota no declara aprobación
+de checks pendientes. Google/Clerk externos y hardware físico siguen sin probar.
+Raíz conserva revisión independiente, verificación final-SHA y merge protegido.
+Este chat no inicia PR9–PR11.
 
 ## PR 7 — Visor con fuente real
 

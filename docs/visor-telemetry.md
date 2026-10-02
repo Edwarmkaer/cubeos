@@ -19,11 +19,13 @@ UUID propietario devuelto por REST. No se elige automáticamente el primer regis
 Errores se muestran y las operaciones se pueden reintentar.
 
 API pública exige HTTPS y un getter de token de sesión en memoria. La identidad
-Clerk corresponde a PR8; sin sesión, la consulta falla antes de contactar al
+Clerk está integrado por PR8; [configuración y límites](public-auth.md). Sin sesión,
+la consulta falla antes de contactar al
 servidor. No existe token de prueba en producción, fallback local, credencial en
 URL ni almacenamiento de bearer. Cambiar el getter invalida la sesión del visor.
 Las credenciales de ingestión pertenecen al receptor; no se introducen en web.
-Cambiar identidad pública borra también UUID/nombre elegidos. Mientras está abierta,
+Cambiar identidad o sesión pública borra también UUID/nombre elegidos. Un token
+tardío de la cuenta anterior se rechaza antes de iniciar una solicitud. Mientras está abierta,
 Configuración invalida operaciones pendientes y vacía lista, campos de formulario
 y errores al cambiar la generación de fuente, dispositivo o identidad. Una escritura
 ya aceptada por el servidor no se deshace al cancelar; puede consultarse de nuevo.

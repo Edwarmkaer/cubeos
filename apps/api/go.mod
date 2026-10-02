@@ -3,6 +3,7 @@ module github.com/Edwarmkaer/cubeos/apps/api
 go 1.27.1
 
 require (
+	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/jackc/pgx/v5 v5.7.6
 	go.bug.st/serial v1.6.4
 	golang.org/x/sys v0.32.0

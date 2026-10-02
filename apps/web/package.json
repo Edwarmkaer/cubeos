@@ -11,6 +11,7 @@
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
+    "@clerk/nextjs": "7.9.10",
     "@cubeos/api-client": "workspace:*",
     "@cubeos/contracts": "workspace:*",
     "@cubeos/telemetry": "workspace:*",
@@ -34,6 +35,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "esbuild": "0.25.10",
     "eslint": "^9",
     "eslint-config-next": "16.3.4",
     "playwright": "1.62.1",

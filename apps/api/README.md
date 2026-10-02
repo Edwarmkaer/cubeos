@@ -1,10 +1,12 @@
-# API local (PR3–PR5)
+# API local y pública (PR3–PR8)
 
 Go 1.27.1 (misma versión en `.go-version`, `go.mod`, Docker y CI), PostgreSQL
 17.6. Persiste identidad/dispositivos, recepciones e historial de telemetría y
-snapshots reconstruibles. La web conserva su demo; todavía no consume esta API.
-Serial y HTTP autenticado están disponibles; SSE, Clerk, progreso y medios pertenecen
-a los PRs siguientes del [plan](../../docs/superpowers/plans/2026-10-01-cubeos-backend.md).
+snapshots reconstruibles. Web consume REST/SSE y conserva demo explícita.
+Serial, HTTP y Clerk están implementados; progreso/medios pertenecen a los PRs
+siguientes del [plan](../../docs/superpowers/plans/2026-10-01-cubeos-backend.md).
+Configuración Google/Clerk, variables runtime, inscripción administrativa y
+límites de autenticación: [identidad pública](../../docs/public-auth.md).
 
 ## Desarrollo nativo
 
@@ -24,7 +26,7 @@ Por defecto escucha `127.0.0.1:8080`. `/healthz` comprueba el proceso; `/readyz`
 comprueba conexión y versiones/checksums de migraciones. La API no migra al
 arrancar. Sin migraciones, las rutas de negocio devuelven 503. `migrate` aplica
 todo en una transacción bajo advisory lock de PostgreSQL, verifica el checksum
-de cada versión y crea el perfil local de forma idempotente. No hay downgrade
+de cada versión y, en modo local, crea el perfil local de forma idempotente. No hay downgrade
 automático: restaurar backup y corregir una migración fallida antes de reintentar.
 
 ## Lecturas de telemetría y fixtures locales
@@ -118,8 +120,8 @@ de exploración con una fotografía remota; no es parte del recorrido local.
 
 Un perfil de instalación local persistente, sin login, contraseña ni sesiones
 individuales. Toda persona con acceso local al puerto comparte ese perfil.
-`DEPLOYMENT_MODE=public` con auth local se rechaza. `AUTH_MODE=clerk` falla
-cerrado hasta PR8: una falla del proveedor nunca habilita perfil local.
+`DEPLOYMENT_MODE=public` con auth local se rechaza. `AUTH_MODE=clerk` requiere
+configuración pública completa: una falla del proveedor nunca habilita perfil local.
 
 `GET /api/v1/devices` lista los dispositivos del principal. `POST` en la misma
 ruta acepta `{"name":"Mi CubeSat","protocolDeviceId":"CS01"}`. `GET`, `PATCH`
@@ -130,26 +132,31 @@ caracteres), y el nombre visible permite hasta 120 caracteres Unicode.
 Acceso a UUID ajeno devuelve 404 para los tres métodos.
 Errores usan `{"error":{"code":"..."}}`, sin detalles SQL ni secretos.
 
-Host se limita a localhost/loopback con el puerto configurado, incluso para
+En modo local, Host se limita a localhost/loopback con el puerto configurado, incluso para
 lecturas, para mitigar DNS rebinding. Origen explícito se compara exactamente
 con `ALLOWED_ORIGIN` (por defecto `http://localhost:3000`); escrituras JSON
 rechazan sitios ajenos, tipos de contenido de formularios, `Sec-Fetch-Site`
 cross-site, cuerpos mayores a 8 KiB, claves desconocidas y JSON concatenado.
 CLI sin Origin se permite porque no recibe automáticamente una identidad de
-un navegador. CORS no sustituye estas validaciones. No hay TLS local.
+un navegador. CORS no sustituye estas validaciones. No hay TLS local. En público,
+Host coincide con `PUBLIC_API_HOST` y se permite cross-site solo con el origen
+HTTPS configurado; cada ruta de alumno requiere su bearer verificado.
 
 ## Verificación
 
 Tests de configuración/validación se ejecutan siempre. Los tests PostgreSQL
 se omiten explícitamente sin las variables siguientes; CI falla si falta una.
-Usar tres bases
+Usar seis bases
 **descartables exclusivas**: los tests eliminan y recrean su schema `public`.
-CI proporciona las tres y ejecuta formato, vet, tests y race detector.
+CI proporciona todas y ejecuta formato, vet, tests y race detector.
 
 ```sh
 export TEST_DATABASE_URL=postgres://test:password@127.0.0.1:5432/cubeos_http_test
 export TEST_MIGRATION_DATABASE_URL=postgres://test:password@127.0.0.1:5432/cubeos_migrations_test
 export TEST_INGESTION_DATABASE_URL=postgres://test:password@127.0.0.1:5432/cubeos_ingestion_test
+export TEST_TRANSPORT_DATABASE_URL=postgres://test:password@127.0.0.1:5432/cubeos_transport_test
+export TEST_REALTIME_DATABASE_URL=postgres://test:password@127.0.0.1:5432/cubeos_realtime_test
+export TEST_AUTH_DATABASE_URL=postgres://test:password@127.0.0.1:5432/cubeos_auth_test
 pnpm --filter @cubeos/api test
 pnpm --filter @cubeos/api lint
 ```

@@ -45,6 +45,9 @@ func NewWithRealtime(c config.Config, p *pgxpool.Pool, d DeviceStore, readings T
 	stream := realtime.NewSSE(hub, func(ctx context.Context, r *http.Request, id string) (identity.Principal, telemetry.Projection, error) {
 		principal, err := resolve(ctx, r)
 		if err != nil {
+			if errors.Is(err, identity.ErrUnauthorized) {
+				return principal, telemetry.Projection{}, realtime.ErrUnauthorized
+			}
 			return principal, telemetry.Projection{}, err
 		}
 		if !uuid(principal.UserID) || (!principal.ExpiresAt.IsZero() && !time.Now().Before(principal.ExpiresAt)) {
@@ -61,7 +64,7 @@ func NewWithRealtime(c config.Config, p *pgxpool.Pool, d DeviceStore, readings T
 		w.Header().Set("Cache-Control", "no-store")
 		host, port, err := net.SplitHostPort(r.Host)
 		ip := net.ParseIP(host)
-		if err != nil || port != c.Port || (host != "localhost" && (ip == nil || !ip.IsLoopback())) {
+		if (c.Mode == "public" && r.Host != c.PublicAPIHost) || (c.Mode != "public" && (err != nil || port != c.Port || (host != "localhost" && (ip == nil || !ip.IsLoopback())))) {
 			problem(w, 403, "host_forbidden")
 			return
 		}
@@ -70,7 +73,7 @@ func NewWithRealtime(c config.Config, p *pgxpool.Pool, d DeviceStore, readings T
 			problem(w, 403, "origin_forbidden")
 			return
 		}
-		if r.Header.Get("Sec-Fetch-Site") == "cross-site" {
+		if r.Header.Get("Sec-Fetch-Site") == "cross-site" && (c.Mode != "public" || origin != c.Origin) {
 			problem(w, 403, "site_forbidden")
 			return
 		}
@@ -135,6 +138,10 @@ func NewWithRealtime(c config.Config, p *pgxpool.Pool, d DeviceStore, readings T
 		}
 		principal, err := resolve(ctx, r)
 		if err != nil {
+			if errors.Is(err, identity.ErrUnauthorized) {
+				problem(w, 401, "unauthorized")
+				return
+			}
 			problem(w, 503, "identity_unavailable")
 			return
 		}

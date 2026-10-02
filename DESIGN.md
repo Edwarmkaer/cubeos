@@ -131,7 +131,7 @@ Laboratorio o aula, portátil, luz de clase. Fondo oscuro para que el dato recib
 
 ### Configuración
 
-- `references/ui/SettingsPrincipal.png`: mismo shell y pozo de fuente de datos. PR7 integra controles nativos con tokens existentes: origen explícito, URL, modo sin Internet, consulta/selección de dispositivo, registro y renombrado. Estados de carga/error se leen junto a los controles. Este cambio funcional no aprueba una nueva dirección visual.
+- `references/ui/SettingsPrincipal.png`: mismo shell y pozo de fuente de datos. PR7 integra controles nativos con tokens existentes: origen explícito, URL, modo sin Internet, consulta/selección de dispositivo, registro y renombrado. PR8 añade sesión pública con botones de entrada/salida del mismo control y texto de disponibilidad. Estados de carga/error se leen junto a los controles. Estos cambios funcionales no aprueban una nueva dirección visual.
 
 ## Tipografía
 

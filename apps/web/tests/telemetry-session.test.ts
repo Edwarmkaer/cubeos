@@ -56,3 +56,24 @@ test("changing public identity clears the old snapshot; public never falls back 
   await assert.rejects(sourceToken("public"), /Sesión no disponible/);
   assert.equal(await sourceToken("local"), null);
 });
+
+test("a late token from the previous public account is rejected before use", async () => {
+  let release!: (value: string) => void;
+  setPublicTokenGetter(() => new Promise<string>(resolve => { release = resolve; }));
+  const pending = sourceToken("public");
+  setPublicTokenGetter(() => "B");
+  release("A");
+  await assert.rejects(pending, /Sesión/);
+  assert.equal(await sourceToken("public"), "B");
+  setPublicTokenGetter(null);
+});
+
+test("identity change immediately aborts SSE even without a React effect cleanup", async () => {
+  setPublicTokenGetter(() => "A");
+  useTelemetryStore.getState().select({ ...local, mode: "public", apiURL: "https://api.example.com" });
+  let signal!: AbortSignal;
+  const stop = startTelemetry(useTelemetryStore, () => ({ subscribeTelemetry: async (_id, h) => { signal = h.signal; await new Promise<void>(resolve => h.signal.addEventListener("abort", () => resolve())); } }));
+  setPublicTokenGetter(null);
+  assert.equal(signal.aborted, true);
+  stop();
+});
