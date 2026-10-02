@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Edwarmkaer/cubeos/apps/api/internal/realtime"
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/telemetry"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -166,6 +167,11 @@ func (r *Repository) Store(ctx context.Context, sourceID string, input Reception
 			return result, err
 		}
 		if _, err = tx.Exec(ctx, "UPDATE device_telemetry_state SET revision=$2 WHERE device_id=$1", *device, result.Revision); err != nil {
+			return result, err
+		}
+		// PostgreSQL delivers this hint only after COMMIT, across API processes.
+		// No raw payload or session/source credentials leave this transaction.
+		if _, err = tx.Exec(ctx, "SELECT pg_notify($1,$2)", realtime.Channel, *device); err != nil {
 			return result, err
 		}
 	}

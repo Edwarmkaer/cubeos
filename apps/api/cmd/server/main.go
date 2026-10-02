@@ -16,6 +16,7 @@ import (
 	api "github.com/Edwarmkaer/cubeos/apps/api/internal/http"
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/identity"
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/ingestion"
+	"github.com/Edwarmkaer/cubeos/apps/api/internal/realtime"
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/storage"
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/telemetry"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -76,9 +77,17 @@ func run() error {
 		return nil
 	}
 	resolver := func(ctx context.Context, r *http.Request) (identity.Principal, error) {
+		// The offline profile has no bearer credential. Ingestion secrets cannot
+		// be promoted into user access to REST or SSE by this local resolver.
+		if r.Header.Get("Authorization") != "" {
+			return identity.Principal{}, nil
+		}
 		return identity.Local(ctx, pool)
 	}
-	server := &http.Server{Addr: c.Address, Handler: api.New(c, pool, devices.NewRepository(pool), resolver), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 15 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
+	hub := realtime.NewHub()
+	go hub.Run(ctx, c.DatabaseURL)
+	defer hub.Close()
+	server := &http.Server{Addr: c.Address, Handler: api.NewWithRealtime(c, pool, devices.NewRepository(pool), telemetry.NewRepository(pool), resolver, hub), BaseContext: func(net.Listener) context.Context { return ctx }, ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 15 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
 	service := ingestion.NewService(ingestion.NewRepository(pool))
 	sources := ingestion.NewSources(pool)
 	var ingress *http.Server

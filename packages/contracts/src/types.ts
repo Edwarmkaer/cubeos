@@ -50,6 +50,15 @@ export type GroupFreshness = FieldFreshness & { fields: Record<string, FieldFres
 /** The readable source snapshot stays intact inside the server projection. */
 export type ProjectionState = { frontierEpoch: number; minimumEpoch: number; statusEvidence: Record<string, FieldFreshness> };
 export type SnapshotProjectionV2 = { revision: number; snapshot: SnapshotV2; freshnessByGroup: Partial<Record<MessageType, GroupFreshness>>; projectionState: ProjectionState };
+/** Full current state, without internal projection ordering provenance. */
+export type TelemetrySnapshotEvent = Pick<SnapshotProjectionV2, "revision" | "snapshot" | "freshnessByGroup">;
+export type TelemetryPacket = {
+  id: number; receivedAt: string; status: "accepted" | "duplicated" | "rejected"; cause: string;
+  receptionEpoch: number | null; messageType: MessageType | null; sequence: number | null; uptimeMs: number | null;
+  rawBase64: string; rawSize: number; rawTruncated: boolean; rawSha256: string;
+  normalized?: Record<string, unknown>; logicalSample: boolean; projected: boolean;
+};
+export type TelemetryPage = { packets: TelemetryPacket[]; nextCursor?: string; watermark: number };
 
 type VectorPatch = Partial<Record<"x" | "y" | "z", number>>;
 /** Conversion reference only: not a persisted/combined snapshot or an ordering algorithm. */
