@@ -262,6 +262,56 @@ func TestPostgresIngestionEvidenceAtomicityConcurrencyAndRebuild(t *testing.T) {
 	if !bytes.Equal(before, after) {
 		t.Fatal("epoch rebuild differs")
 	}
+	// CS01 is intentionally reused by another owner. Source membership, not
+	// flight id or identical packet content, separates identity/projection.
+	bSame, err := devices.NewRepository(pool).Create(ctx, b, devices.Input{Name: "B same flight id", ProtocolDeviceID: "CS01"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var bSource string
+	if err = pool.QueryRow(ctx, "INSERT INTO ingestion_sources(device_id,transport,credential_hash) VALUES($1,'http',repeat('5',64)) RETURNING id::text", bSame.ID).Scan(&bSource); err != nil {
+		t.Fatal(err)
+	}
+	if r := ingest(bSource, first, "accepted"); r.Revision != 1 {
+		t.Fatal("global flight id leaked identity")
+	}
+	if _, err = reader.GetSnapshot(ctx, a, bSame.ID); err != devices.ErrNotFound {
+		t.Fatal("same flight id ownership leaked")
+	}
+	bSnapshot, err := reader.GetSnapshot(ctx, b, bSame.ID)
+	if err != nil || bSnapshot.Revision != 1 {
+		t.Fatal("B own snapshot", err)
+	}
+	bPage, err := reader.ListPackets(ctx, b, bSame.ID, telemetry.Filter{}, "", 200)
+	if err != nil || len(bPage.Packets) != 1 {
+		t.Fatal("B history includes A", err)
+	}
+	// Persist sequence+uptime uint32 wrap and a previously unseen delayed
+	// pre-wrap sample in distinct logical epochs, then rebuild exactly.
+	wrapDevice, err := devices.NewRepository(pool).Create(ctx, a, devices.Input{Name: "Wrap", ProtocolDeviceID: "CS01"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var wrapSource string
+	if err = pool.QueryRow(ctx, "INSERT INTO ingestion_sources(device_id,transport,credential_hash) VALUES($1,'http',repeat('6',64)) RETURNING id::text", wrapDevice.ID).Scan(&wrapSource); err != nil {
+		t.Fatal(err)
+	}
+	ingest(wrapSource, h(4294967294, 4294967200), "accepted")
+	ingest(wrapSource, h(4294967295, 4294967201), "accepted")
+	if r := ingest(wrapSource, h(0, 10), "accepted"); r.Epoch == nil || *r.Epoch != 1 || r.Revision != 3 {
+		t.Fatal("wrap epoch/revision", r)
+	}
+	if r := ingest(wrapSource, h(4294967293, 4294967199), "accepted"); r.Epoch == nil || *r.Epoch != 0 || r.Revision != 3 {
+		t.Fatal("delayed pre-wrap assigned wrong epoch", r)
+	}
+	before, _ = json.Marshal(mustSnapshot(t, reader, ctx, a, wrapDevice.ID))
+	if err = reader.Rebuild(ctx, a, wrapDevice.ID); err != nil {
+		t.Fatal(err)
+	}
+	after, _ = json.Marshal(mustSnapshot(t, reader, ctx, a, wrapDevice.ID))
+	if !bytes.Equal(before, after) {
+		t.Fatal("wrap rebuild differs")
+	}
 }
 func mustSnapshot(t *testing.T, r *telemetry.Repository, ctx context.Context, p identity.Principal, id string) telemetry.Projection {
 	t.Helper()
