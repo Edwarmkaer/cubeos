@@ -1,10 +1,11 @@
-# API local y pública (PR3–PR8)
+# API local y pública (PR3–PR9)
 
 Go 1.27.1 (misma versión en `.go-version`, `go.mod`, Docker y CI), PostgreSQL
 17.6. Persiste identidad/dispositivos, recepciones e historial de telemetría y
 snapshots reconstruibles. Web consume REST/SSE y conserva demo explícita.
-Serial, HTTP y Clerk están implementados; progreso/medios pertenecen a los PRs
-siguientes del [plan](../../docs/superpowers/plans/2026-10-01-cubeos-backend.md).
+Serial, HTTP, Clerk y progreso están implementados; operación y carga de pasos
+aprobados en [construcción](../../docs/construction-progress.md).
+Medios siguen pendientes en el [plan](../../docs/superpowers/plans/2026-10-01-cubeos-backend.md).
 Configuración Google/Clerk, variables runtime, inscripción administrativa y
 límites de autenticación: [identidad pública](../../docs/public-auth.md).
 

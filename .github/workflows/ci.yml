@@ -115,6 +115,7 @@ jobs:
           for i in $(seq 1 60); do docker exec cubeos-browser-pg pg_isready -U postgres && break; sleep 1; done
           docker exec cubeos-browser-pg createdb -U postgres cubeos_browser_test
           echo "TEST_BROWSER_DATABASE_URL=postgres://postgres:$POSTGRES_PASSWORD@localhost:55437/cubeos_browser_test?sslmode=disable" >> "$GITHUB_ENV"
+          echo "CUBEOS_BROWSER_PG_CONTAINER=cubeos-browser-pg" >> "$GITHUB_ENV"
           echo "CUBEOS_API_BINARY=$RUNNER_TEMP/cubeos-pr7-api" >> "$GITHUB_ENV"
           echo "CUBEOS_BROWSER_EVIDENCE_DIR=$RUNNER_TEMP/cubeos-browser-evidence" >> "$GITHUB_ENV"
           pnpm --filter web start --port 3108 > "$RUNNER_TEMP/cubeos-web.log" 2>&1 &
@@ -147,6 +148,7 @@ jobs:
       TEST_TRANSPORT_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_transport_test?sslmode=disable
       TEST_REALTIME_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_realtime_test?sslmode=disable
       TEST_AUTH_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_auth_test?sslmode=disable
+      TEST_CONSTRUCTION_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_construction_test?sslmode=disable
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -165,6 +167,7 @@ jobs:
           createdb -h localhost -U postgres cubeos_transport_test
           createdb -h localhost -U postgres cubeos_realtime_test
           createdb -h localhost -U postgres cubeos_auth_test
+          createdb -h localhost -U postgres cubeos_construction_test
       - name: Format, vet and race tests against PostgreSQL
         working-directory: apps/api
         run: |
@@ -205,6 +208,8 @@ jobs:
     env:
       TEST_AUTH_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_auth_browser_test?sslmode=disable
       CUBEOS_AUTH_BROWSER: '1'
+      CUBEOS_CONSTRUCTION_BROWSER: '1'
+      TEST_CONSTRUCTION_BROWSER_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_construction_browser_test?sslmode=disable
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -224,11 +229,15 @@ jobs:
           PGPASSWORD: ci-disposable
         run: |
           createdb -h localhost -U postgres cubeos_auth_browser_test
+          createdb -h localhost -U postgres cubeos_construction_browser_test
           pnpm install --frozen-lockfile
           pnpm --filter web exec playwright install --with-deps chromium
       - name: Signed JWT, real Go/PostgreSQL REST/SSE and React account boundaries
         working-directory: apps/api
         run: go test -race -count=1 -v ./internal/http -run TestPublicIdentityOwnershipRevocationAndBrowser
+      - name: Signed construction saved progress and delayed account/device boundaries
+        working-directory: apps/api
+        run: go test -race -count=1 -v ./internal/http -run TestConstructionSignedBrowser
 
   docker:
     name: docker-local

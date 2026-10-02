@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/config"
+	"github.com/Edwarmkaer/cubeos/apps/api/internal/construction"
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/devices"
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/identity"
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/ingestion"
@@ -40,6 +41,7 @@ func NewWithTelemetry(c config.Config, p *pgxpool.Pool, d DeviceStore, readings 
 	return NewWithRealtime(c, p, d, readings, resolve, realtime.NewHub())
 }
 func NewWithRealtime(c config.Config, p *pgxpool.Pool, d DeviceStore, readings TelemetryStore, resolve Resolver, hub *realtime.Hub) http.Handler {
+	guide := construction.NewRepository(p)
 	sources := ingestion.NewSources(p)
 	packets := ingestion.NewHTTP(ingestion.NewService(ingestion.NewRepository(p)), sources)
 	stream := realtime.NewSSE(hub, func(ctx context.Context, r *http.Request, id string) (identity.Principal, telemetry.Projection, error) {
@@ -86,7 +88,7 @@ func NewWithRealtime(c config.Config, p *pgxpool.Pool, d DeviceStore, readings T
 				problem(w, 403, "origin_required")
 				return
 			}
-			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, Last-Event-ID")
 			w.WriteHeader(204)
 			return
@@ -128,7 +130,7 @@ func NewWithRealtime(c config.Config, p *pgxpool.Pool, d DeviceStore, readings T
 			return
 		}
 		const collection = "/api/v1/devices"
-		if r.URL.Path != collection && !strings.HasPrefix(r.URL.Path, collection+"/") {
+		if r.URL.Path != "/api/v1/steps" && r.URL.Path != collection && !strings.HasPrefix(r.URL.Path, collection+"/") {
 			problem(w, 404, "not_found")
 			return
 		}
@@ -147,6 +149,17 @@ func NewWithRealtime(c config.Config, p *pgxpool.Pool, d DeviceStore, readings T
 		}
 		if !uuid(principal.UserID) || (!principal.ExpiresAt.IsZero() && !time.Now().Before(principal.ExpiresAt)) {
 			problem(w, 401, "unauthorized")
+			return
+		}
+		if r.URL.Path == "/api/v1/steps" {
+			if r.Method != "GET" {
+				problem(w, 405, "method_not_allowed")
+				return
+			}
+			result, err := guide.List(ctx)
+			if !handleError(w, err) {
+				respond(w, 200, result)
+			}
 			return
 		}
 		if r.URL.Path == collection {
@@ -175,6 +188,10 @@ func NewWithRealtime(c config.Config, p *pgxpool.Pool, d DeviceStore, readings T
 		}
 		id := strings.TrimPrefix(r.URL.Path, collection+"/")
 		parts := strings.Split(id, "/")
+		if len(parts) >= 2 && (parts[1] == "progress" || parts[1] == "steps") {
+			serveConstruction(ctx, w, r, guide, principal, parts)
+			return
+		}
 		if len(parts) >= 2 && parts[1] == "sources" {
 			serveSources(ctx, w, r, sources, principal, parts)
 			return

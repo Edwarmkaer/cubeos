@@ -1,7 +1,8 @@
 # Cliente CubeOS
 
 `APIClient` consume REST tipado y SSE con fetch. Contrato y operación:
-[realtime](../../docs/realtime.md). El paquete aún no conecta el visor.
+[realtime](../../docs/realtime.md), [visor](../../docs/visor-telemetry.md) y
+[construcción](../../docs/construction-progress.md).
 
 ```ts
 import { APIClient } from "@cubeos/api-client";

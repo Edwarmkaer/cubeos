@@ -128,6 +128,11 @@ Laboratorio o aula, portátil, luz de clase. Fondo oscuro para que el dato recib
 
 - `references/ui/ConstruccionPrincipal.png`: paso + lista | canvas del armazón | vista; barra de progreso abajo.
 - Sin catálogo inventado (D-005).
+- PR9 reutiliza los pozos y controles nativos: secuencia común, casillas,
+  instrucciones de texto y porcentaje confirmado por API. En móvil los tres
+  pozos se apilan. Estados vacíos/guardado/error usan tokens existentes.
+  Operación: [construcción](docs/construction-progress.md). La integración
+  funcional no aprueba la dirección visual ni incorpora un simulador 3D.
 
 ### Configuración
 

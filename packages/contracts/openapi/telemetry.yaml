@@ -1,16 +1,86 @@
 openapi: 3.1.0
 info:
   title: CubeOS local telemetry, source transports and realtime
-  version: 0.6.0
+  version: 0.9.0
   description: >-
     Local management resolves a persistent installation principal and requires
     loopback Host and configured Origin when supplied. Source credentials only
     authorize machine ingestion, never management. Optional separate ingestion
     listener requires exact configured private-interface Host, rejects browser
-    Origin/Fetch-Site, and exposes only POST packets. Public mode remains disabled.
+    Origin/Fetch-Site, and exposes only POST packets. Public management requires
+    an enrolled Clerk principal and verified session; see docs/public-auth.md.
 servers:
   - url: http://127.0.0.1:8080
 paths:
+  /api/v1/steps:
+    get:
+      operationId: listSteps
+      security: [{UserBearer: []}, {}]
+      description: Authenticated common approved guide ordered by displayOrder then stable UUID. Local principal needs no bearer. Empty until approved content is loaded by a DB operator.
+      responses:
+        '200':
+          description: Approved steps, possibly empty.
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: '#/components/schemas/ConstructionStep'}}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /api/v1/devices/{deviceId}/progress:
+    parameters:
+      - $ref: '#/components/parameters/DeviceId'
+    get:
+      operationId: getProgress
+      security: [{UserBearer: []}, {}]
+      description: Owner-only persisted construction progress. Unknown and foreign devices both return 404. Total and percentage are derived from existing steps.
+      responses:
+        '200':
+          description: Progress including every step.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ConstructionProgress'}
+        '400': {description: Invalid device UUID}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /api/v1/devices/{deviceId}/steps/{stepId}:
+    parameters:
+      - $ref: '#/components/parameters/DeviceId'
+      - name: stepId
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    put:
+      operationId: setStepCompleted
+      security: [{UserBearer: []}, {}]
+      description: Owner-only idempotent mark/unmark. Repeated true preserves completion date; false clears it. Exact completed key and JSON boolean required, no duplicates/casing aliases/null/coercion.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [completed]
+              properties:
+                completed: {type: boolean}
+      responses:
+        '200':
+          description: Persisted current progress.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ConstructionProgress'}
+        '400': {description: Invalid UUID or completion body}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {description: Step missing or device missing/not owned}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+        '413': {description: Body exceeds 8192 bytes}
+        '415': {description: application/json required}
+        '503': {$ref: '#/components/responses/Unavailable'}
   /api/v1/devices/{deviceId}/events:
     parameters:
       - $ref: '#/components/parameters/DeviceId'
@@ -23,8 +93,8 @@ paths:
       operationId: subscribeTelemetry
       description: >-
         Owner-authorized current snapshots after commit. GET only, no query parameters
-        or URL tokens. Local profile requires no bearer; public identity remains disabled
-        until PR8. SourceBearer never authorizes this endpoint. SSE snapshot data uses
+        or URL tokens. Local profile requires no bearer; public mode requires an
+        enrolled verified Clerk session. SourceBearer never authorizes this endpoint. SSE snapshot data uses
         SnapshotEvent; id is device UUID colon exact decimal int64 revision. A device
         without telemetry stays open with comments until its first projection. Revision
         is monotonic per device, intermediate states can be coalesced. Ownership and
@@ -216,6 +286,11 @@ paths:
         '503': {$ref: '#/components/responses/Unavailable'}
 components:
   securitySchemes:
+    UserBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Public enrolled Clerk user and active verified session. Local installation resolves its persisted principal without this header.
     SourceBearer:
       type: http
       scheme: bearer
@@ -228,6 +303,31 @@ components:
     Cursor: {name: cursor, in: query, description: Opaque base64url keyset tied to device and filters., schema: {type: string, maxLength: 2048}}
     Limit: {name: limit, in: query, schema: {type: integer, minimum: 1, maximum: 200, default: 100}}
   schemas:
+    ConstructionStep:
+      type: object
+      required: [id, title, instructions, displayOrder]
+      properties:
+        id: {type: string, format: uuid}
+        title: {type: string, minLength: 1, maxLength: 200}
+        instructions: {type: string, minLength: 1, maxLength: 10000}
+        displayOrder: {type: integer, minimum: 0}
+    ConstructionStepState:
+      allOf:
+        - {$ref: '#/components/schemas/ConstructionStep'}
+        - type: object
+          required: [completed, completedAt]
+          properties:
+            completed: {type: boolean}
+            completedAt: {type: [string, 'null'], format: date-time}
+    ConstructionProgress:
+      type: object
+      required: [deviceId, total, completed, percentage, steps]
+      properties:
+        deviceId: {type: string, format: uuid}
+        total: {type: integer, minimum: 0}
+        completed: {type: integer, minimum: 0}
+        percentage: {type: number, minimum: 0, maximum: 100}
+        steps: {type: array, items: {$ref: '#/components/schemas/ConstructionStepState'}}
     SnapshotEvent:
       type: object
       additionalProperties: false

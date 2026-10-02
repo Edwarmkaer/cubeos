@@ -27,6 +27,14 @@ test "$("${compose[@]}" exec -T web id -u)" != 0
 device=$("${curl_probe[@]}" --fail --silent -H 'Content-Type: application/json' -d '{"name":"Smoke persistente","protocolDeviceId":"CS01"}' "$api_url/api/v1/devices")
 device_id=$(jq -er .id <<<"$device")
 profile_before=$("${compose[@]}" exec -T db psql -U cubeos -d cubeos -Atc "SELECT user_id FROM auth_identities WHERE provider='local' AND subject='installation'")
+# This disposable smoke owns test-only steps. Production migrations contain none.
+step_one=11111111-1111-4111-8111-111111111111
+step_two=22222222-2222-4222-8222-222222222222
+"${compose[@]}" exec -T db psql -v ON_ERROR_STOP=1 -U cubeos -d cubeos -c "INSERT INTO steps(id,title,instructions,display_order) VALUES('$step_one','Smoke fixture one','Test-only content',1),('$step_two','Smoke fixture two','Test-only content',2) ON CONFLICT(id) DO NOTHING" >/dev/null
+progress_before=$("${curl_probe[@]}" --fail --silent -X PUT -H 'Content-Type: application/json' -d '{"completed":true}' "$api_url/api/v1/devices/$device_id/steps/$step_one" | jq -cS .)
+test "$(jq -er .percentage <<<"$progress_before")" = 50
+progress_duplicate=$("${curl_probe[@]}" --fail --silent -X PUT -H 'Content-Type: application/json' -d '{"completed":true}' "$api_url/api/v1/devices/$device_id/steps/$step_one" | jq -cS .)
+test "$progress_before" = "$progress_duplicate"
 # Fixture and authenticated HTTP use the same transactional ingestion service.
 provisioned=$("${curl_probe[@]}" --fail --silent -H 'Content-Type: application/json' -d '{"transport":"http","gatewayId":"docker-smoke"}' "$api_url/api/v1/devices/$device_id/sources")
 source_id=$(jq -er .id <<<"$provisioned")
@@ -61,6 +69,8 @@ test "$(jq -er .protocolDeviceId <<<"$restored")" = CS01
 profile_after=$("${compose[@]}" exec -T db psql -U cubeos -d cubeos -Atc "SELECT user_id FROM auth_identities WHERE provider='local' AND subject='installation'")
 test -n "$profile_before"
 test "$profile_before" = "$profile_after"
+progress_after=$("${offline[@]}" exec -T api wget -T 6 -q -O - "http://127.0.0.1:${API_PORT:-8080}/api/v1/devices/$device_id/progress" | jq -cS .)
+test "$progress_before" = "$progress_after"
 snapshot_after=$("${offline[@]}" exec -T api wget -T 6 -q -O - "http://127.0.0.1:${API_PORT:-8080}/api/v1/devices/$telemetry_id/snapshot" | jq -cS .)
 events_offline=$("${offline[@]}" exec -T api wget -T 1 -q -O - "http://127.0.0.1:${API_PORT:-8080}/api/v1/devices/$telemetry_id/events" 2>/dev/null) || test "$?" = 1
 event_offline=$(sed -n 's/^data: //p' <<<"$events_offline" | jq -cS .)
@@ -92,6 +102,10 @@ done
 "${offline[@]}" down
 "${compose[@]}" up --no-build --pull never -d
 wait_ready
+test "$progress_before" = "$("${curl_probe[@]}" --fail --silent "$api_url/api/v1/devices/$device_id/progress" | jq -cS .)"
+unmarked=$("${curl_probe[@]}" --fail --silent -X PUT -H 'Content-Type: application/json' -d '{"completed":false}' "$api_url/api/v1/devices/$device_id/steps/$step_one")
+test "$(jq -er .percentage <<<"$unmarked")" = 0
+test "$(jq -c '[.steps[].completedAt]' <<<"$unmarked")" = '[null,null]'
 events_restored=$(curl --connect-timeout 2 --max-time 1 --no-buffer --silent --fail "$api_url/api/v1/devices/$telemetry_id/events") || test "$?" = 28
 test "$event_before" = "$(sed -n 's/^data: //p' <<<"$events_restored" | jq -cS .)"
 duplicated=$("${curl_probe[@]}" --fail --silent -H "Authorization: Bearer $source_credential" -H 'Content-Type: application/json' -d "$frame" "$api_url/api/v1/ingestion/packets")
@@ -99,4 +113,4 @@ test "$(jq -er .status <<<"$duplicated")" = duplicated
 "${curl_probe[@]}" --fail --silent -X DELETE "$api_url/api/v1/devices/$device_id/sources/$source_id" >/dev/null
 test "$("${curl_probe[@]}" --silent -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $source_credential" -H 'Content-Type: application/json' -d "$frame" "$api_url/api/v1/ingestion/packets")" = 401
 unset source_credential provisioned
-echo "Smoke passed: non-root, DB-down readiness, persistent device/profile/raw/history/snapshot/SSE after restart, deterministic rebuild, blocked-egress boot, offline SSE/visor/font and six original photos; loopback installation restored."
+echo "Smoke passed: non-root, DB-down readiness, persistent construction dates/percentage/device/profile/raw/history/snapshot/SSE after API/DB restart, unmark, deterministic rebuild, blocked-egress boot, offline SSE/visor/font and six original photos; loopback installation restored."

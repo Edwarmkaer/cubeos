@@ -19,6 +19,9 @@ export type Device = {
     name: string;
     protocolDeviceId: string;
 };
+export type ConstructionStep = { id: string; title: string; instructions: string; displayOrder: number };
+export type ConstructionStepState = ConstructionStep & { completed: boolean; completedAt: string | null };
+export type ConstructionProgress = { deviceId: string; total: number; completed: number; percentage: number; steps: ConstructionStepState[] };
 export class APIError extends Error {
     readonly status: number;
     readonly retryable: boolean;
@@ -174,6 +177,12 @@ export class APIClient {
         }
     }
     listDevices(token: string | null, signal: AbortSignal) { return this.json<Device[]>("/api/v1/devices", token, signal); }
+    listSteps(token: string | null, signal: AbortSignal) { return this.json<ConstructionStep[]>("/api/v1/steps", token, signal); }
+    getProgress(id: string, token: string | null, signal: AbortSignal) { return this.json<ConstructionProgress>(devicePath(id) + "/progress", token, signal); }
+    setStepCompleted(id: string, stepId: string, completed: boolean, token: string | null, signal: AbortSignal) {
+        devicePath(stepId);
+        return this.json<ConstructionProgress>(devicePath(id) + "/steps/" + encodeURIComponent(stepId), token, signal, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ completed }) });
+    }
     getDevice(id: string, token: string | null, signal: AbortSignal) { return this.json<Device>(devicePath(id), token, signal); }
     createDevice(input: {
         name: string;
