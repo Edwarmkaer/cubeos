@@ -48,7 +48,7 @@ func TestLocalDefaultsAndInvalidConfigurations(t *testing.T) {
 }
 
 func TestPublicClerkConfiguration(t *testing.T) {
-	base := map[string]string{"DATABASE_URL": "postgres://test@localhost/db", "DEPLOYMENT_MODE": "public", "AUTH_MODE": "clerk", "LISTEN_HOST": "0.0.0.0", "ALLOWED_ORIGIN": "https://web.example", "PUBLIC_API_HOST": "api.example", "CLERK_ISSUER": "https://auth.example", "CLERK_JWKS_URL": "https://auth.example/.well-known/jwks.json", "CLERK_AUDIENCE": "cubeos", "CLERK_SECRET_KEY": "fixture-only"}
+	base := map[string]string{"DATABASE_URL": "postgres://test@localhost/db", "DEPLOYMENT_MODE": "public", "AUTH_MODE": "clerk", "LISTEN_HOST": "0.0.0.0", "ALLOWED_ORIGIN": "https://web.example", "PUBLIC_API_HOST": "api.example", "CLERK_ISSUER": "https://auth.example", "CLERK_JWKS_URL": "https://auth.example/.well-known/jwks.json", "CLERK_AUDIENCE": "cubeos", "CLERK_SECRET_KEY": "fixture-only", "MEDIA_STORAGE": "s3", "MEDIA_S3_ENDPOINT": "https://objects.example", "MEDIA_S3_REGION": "test", "MEDIA_S3_BUCKET": "private", "MEDIA_S3_ACCESS_KEY": "test-key", "MEDIA_S3_SECRET_KEY": "fixture-only"}
 	load := func(m map[string]string) (Config, error) { return Load(func(k string) string { return m[k] }) }
 	if _, err := load(base); err != nil {
 		t.Fatalf("valid public config rejected: %v", err)

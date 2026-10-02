@@ -6,6 +6,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { setTimeout as delay } from "node:timers/promises";
 import { chromium } from "playwright";
 import { reading, appendReadings, chartFields, gpsPosition } from "../src/lib/real-telemetry.ts";
+import { mediaRuntime } from "./media-runtime.mjs";
 
 const binary = process.env.CUBEOS_API_BINARY;
 const database = process.env.TEST_BROWSER_DATABASE_URL;
@@ -16,7 +17,7 @@ const port = process.env.CUBEOS_BROWSER_API_PORT ?? "8087";
 const base = `http://localhost:${port}`;
 const evidence = process.env.CUBEOS_BROWSER_EVIDENCE_DIR ?? ".superpowers/sdd/2026-10-01-cubeos-backend/pr7-browser";
 await mkdir(evidence, { recursive: true });
-const env = { ...process.env, DATABASE_URL: database, PORT: port, LISTEN_HOST: "127.0.0.1", DEPLOYMENT_MODE: "local", AUTH_MODE: "local", ALLOWED_ORIGIN: web, LOCAL_CONTAINER: "false", SERIAL_PORT: "", SERIAL_SOURCE_ID: "", SERIAL_BAUD: "", INGESTION_ADDRESS: "" };
+const env = { ...process.env, DATABASE_URL: database, PORT: port, LISTEN_HOST: "127.0.0.1", DEPLOYMENT_MODE: "local", AUTH_MODE: "local", ALLOWED_ORIGIN: web, LOCAL_CONTAINER: "false", SERIAL_PORT: "", SERIAL_SOURCE_ID: "", SERIAL_BAUD: "", INGESTION_ADDRESS: "", MEDIA_STORAGE:"local",MEDIA_LOCAL_ROOT:`${evidence}/media`,MEDIA_TEMP_ROOT:`${evidence}/media-staging` };
 execFileSync(binary, ["migrate"], { env, stdio: "pipe" });
 let api;
 let exiting;
@@ -143,6 +144,7 @@ try {
   await expectText(/1 \/ 2 pasos · 50%/); assert.equal(await constructionMark.isChecked(), true);
   assert.deepEqual(await request(`/api/v1/devices/${device.id}/progress`), savedProgress, "remount changed persisted date");
   await page.getByRole("link", { name: "Visor", exact: true }).first().click();
+  await mediaRuntime({page,base,device,web,evidence});
   await expectText(/API conectada/);
   await expectText(/Esperando primera muestra real/);
   const cli = spawn(process.execPath, ["tools/simulator/src/index.ts", "--transport", "http", "--url", base + "/api/v1/ingestion/packets", "--seed", "42", "--duration-ms", "2000", "--rate", "10"], { env: { ...process.env, CUBEOS_SOURCE_CREDENTIAL: source.credential }, stdio: "ignore" });

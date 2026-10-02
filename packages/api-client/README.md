@@ -23,3 +23,6 @@ terminales rechazan la promesa; cancelación la resuelve y emite `closed`.
 original. REST ofrece dispositivos, fuentes, snapshot e historial paginado;
 solo snapshot/SSE se validan semánticamente en runtime, otras rutas tienen tipos
 estáticos y validación JSON/Content-Type/límite de tamaño. No incorpora Clerk.
+`listPhotos`, `uploadPhoto` y `photoBlob` añaden REST privado de medios con
+AbortSignal; multipart conserva bytes y las descargas tienen límite de memoria.
+Operación: [medios](../../docs/media.md). No persiste tokens ni URLs.

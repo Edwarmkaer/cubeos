@@ -161,3 +161,9 @@ export TEST_AUTH_DATABASE_URL=postgres://test:password@127.0.0.1:5432/cubeos_aut
 pnpm --filter @cubeos/api test
 pnpm --filter @cubeos/api lint
 ```
+# Fotografías
+
+Límites, variables local/S3, credenciales hardware, importación de archivos y
+reconciliación tienen dueño en [medios](../../docs/media.md). Después de migrar,
+`server media-reconcile` recupera metadata pendiente sin purgar originales.
+Compose persiste objetos en `media-data` además de PostgreSQL.

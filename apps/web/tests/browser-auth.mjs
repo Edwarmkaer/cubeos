@@ -9,7 +9,7 @@ import { setTimeout as delay } from "node:timers/promises";
 let input = ""; for await (const chunk of process.stdin) input += chunk;
 const fixture = JSON.parse(input); input = "";
 const root = fileURLToPath(new URL("../", import.meta.url));
-const bundle = await build({ absWorkingDir: root, entryPoints: ["tests/auth-browser-fixture.tsx"], bundle: true, write: false, platform: "browser", jsx: "automatic", define: { "process.env.NODE_ENV": '"production"' } });
+const bundle = await build({ absWorkingDir: root, entryPoints: ["tests/auth-browser-fixture.tsx"], bundle: true, write: false, platform: "browser", jsx: "automatic", define: { "process.env.NODE_ENV": '"production"' }, alias: { "next/image": fileURLToPath(new URL("./media-test-image.tsx", import.meta.url)) } });
 const server = createServer((req, res) => {
   res.setHeader("Cache-Control", "no-store");
   if (req.url === "/fixture.js") { res.setHeader("Content-Type", "text/javascript"); res.end(bundle.outputFiles[0].text); }

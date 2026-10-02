@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { Tile, PendingNote } from "./tile";
 import { BatteryIndicator } from "./battery-indicator";
-import { CameraGallery } from "./camera-gallery";
+import { MediaGallery } from "./media-gallery";
 import { TrendChart } from "./trend-chart";
 import { TelemetryMap } from "./telemetry-map";
 import { formatValue } from "./sparkline";
@@ -86,8 +86,7 @@ export function RealDashboard({ state }: { state: TelemetryState & { now: number
     <Tile title="Cámara" className="[grid-area:camera]">
       <p className="text-xs text-muted-foreground">Estado de cámara: {s?.health.errors.includes("CAMERA_FAILURE") ? "fallo" : s?.payload.cameraOk === null || !s ? "pendiente" : s.payload.cameraOk ? "operativa" : "fallo"} · SD {s?.health.errors.includes("STORAGE_FAILURE") ? "fallo" : s?.payload.sdFreeMb ?? "—"} MB · {s?.payload.deploymentState ?? "despliegue pendiente"}</p>
       {event ? <div className="flex gap-3 text-xs text-muted-foreground"><div>Cámara <Evidence r={fieldAge(event, "payload.cameraOk", now)} /></div><div>SD <Evidence r={fieldAge(event, "payload.sdFreeMb", now)} /></div></div> : null}
-      <CameraGallery frames={[]} />
-      <p className="text-[11px] text-muted-foreground">Esperando capturas reales · recepción de fotos pendiente.</p>
+      <MediaGallery />
     </Tile>
   </div>;
 }

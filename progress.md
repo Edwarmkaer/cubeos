@@ -2,6 +2,38 @@
 
 Actualizado: 2026-10-02.
 
+## PR 10 — Fotografías privadas local/S3
+
+Base PR9 integrada `26649d889d57f2dc12e288558cc4bc2b8f051662`; rama
+`feat/photo-storage`, checkout nativo exclusivo. Operación y límites pertenecen a
+[medios](docs/media.md); JSON/rutas a
+[OpenAPI](packages/contracts/openapi/telemetry.yaml). Originales exactos/SHA,
+captura desconocida nula, importación del servidor, miniaturas separadas,
+metadata pending/ready y reconciliación por lotes rotativos. Credenciales de
+medios revocables por dispositivo, distintas de telemetría; ingreso privado
+solo upload. Galería conserva imágenes sin captions, miniaturas paginadas,
+scrollbar oculta y descarga original. Cambios de cuenta/dispositivo/logout
+cancelan y revocan blobs. Pozo y `DESIGN.md` draft se conservan.
+
+RED→GREEN documentado para contrato local/S3, HTTP/cliente, aislamiento/sesión,
+pool agotado por listas concurrentes y reconciliación tras cien cargas cortadas.
+El overflow móvil provino del estado accesible sin contenedor posicionado:
+diagnóstico 698→390 px al contenerlo, con bento 1152 px preservado; regresión
+Next real verifica antes/después del scroll. Fixtures firmados no cargan CSS de
+Next: sustituyen su wrapper de imagen y activan botones DOM; clic/responsividad
+se verifican en Next real. Datos/PG/API/almacenamiento permanecen reales.
+
+Recursos exclusivos: `cubeos-pr10-test-pg` (55440,
+`cubeos-pr10-test-data`) y `cubeos-pr10-test-s3` (59040,
+`cubeos-pr10-s3-data`), servidor S3 oficial RustFS fijado por digest;
+Compose `cubeos-pr10-smoke` (8101/3135), volúmenes propios persistidos;
+Next 3133/API browser 8102/fixture firmado 3134. Credenciales efímeras y
+evidencia en `.superpowers/sdd/pr10-media/`, ignorada. No se modifican volúmenes
+ajenos. CI media obligatorio y gates anteriores conservados. Handoff aporta
+SHA y logs finales; runners/revisión/merge pertenecen al chat raíz.
+Hardware, Google/Clerk externo y proveedor S3 cloud no fueron probados.
+PR11/Railway no se inicia en esta entrega.
+
 ## PR 9 — Progreso de construcción
 
 Base PR8 integrada `0bbdf00f06ac86385e920ad2c0b04820043e1225`; rama

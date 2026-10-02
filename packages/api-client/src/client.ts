@@ -22,6 +22,8 @@ export type Device = {
 export type ConstructionStep = { id: string; title: string; instructions: string; displayOrder: number };
 export type ConstructionStepState = ConstructionStep & { completed: boolean; completedAt: string | null };
 export type ConstructionProgress = { deviceId: string; total: number; completed: number; percentage: number; steps: ConstructionStepState[] };
+export type Photo = { id: string; deviceId: string; contentType: "image/png" | "image/jpeg"; sizeBytes: number; widthPx: number; heightPx: number; sha256: string; capturedAt: string | null; importedAt: string; importMethod: "manual" | "http"; status: "pending" | "ready"; hasThumbnail: boolean };
+export type PhotoPage = { items: Photo[]; nextCursor: string };
 export class APIError extends Error {
     readonly status: number;
     readonly retryable: boolean;
@@ -177,6 +179,36 @@ export class APIClient {
         }
     }
     listDevices(token: string | null, signal: AbortSignal) { return this.json<Device[]>("/api/v1/devices", token, signal); }
+    listPhotos(id: string, filter: { limit?: number; cursor?: string }, token: string | null, signal: AbortSignal) {
+        const query = new URLSearchParams();
+        if (filter.limit !== undefined) query.set("limit", String(filter.limit));
+        if (filter.cursor) query.set("cursor", filter.cursor);
+        return this.json<PhotoPage>(devicePath(id) + "/photos?" + query, token, signal, { cache: "no-store" });
+    }
+    uploadPhoto(id: string, file: File, capturedAt: string | null, token: string | null, signal: AbortSignal) {
+        const body = new FormData();
+        if (capturedAt !== null) body.append("capturedAt", capturedAt);
+        body.append("file", file);
+        return this.json<Photo>(devicePath(id) + "/photos", token, signal, { method: "POST", body, cache: "no-store" });
+    }
+    async photoBlob(id: string, kind: "original" | "thumbnail", token: string | null, signal: AbortSignal): Promise<Blob> {
+        devicePath(id);
+        const response = await this.response(`/api/v1/photos/${encodeURIComponent(id)}/${kind}`, token, signal, { cache: "no-store" });
+        const type = response.headers.get("Content-Type")?.split(";")[0].trim();
+        if ((type !== "image/jpeg" && type !== "image/png") || !response.body) { await response.body?.cancel(); throw new APIError("Invalid photo response"); }
+        const maximum = kind === "thumbnail" ? 2 << 20 : 256 << 20;
+        const reader = response.body.getReader(), chunks: Uint8Array<ArrayBuffer>[] = [];
+        let size = 0;
+        try {
+            while (true) {
+                const result = await cancellable(reader.read(), signal);
+                if (result.done) { signal.throwIfAborted(); return new Blob(chunks, { type }); }
+                size += result.value.byteLength;
+                if (size > maximum) throw new APIError("Photo response limit exceeded");
+                chunks.push(new Uint8Array(result.value));
+            }
+        } finally { await reader.cancel().catch(() => {}); reader.releaseLock(); }
+    }
     listSteps(token: string | null, signal: AbortSignal) { return this.json<ConstructionStep[]>("/api/v1/steps", token, signal); }
     getProgress(id: string, token: string | null, signal: AbortSignal) { return this.json<ConstructionProgress>(devicePath(id) + "/progress", token, signal); }
     setStepCompleted(id: string, stepId: string, completed: boolean, token: string | null, signal: AbortSignal) {

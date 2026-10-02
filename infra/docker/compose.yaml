@@ -16,7 +16,7 @@ services:
     networks: [local]
     restart: unless-stopped
   migrate:
-    image: cubeos-api:pr9
+    image: cubeos-api:pr10
     build:
       context: ../..
       dockerfile: infra/docker/Dockerfile.api
@@ -29,22 +29,35 @@ services:
       LISTEN_HOST: 0.0.0.0
       PORT: ${API_PORT:-8080}
       ALLOWED_ORIGIN: http://localhost:${WEB_PORT:-3000}
+      MEDIA_STORAGE: ${MEDIA_STORAGE:-local}
+      MEDIA_LOCAL_ROOT: /data/media
+      MEDIA_TEMP_ROOT: /data/media-staging
+      MEDIA_MAX_BYTES: ${MEDIA_MAX_BYTES:-67108864}
+      MEDIA_MAX_PIXELS: ${MEDIA_MAX_PIXELS:-80000000}
+      MEDIA_S3_ENDPOINT: ${MEDIA_S3_ENDPOINT:-}
+      MEDIA_S3_REGION: ${MEDIA_S3_REGION:-}
+      MEDIA_S3_BUCKET: ${MEDIA_S3_BUCKET:-}
+      MEDIA_S3_ACCESS_KEY: ${MEDIA_S3_ACCESS_KEY:-}
+      MEDIA_S3_SECRET_KEY: ${MEDIA_S3_SECRET_KEY:-}
     depends_on:
       db: {condition: service_healthy}
     networks: [local]
   api:
-    image: cubeos-api:pr9
+    image: cubeos-api:pr10
     build:
       context: ../..
       dockerfile: infra/docker/Dockerfile.api
     environment: *api-env
+    volumes:
+      - media-data:/data/media
+      - media-staging:/data/media-staging
     ports: ["127.0.0.1:${API_PORT:-8080}:${API_PORT:-8080}"]
     depends_on:
       migrate: {condition: service_completed_successfully}
     networks: [local]
     restart: unless-stopped
   web:
-    image: cubeos-web:pr9
+    image: cubeos-web:pr10
     environment:
       DEPLOYMENT_MODE: local
     build:
@@ -58,3 +71,5 @@ networks:
     driver: bridge
 volumes:
   postgres-data:
+  media-data:
+  media-staging:

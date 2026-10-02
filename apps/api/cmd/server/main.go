@@ -16,6 +16,7 @@ import (
 	api "github.com/Edwarmkaer/cubeos/apps/api/internal/http"
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/identity"
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/ingestion"
+	"github.com/Edwarmkaer/cubeos/apps/api/internal/media"
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/realtime"
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/storage"
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/telemetry"
@@ -61,11 +62,20 @@ func run() error {
 			log.Print("public identity enrolled")
 			return nil
 		}
-		if c.Mode == "public" && os.Args[1] != "migrate" {
+		if c.Mode == "public" && os.Args[1] != "migrate" && os.Args[1] != "media-reconcile" {
 			return errors.New("local fixture/rebuild commands are disabled in public mode")
 		}
 		if len(os.Args) == 2 && os.Args[1] == "fixture" {
 			return fixture(ctx, pool, os.Stdin, os.Stdout)
+		}
+		if len(os.Args) == 2 && os.Args[1] == "media-reconcile" {
+			objects, e := media.Configure(c)
+			if e != nil {
+				return errors.New("media storage unavailable")
+			}
+			job, done := context.WithTimeout(ctx, 30*time.Minute)
+			defer done()
+			return media.New(pool, objects, c).Reconcile(job, time.Minute)
 		}
 		if len(os.Args) == 3 && os.Args[1] == "rebuild" {
 			principal, e := identity.Local(ctx, pool)
@@ -78,7 +88,7 @@ func run() error {
 			return nil
 		}
 		if len(os.Args) != 2 || os.Args[1] != "migrate" {
-			return errors.New("usage: server [migrate | fixture | rebuild DEVICE_UUID]")
+			return errors.New("usage: server [migrate | fixture | rebuild DEVICE_UUID | media-reconcile]")
 		}
 		migrationCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
 		defer cancel()
@@ -105,9 +115,14 @@ func run() error {
 		resolver = identity.NewClerk(pool, c.ClerkIssuer, c.ClerkJWKSURL, c.ClerkAudience, c.Origin, c.ClerkSecretKey).Resolve
 	}
 	hub := realtime.NewHub()
+	objects, err := media.Configure(c)
+	if err != nil {
+		return errors.New("media storage unavailable")
+	}
+	photos := media.New(pool, objects, c)
 	go hub.Run(ctx, c.DatabaseURL)
 	defer hub.Close()
-	server := &http.Server{Addr: c.Address, Handler: api.NewWithRealtime(c, pool, devices.NewRepository(pool), telemetry.NewRepository(pool), resolver, hub), BaseContext: func(net.Listener) context.Context { return ctx }, ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 15 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
+	server := &http.Server{Addr: c.Address, Handler: api.NewWithMedia(c, pool, devices.NewRepository(pool), telemetry.NewRepository(pool), resolver, hub, photos), BaseContext: func(net.Listener) context.Context { return ctx }, ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 120 * time.Second, WriteTimeout: 120 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
 	service := ingestion.NewService(ingestion.NewRepository(pool))
 	sources := ingestion.NewSources(pool)
 	var ingress *http.Server
@@ -144,7 +159,7 @@ func run() error {
 		}()
 	}
 	if c.IngestionAddress != "" {
-		ingress = &http.Server{Addr: c.IngestionAddress, Handler: ingestion.RestrictedHTTP(c.IngestionAddress, ingestion.NewHTTP(service, sources)), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 15 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
+		ingress = &http.Server{Addr: c.IngestionAddress, Handler: api.NewIngestionHTTP(c.IngestionAddress, ingestion.NewHTTP(service, sources), photos, c.MediaMaxBytes), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 120 * time.Second, WriteTimeout: 120 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
 		listener, e := net.Listen("tcp", c.IngestionAddress)
 		if e != nil {
 			return errors.New("ingestion listener cannot bind; refusing startup")
