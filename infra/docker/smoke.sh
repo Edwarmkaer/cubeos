@@ -3,6 +3,8 @@ set -euo pipefail
 # Only point this script at a disposable installation owned by the caller.
 # Creates a device and restarts containers; never removes volumes.
 project=${1:?Pass the owned Compose project name}
+scratch=$(mktemp -d "${TMPDIR:-/tmp}/cubeos-media-smoke.XXXXXXXX")
+trap 'rm -rf "$scratch"' EXIT
 compose=(docker compose -p "$project" -f infra/docker/compose.yaml)
 offline=("${compose[@]}" -f infra/docker/compose.offline.yaml)
 curl_probe=(curl --connect-timeout 2 --max-time 6)
@@ -20,12 +22,22 @@ wait_ready() {
 }
 wait_ready
 "${curl_probe[@]}" --fail --silent "$api_url/healthz"
-"${curl_probe[@]}" --fail --silent "$web_url/visor" -o /tmp/cubeos-smoke-visor.html
-grep -q 'Visor' /tmp/cubeos-smoke-visor.html
+"${curl_probe[@]}" --fail --silent "$web_url/visor" -o "$scratch/visor.html"
+grep -q 'Visor' "$scratch/visor.html"
 test "$("${compose[@]}" exec -T api id -u)" != 0
 test "$("${compose[@]}" exec -T web id -u)" != 0
 device=$("${curl_probe[@]}" --fail --silent -H 'Content-Type: application/json' -d '{"name":"Smoke persistente","protocolDeviceId":"CS01"}' "$api_url/api/v1/devices")
 device_id=$(jq -er .id <<<"$device")
+# Test-only camera file, separate from all bundled DEMO/NASA assets.
+node apps/web/tests/media-test-png.mjs > "$scratch/original.png"
+media=$("${curl_probe[@]}" --fail --silent -F "file=@$scratch/original.png;type=image/png" "$api_url/api/v1/devices/$device_id/photos")
+photo_id=$(jq -er .id <<<"$media")
+photo_sha=$(sha256sum "$scratch/original.png" | cut -d ' ' -f1)
+test "$(jq -er .sha256 <<<"$media")" = "$photo_sha"
+test "$(jq -er .status <<<"$media")" = ready
+test "$(jq -c .capturedAt <<<"$media")" = null
+"${curl_probe[@]}" --fail --silent "$api_url/api/v1/photos/$photo_id/original" -o "$scratch/download.png"
+cmp "$scratch/original.png" "$scratch/download.png"
 profile_before=$("${compose[@]}" exec -T db psql -U cubeos -d cubeos -Atc "SELECT user_id FROM auth_identities WHERE provider='local' AND subject='installation'")
 # This disposable smoke owns test-only steps. Production migrations contain none.
 step_one=11111111-1111-4111-8111-111111111111
@@ -69,6 +81,9 @@ test "$(jq -er .protocolDeviceId <<<"$restored")" = CS01
 profile_after=$("${compose[@]}" exec -T db psql -U cubeos -d cubeos -Atc "SELECT user_id FROM auth_identities WHERE provider='local' AND subject='installation'")
 test -n "$profile_before"
 test "$profile_before" = "$profile_after"
+"${offline[@]}" exec -T api wget -T 6 -q -O - "http://127.0.0.1:${API_PORT:-8080}/api/v1/photos/$photo_id/original" > "$scratch/offline-original.png"
+cmp "$scratch/original.png" "$scratch/offline-original.png"
+test "$("${compose[@]}" exec -T db psql -U cubeos -d cubeos -Atc "SELECT sha256 FROM photos WHERE id='$photo_id' AND status='ready'")" = "$photo_sha"
 progress_after=$("${offline[@]}" exec -T api wget -T 6 -q -O - "http://127.0.0.1:${API_PORT:-8080}/api/v1/devices/$device_id/progress" | jq -cS .)
 test "$progress_before" = "$progress_after"
 snapshot_after=$("${offline[@]}" exec -T api wget -T 6 -q -O - "http://127.0.0.1:${API_PORT:-8080}/api/v1/devices/$telemetry_id/snapshot" | jq -cS .)
@@ -88,9 +103,9 @@ network=$(docker inspect "$("${compose[@]}" ps -q api)" --format '{{range $name,
 test "$(docker network inspect "$network" --format '{{.Internal}}')" = true
 "${compose[@]}" exec -T api sh -c 'if wget -T 3 -q -O /dev/null http://1.1.1.1; then exit 1; fi'
 "${compose[@]}" exec -T web node -e 'fetch("http://1.1.1.1",{signal:AbortSignal.timeout(3000)}).then(()=>process.exit(1),()=>process.exit(0))'
-"${offline[@]}" exec -T web node -e 'fetch("http://127.0.0.1:3000/visor").then(async r=>{if(!r.ok)throw Error(r.status); console.log(await r.text())}).catch(()=>process.exit(1))' > /tmp/cubeos-smoke-visor-offline.html
+"${offline[@]}" exec -T web node -e 'fetch("http://127.0.0.1:3000/visor").then(async r=>{if(!r.ok)throw Error(r.status); console.log(await r.text())}).catch(()=>process.exit(1))' > "$scratch/visor-offline.html"
 # Font URLs point to bundled static assets. Verify an asset is served offline.
-font=$(grep -oE '/_next/static/[^" ]+\.woff2' /tmp/cubeos-smoke-visor-offline.html | head -1 || true)
+font=$(grep -oE '/_next/static/[^" ]+\.woff2' "$scratch/visor-offline.html" | head -1 || true)
 test -n "$font"
 "${offline[@]}" exec -T web node -e 'fetch("http://127.0.0.1:3000"+process.argv[1]).then(async r=>{if(!r.ok||(await r.arrayBuffer()).byteLength===0)process.exit(1)}).catch(()=>process.exit(1))' "$font"
 # Every bundled gallery photo must be served byte-for-byte without egress.
@@ -113,4 +128,4 @@ test "$(jq -er .status <<<"$duplicated")" = duplicated
 "${curl_probe[@]}" --fail --silent -X DELETE "$api_url/api/v1/devices/$device_id/sources/$source_id" >/dev/null
 test "$("${curl_probe[@]}" --silent -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $source_credential" -H 'Content-Type: application/json' -d "$frame" "$api_url/api/v1/ingestion/packets")" = 401
 unset source_credential provisioned
-echo "Smoke passed: non-root, DB-down readiness, persistent construction dates/percentage/device/profile/raw/history/snapshot/SSE after API/DB restart, unmark, deterministic rebuild, blocked-egress boot, offline SSE/visor/font and six original photos; loopback installation restored."
+echo "Smoke passed: non-root, DB-down readiness, private uploaded original/SHA and construction/device/profile/raw/history/snapshot/SSE persisted across API/DB/volume recreation, unmark, deterministic rebuild, blocked-egress boot, offline media/SSE/visor/fonts and six bundled demo photos; loopback installation restored."

@@ -15,6 +15,7 @@ erDiagram
     DEVICES ||--o| DEVICE_SNAPSHOTS : has_latest
     DEVICES ||--o| DEVICE_TELEMETRY_STATE : orders
     DEVICES ||--o{ PHOTOS : captures
+    DEVICES ||--o{ MEDIA_CREDENTIALS : accepts_uploads_from
 
     USERS {
         uuid id PK
@@ -88,7 +89,6 @@ erDiagram
         string storage_backend
         string original_key
         string thumbnail_key
-        string original_filename
         string content_type
         bigint size_bytes
         int width_px
@@ -100,6 +100,11 @@ erDiagram
         string status
     }
 ```
+
+`MEDIA_CREDENTIALS` registra autorización independiente de carga ligada al
+dispositivo y propietario de emisión, con hash y revocación. No es identidad de
+estudiante ni fuente de telemetría. El nombre original recibido se descarta;
+operación de medios y campos de respuesta: [medios](media.md).
 
 ## Reglas de relación y persistencia
 

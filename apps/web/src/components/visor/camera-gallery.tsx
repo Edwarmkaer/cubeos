@@ -11,7 +11,7 @@ export type CameraFrame = {
   timestamp?: string;
 };
 
-export function CameraGallery({ frames }: { frames: CameraFrame[] }) {
+export function CameraGallery({ frames, onSelect, onNearEnd }: { frames: CameraFrame[]; onSelect?: (id: string) => void; onNearEnd?: () => void }) {
   const stripRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const isScrollable = frames.length > 3;
@@ -20,6 +20,7 @@ export function CameraGallery({ frames }: { frames: CameraFrame[] }) {
     if (!isScrollable) return;
     const strip = stripRef.current;
     if (!strip) return;
+    if (strip.scrollLeft + strip.clientWidth >= strip.scrollWidth - 240) onNearEnd?.();
     const center = strip.scrollLeft + strip.clientWidth / 2;
     const cards = Array.from(strip.children[0]?.children ?? []) as HTMLElement[];
     let closestIndex = 0;
@@ -119,6 +120,7 @@ export function CameraGallery({ frames }: { frames: CameraFrame[] }) {
                   sizes="176px"
                   className="object-cover"
                 />
+                {onSelect ? <button type="button" aria-label={`Descargar captura original ${index + 1}`} className="absolute inset-0 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-foreground" onClick={() => onSelect(frame.id)} /> : null}
               </figure>
             );
           })}

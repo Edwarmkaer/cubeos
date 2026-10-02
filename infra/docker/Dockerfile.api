@@ -6,7 +6,7 @@ COPY apps/api/ ./
 RUN CGO_ENABLED=0 go build -trimpath -o /server ./cmd/server
 
 FROM alpine:3.22.1
-RUN addgroup -g 10001 cubeos && adduser -D -u 10001 -G cubeos cubeos
+RUN addgroup -g 10001 cubeos && adduser -D -u 10001 -G cubeos cubeos && mkdir -p /data/media /data/media-staging && chown -R 10001:10001 /data
 COPY --from=build /server /usr/local/bin/server
 USER 10001:10001
 EXPOSE 8080

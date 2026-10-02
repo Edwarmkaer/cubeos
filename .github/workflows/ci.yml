@@ -62,7 +62,7 @@ jobs:
   ci-required:
     name: ci-required
     if: ${{ always() }}
-    needs: [web, contracts, go, docker, browser, auth]
+    needs: [web, contracts, go, docker, browser, auth, media]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -74,7 +74,8 @@ jobs:
           DOCKER_RESULT: ${{ needs.docker.result }}
           BROWSER_RESULT: ${{ needs.browser.result }}
           AUTH_RESULT: ${{ needs.auth.result }}
-        run: test "$WEB_RESULT" = success && test "$CONTRACTS_RESULT" = success && test "$GO_RESULT" = success && test "$DOCKER_RESULT" = success && test "$BROWSER_RESULT" = success && test "$AUTH_RESULT" = success
+          MEDIA_RESULT: ${{ needs.media.result }}
+        run: test "$WEB_RESULT" = success && test "$CONTRACTS_RESULT" = success && test "$GO_RESULT" = success && test "$DOCKER_RESULT" = success && test "$BROWSER_RESULT" = success && test "$AUTH_RESULT" = success && test "$MEDIA_RESULT" = success
 
   browser:
     name: browser-live-telemetry
@@ -106,14 +107,17 @@ jobs:
           go build -o "$RUNNER_TEMP/cubeos-pr7-api" ./cmd/server
           cd ../..
           pnpm --filter web build
+      - name: PostgreSQL cold-start readiness regression
+        run: bash infra/docker/tests/postgres-ready.sh infra/docker/wait-postgres.sh
       - name: Exclusive PostgreSQL and prepared web
         run: |
           POSTGRES_PASSWORD="$(openssl rand -hex 32)"
           echo "::add-mask::$POSTGRES_PASSWORD"
           export POSTGRES_PASSWORD
           docker run -d --name cubeos-browser-pg -e POSTGRES_PASSWORD -p 127.0.0.1:55437:5432 postgres:17.6-alpine
-          for i in $(seq 1 60); do docker exec cubeos-browser-pg pg_isready -U postgres && break; sleep 1; done
-          docker exec cubeos-browser-pg createdb -U postgres cubeos_browser_test
+          export PGPASSWORD="$POSTGRES_PASSWORD"
+          bash infra/docker/wait-postgres.sh 55437
+          createdb -h 127.0.0.1 -p 55437 -U postgres cubeos_browser_test
           echo "TEST_BROWSER_DATABASE_URL=postgres://postgres:$POSTGRES_PASSWORD@localhost:55437/cubeos_browser_test?sslmode=disable" >> "$GITHUB_ENV"
           echo "CUBEOS_BROWSER_PG_CONTAINER=cubeos-browser-pg" >> "$GITHUB_ENV"
           echo "CUBEOS_API_BINARY=$RUNNER_TEMP/cubeos-pr7-api" >> "$GITHUB_ENV"
@@ -139,7 +143,7 @@ jobs:
           POSTGRES_PASSWORD: ci-disposable
         ports: [5432:5432]
         options: >-
-          --health-cmd "pg_isready -U postgres"
+          --health-cmd "pg_isready -h 127.0.0.1 -U postgres"
           --health-interval 2s --health-timeout 3s --health-retries 30
     env:
       TEST_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_http_test?sslmode=disable
@@ -149,6 +153,8 @@ jobs:
       TEST_REALTIME_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_realtime_test?sslmode=disable
       TEST_AUTH_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_auth_test?sslmode=disable
       TEST_CONSTRUCTION_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_construction_test?sslmode=disable
+      TEST_MEDIA_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_media_test?sslmode=disable
+      TEST_MEDIA_SERVICE_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_media_service_test?sslmode=disable
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -168,6 +174,8 @@ jobs:
           createdb -h localhost -U postgres cubeos_realtime_test
           createdb -h localhost -U postgres cubeos_auth_test
           createdb -h localhost -U postgres cubeos_construction_test
+          createdb -h localhost -U postgres cubeos_media_test
+          createdb -h localhost -U postgres cubeos_media_service_test
       - name: Format, vet and race tests against PostgreSQL
         working-directory: apps/api
         run: |
@@ -203,7 +211,7 @@ jobs:
           POSTGRES_PASSWORD: ci-disposable
         ports: [5432:5432]
         options: >-
-          --health-cmd "pg_isready -U postgres"
+          --health-cmd "pg_isready -h 127.0.0.1 -U postgres"
           --health-interval 2s --health-timeout 3s --health-retries 30
     env:
       TEST_AUTH_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_auth_browser_test?sslmode=disable
@@ -238,6 +246,69 @@ jobs:
       - name: Signed construction saved progress and delayed account/device boundaries
         working-directory: apps/api
         run: go test -race -count=1 -v ./internal/http -run TestConstructionSignedBrowser
+
+  media:
+    name: media-postgres-s3-browser
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .node-version
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+        with:
+          run_install: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: .go-version
+          cache-dependency-path: apps/api/go.sum
+      - name: Prepare isolated PostgreSQL and private S3 with ephemeral credentials
+        run: |
+          export POSTGRES_PASSWORD="$(openssl rand -hex 24)"
+          export RUSTFS_ACCESS_KEY="pr10$(openssl rand -hex 8)"
+          export RUSTFS_SECRET_KEY="$(openssl rand -hex 32)"
+          echo "::add-mask::$POSTGRES_PASSWORD"
+          echo "::add-mask::$RUSTFS_ACCESS_KEY"
+          echo "::add-mask::$RUSTFS_SECRET_KEY"
+          docker run -d --name cubeos-media-pg -e POSTGRES_PASSWORD -p 127.0.0.1:55440:5432 postgres:17.6-alpine
+          docker run -d --name cubeos-media-s3 -e RUSTFS_ACCESS_KEY -e RUSTFS_SECRET_KEY -e RUSTFS_CONSOLE_ENABLE=false -p 127.0.0.1:59040:9000 -v cubeos-media-s3-data:/data rustfs/rustfs:1.0.0-rc.6-glibc@sha256:b73a77ef70000722d985193e644d30882c57d7cb8f64c06bd329eb7969b03d52 /data
+          export PGPASSWORD="$POSTGRES_PASSWORD"
+          bash infra/docker/wait-postgres.sh 55440
+          createdb -h 127.0.0.1 -p 55440 -U postgres media_http
+          createdb -h 127.0.0.1 -p 55440 -U postgres media_service
+          createdb -h 127.0.0.1 -p 55440 -U postgres media_browser
+          createdb -h 127.0.0.1 -p 55440 -U postgres media_restart
+          echo "TEST_MEDIA_DATABASE_URL=postgres://postgres:$POSTGRES_PASSWORD@localhost:55440/media_http?sslmode=disable" >> "$GITHUB_ENV"
+          echo "TEST_MEDIA_SERVICE_DATABASE_URL=postgres://postgres:$POSTGRES_PASSWORD@localhost:55440/media_service?sslmode=disable" >> "$GITHUB_ENV"
+          echo "TEST_MEDIA_BROWSER_DATABASE_URL=postgres://postgres:$POSTGRES_PASSWORD@localhost:55440/media_browser?sslmode=disable" >> "$GITHUB_ENV"
+          echo "TEST_MEDIA_RESTART_DATABASE_URL=postgres://postgres:$POSTGRES_PASSWORD@localhost:55440/media_restart?sslmode=disable" >> "$GITHUB_ENV"
+          echo "TEST_S3_ENDPOINT=http://127.0.0.1:59040" >> "$GITHUB_ENV"
+          echo "TEST_S3_BUCKET=cubeos-media-private" >> "$GITHUB_ENV"
+          echo "TEST_S3_ACCESS_KEY=$RUSTFS_ACCESS_KEY" >> "$GITHUB_ENV"
+          echo "TEST_S3_SECRET_KEY=$RUSTFS_SECRET_KEY" >> "$GITHUB_ENV"
+          echo "TEST_MEDIA_REQUIRED=1" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/media-tmp"
+          echo "TMPDIR=$RUNNER_TEMP/media-tmp" >> "$GITHUB_ENV"
+          pnpm install --frozen-lockfile
+          pnpm --filter web exec playwright install --with-deps chromium
+      - name: Shared local/S3 contract, failures/recovery and private HTTP PostgreSQL
+        working-directory: apps/api
+        run: go test -race -count=1 -v ./internal/media/... ./internal/http -run 'Test(MediaHTTP|MediaService|MediaConcurrent|MediaReconcile|LocalContract|S3Contract|Validation)'
+      - name: Signed real media browser and private account/device/byte boundaries
+        working-directory: apps/api
+        env:
+          CUBEOS_MEDIA_BROWSER: '1'
+        run: go test -race -count=1 -v ./internal/http -run TestMediaSignedBrowser
+      - name: Preserve exact originals across API, DB and S3 service restarts
+        env:
+          CUBEOS_MEDIA_RESTART: '1'
+          CUBEOS_MEDIA_PG_CONTAINER: cubeos-media-pg
+          CUBEOS_MEDIA_S3_CONTAINER: cubeos-media-s3
+        working-directory: apps/api
+        run: go test -race -count=1 -v ./internal/http -run TestMediaS3PersistedRestart
 
   docker:
     name: docker-local

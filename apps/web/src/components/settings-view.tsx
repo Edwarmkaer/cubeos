@@ -7,6 +7,7 @@ import { useTelemetryStore } from "@/lib/telemetry-store";
 import type { SourceSelection } from "@/lib/telemetry-store";
 import { sourceToken, validateSelection } from "@/lib/telemetry-source";
 import { usePublicSession } from "./public-session";
+import { MediaImport } from "./visor/media-gallery";
 
 const control = "w-full rounded-md bg-background px-3 py-2 text-base text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground disabled:opacity-50";
 
@@ -94,6 +95,7 @@ export function SettingsView() {
             <label className="block text-sm text-muted-foreground">Identificador de vuelo<input className={control} value={protocolId} onChange={e => setProtocolId(e.target.value)} placeholder="CS01" /></label>
             <div className="flex gap-3"><button type="button" className={control} disabled={busy || !name.trim() || !protocolId.trim()} onClick={() => void request("create")}>Registrar dispositivo</button><button type="button" className={control} disabled={busy || !draft.deviceId || !name.trim()} onClick={() => void request("rename")}>Renombrar</button></div>
           </>}
+          <MediaImport />
           {error ? <p role="alert" className="text-sm text-muted-foreground">{error}</p> : null}
         </div>
       </Tile>

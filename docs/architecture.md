@@ -88,3 +88,6 @@ Ingestión, REST, SSE y el consumo del visor están operativos en modo local.
 El hub recibe invalidaciones PostgreSQL solo después de commit; cada stream lee
 la proyección actual con propiedad desde DB. Comportamiento de colas, tiempos,
 reconexión y precisión del cliente tiene dueño en [realtime](realtime.md).
+Fotografías: API y servicio de medios separan autorizaciones del propietario y
+hardware, originales y miniaturas, metadata y object store. Operación y límites
+canónicos: [medios](media.md). No altera el contrato Chasqui v2.

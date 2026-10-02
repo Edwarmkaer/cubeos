@@ -10,6 +10,7 @@ import (
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/devices"
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/identity"
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/ingestion"
+	"github.com/Edwarmkaer/cubeos/apps/api/internal/media"
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/realtime"
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/storage"
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/telemetry"
@@ -41,6 +42,16 @@ func NewWithTelemetry(c config.Config, p *pgxpool.Pool, d DeviceStore, readings 
 	return NewWithRealtime(c, p, d, readings, resolve, realtime.NewHub())
 }
 func NewWithRealtime(c config.Config, p *pgxpool.Pool, d DeviceStore, readings TelemetryStore, resolve Resolver, hub *realtime.Hub) http.Handler {
+	var photos *media.Service
+	if c.MediaStorage != "" {
+		store, err := media.Configure(c)
+		if err == nil {
+			photos = media.New(p, store, c)
+		}
+	}
+	return NewWithMedia(c, p, d, readings, resolve, hub, photos)
+}
+func NewWithMedia(c config.Config, p *pgxpool.Pool, d DeviceStore, readings TelemetryStore, resolve Resolver, hub *realtime.Hub, photos *media.Service) http.Handler {
 	guide := construction.NewRepository(p)
 	sources := ingestion.NewSources(p)
 	packets := ingestion.NewHTTP(ingestion.NewService(ingestion.NewRepository(p)), sources)
@@ -95,6 +106,10 @@ func NewWithRealtime(c config.Config, p *pgxpool.Pool, d DeviceStore, readings T
 		}
 		if r.URL.Path == "/api/v1/ingestion/packets" {
 			packets.ServeHTTP(w, r)
+			return
+		}
+		if mediaPath(r.URL.Path) {
+			serveMedia(w, r, photos, resolve, c.MediaMaxBytes)
 			return
 		}
 		const eventPrefix = "/api/v1/devices/"

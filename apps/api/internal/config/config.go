@@ -9,12 +9,15 @@ import (
 )
 
 type Config struct {
-	Mode, PublicAPIHost                                      string
-	ClerkIssuer, ClerkJWKSURL, ClerkAudience, ClerkSecretKey string
-	Address, DatabaseURL, Origin                             string
-	Port                                                     string
-	IngestionAddress, SerialPort, SerialSourceID             string
-	SerialBaud                                               int
+	Mode, PublicAPIHost                                                     string
+	ClerkIssuer, ClerkJWKSURL, ClerkAudience, ClerkSecretKey                string
+	Address, DatabaseURL, Origin                                            string
+	Port                                                                    string
+	IngestionAddress, SerialPort, SerialSourceID                            string
+	SerialBaud                                                              int
+	MediaStorage, MediaLocalRoot, MediaTempRoot                             string
+	MediaEndpoint, MediaRegion, MediaBucket, MediaAccessKey, MediaSecretKey string
+	MediaMaxBytes, MediaMaxPixels                                           int64
 }
 
 func Load(get func(string) string) (Config, error) {
@@ -90,6 +93,34 @@ func Load(get func(string) string) (Config, error) {
 			return Config{}, errors.New("serial needs port, source UUID and explicit baudrate")
 		}
 		c.SerialBaud = n
+	}
+	c.MediaStorage = value("MEDIA_STORAGE", "local")
+	c.MediaLocalRoot = value("MEDIA_LOCAL_ROOT", "./data/media")
+	c.MediaTempRoot = value("MEDIA_TEMP_ROOT", "./data/media-staging")
+	c.MediaMaxBytes, err = strconv.ParseInt(value("MEDIA_MAX_BYTES", "67108864"), 10, 64)
+	if err != nil || c.MediaMaxBytes < 1 || c.MediaMaxBytes > 256<<20 {
+		return Config{}, errors.New("invalid media byte limit")
+	}
+	c.MediaMaxPixels, err = strconv.ParseInt(value("MEDIA_MAX_PIXELS", "80000000"), 10, 64)
+	if err != nil || c.MediaMaxPixels < 1 || c.MediaMaxPixels > 80_000_000 {
+		return Config{}, errors.New("invalid media pixel limit")
+	}
+	if c.MediaStorage != "local" && c.MediaStorage != "s3" {
+		return Config{}, errors.New("invalid media storage")
+	}
+	if c.Mode == "public" && c.MediaStorage != "s3" {
+		return Config{}, errors.New("public media requires persistent S3 storage")
+	}
+	if c.MediaStorage == "s3" {
+		c.MediaEndpoint = get("MEDIA_S3_ENDPOINT")
+		c.MediaRegion = get("MEDIA_S3_REGION")
+		c.MediaBucket = get("MEDIA_S3_BUCKET")
+		c.MediaAccessKey = get("MEDIA_S3_ACCESS_KEY")
+		c.MediaSecretKey = get("MEDIA_S3_SECRET_KEY")
+		endpoint, e := url.Parse(c.MediaEndpoint)
+		if e != nil || endpoint.Host == "" || endpoint.User != nil || endpoint.Path != "" || endpoint.RawQuery != "" || endpoint.Fragment != "" || (endpoint.Scheme != "https" && !(endpoint.Scheme == "http" && isLoopback(endpoint.Hostname()))) || c.MediaRegion == "" || c.MediaBucket == "" || c.MediaAccessKey == "" || c.MediaSecretKey == "" {
+			return Config{}, errors.New("complete private S3 configuration required; plaintext only on loopback")
+		}
 	}
 	return c, nil
 }
