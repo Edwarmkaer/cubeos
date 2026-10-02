@@ -7,12 +7,38 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/big"
+	"strconv"
+	"strings"
 
 	"github.com/Edwarmkaer/cubeos/apps/api/internal/telemetry"
 )
 
 // MaxEnvelopeBytes bounds transport overhead separately from the intact payload.
 const MaxEnvelopeBytes = 16384
+
+// JSON Schema const1 permits numeric syntax such as 1.0/1e0, never strings.
+// Bound exponent expansion before exact rational comparison, as for uplink.
+func envelopeVersionOne(raw json.RawMessage) bool {
+	d := json.NewDecoder(bytes.NewReader(raw))
+	d.UseNumber()
+	var value any
+	if d.Decode(&value) != nil {
+		return false
+	}
+	number, ok := value.(json.Number)
+	if !ok {
+		return false
+	}
+	if i := strings.IndexAny(string(number), "eE"); i >= 0 {
+		exponent, err := strconv.Atoi(string(number)[i+1:])
+		if err != nil || exponent > 10000 || exponent < -10000 {
+			return false
+		}
+	}
+	rational, ok := new(big.Rat).SetString(string(number))
+	return ok && rational.Cmp(big.NewRat(1, 1)) == 0
+}
 
 // uniqueObject rejects duplicate keys and excessive nesting before struct decoding.
 func uniqueJSON(d *json.Decoder, depth int) error {
@@ -74,14 +100,27 @@ func (s *Service) IngestEnvelope(ctx context.Context, source string, raw []byte)
 	if d.Decode(new(any)) != io.EOF {
 		return reject("invalid_envelope")
 	}
+	// Struct decoding folds key case. Validate exact contract keys first so an
+	// alias can neither bypass additionalProperties nor overwrite metadata.
+	var fields map[string]json.RawMessage
+	if json.Unmarshal(raw, &fields) != nil {
+		return reject("invalid_envelope")
+	}
+	for key := range fields {
+		switch key {
+		case "envelopeVersion", "payload", "receiver":
+		default:
+			return reject("invalid_envelope")
+		}
+	}
 	var env struct {
-		Version  int             `json:"envelopeVersion"`
+		Version  json.RawMessage `json:"envelopeVersion"`
 		Payload  json.RawMessage `json:"payload"`
 		Receiver json.RawMessage `json:"receiver"`
 	}
 	d = json.NewDecoder(bytes.NewReader(raw))
 	d.DisallowUnknownFields()
-	if d.Decode(&env) != nil || env.Version != 1 || len(env.Payload) == 0 || bytes.Equal(bytes.TrimSpace(env.Payload), []byte("null")) {
+	if d.Decode(&env) != nil || !envelopeVersionOne(env.Version) || len(env.Payload) == 0 || bytes.Equal(bytes.TrimSpace(env.Payload), []byte("null")) {
 		return reject("invalid_envelope")
 	}
 	var meta telemetry.ReceiverMetadata
@@ -90,7 +129,12 @@ func (s *Service) IngestEnvelope(ctx context.Context, source string, raw []byte)
 		if json.Unmarshal(env.Receiver, &fields) != nil {
 			return reject("invalid_envelope")
 		}
-		for _, v := range fields {
+		for key, v := range fields {
+			switch key {
+			case "gatewayId", "rssiDbm", "snrDb", "frequencyMhz":
+			default:
+				return reject("invalid_envelope")
+			}
 			if bytes.Equal(bytes.TrimSpace(v), []byte("null")) {
 				return reject("invalid_envelope")
 			}

@@ -27,6 +27,16 @@ en `.superpowers/sdd/2026-10-01-cubeos-backend/pr5-*`. Frontend, fixtures origin
 y DESIGN draft preservados. Revisión independiente y merge a cargo de raíz;
 no avanzar PR6 desde este chat.
 
+Correcciones de revisión PR5: envelope/receiver validan claves exactas antes del
+decoder Go, evitando aliases case-insensitive y sobrescritura de RSSI. Serial
+acota cada escritura/evidencia y lookup de fuente a 5 s; el worker conserva vida
+independiente y recupera con backoff. Regresiones red/green reproducen variantes
+inválidas y locks PostgreSQL; esquema TS coincide, inválidos auditados no cambian
+proyección. Verificación del nuevo SHA/run se reporta al entregar corrección;
+el CI previo `36953752686` corresponde exclusivamente a `5a8196a`.
+Const numérica del envelope acepta 1.0/1e0 por comparación racional exacta con
+exponente acotado; no coerciona strings ni redondea números diferentes a 1.
+
 ## PR 4 — Ingestión, historial y snapshots
 
 PR3 integrado: [PR #4](https://github.com/Edwarmkaer/cubeos/pull/4), merge `94fb955`.

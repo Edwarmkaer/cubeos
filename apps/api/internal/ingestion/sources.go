@@ -131,6 +131,8 @@ func (s *Sources) Authenticate(ctx context.Context, credential string) (string, 
 	return id, err
 }
 func (s *Sources) ActiveSerial(ctx context.Context, p identity.Principal, id string) (Source, error) {
+	ctx, cancel := context.WithTimeout(ctx, TransportOperationTimeout)
+	defer cancel()
 	var result Source
 	if !sourceUUID(id) || !sourceUUID(p.UserID) {
 		return result, devices.ErrNotFound

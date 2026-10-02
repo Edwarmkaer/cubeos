@@ -83,11 +83,15 @@ func run() error {
 	sources := ingestion.NewSources(pool)
 	var ingress *http.Server
 	if c.SerialPort != "" {
-		principal, e := identity.Local(ctx, pool)
+		startup, cancel := context.WithTimeout(ctx, ingestion.TransportOperationTimeout)
+		principal, e := identity.Local(startup, pool)
 		if e != nil {
+			cancel()
 			return errors.New("serial local identity unavailable")
 		}
-		if _, e = sources.ActiveSerial(ctx, principal, c.SerialSourceID); e != nil {
+		_, e = sources.ActiveSerial(startup, principal, c.SerialSourceID)
+		cancel()
+		if e != nil {
 			return errors.New("serial source must be active and owned by local profile")
 		}
 		go func() {

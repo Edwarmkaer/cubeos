@@ -134,6 +134,19 @@ func TestHTTPAndSerialPostgresCredentialsIsolationAndParity(t *testing.T) {
 	if r := send(sa.Credential, strings.Replace(envelopeH, `"dp":0`, `"dp":0,"rssiDbm":-80`, 1), 422); r.Cause != "invalid_uplink" {
 		t.Fatal(r)
 	}
+	before, err := tr.GetSnapshot(ctx, a, da.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, raw := range []string{strings.Replace(envelopeH, `"payload"`, `"Payload"`, 1), strings.Replace(envelopeH, `"envelopeVersion"`, `"EnvelopeVersion"`, 1), strings.Replace(envelopeH, `"receiver"`, `"Receiver"`, 1), strings.Replace(envelopeH, `"rssiDbm":-80`, `"rssiDbm":-80,"RSSIDbm":0`, 1)} {
+		if result := send(sa.Credential, raw, 422); result.Cause != "invalid_envelope" {
+			t.Fatal(result)
+		}
+	}
+	after, err := tr.GetSnapshot(ctx, a, da.ID)
+	if err != nil || !reflect.DeepEqual(before, after) {
+		t.Fatal("schema-invalid envelope changed projection", err)
+	}
 	if _, err = tr.GetSnapshot(ctx, a, db.ID); !errors.Is(err, devices.ErrNotFound) {
 		t.Fatal("foreign snapshot", err)
 	}

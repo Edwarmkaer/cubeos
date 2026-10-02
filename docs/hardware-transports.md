@@ -48,6 +48,13 @@ se une a reconexión. No hay cola durable durante caída DB: receptor debe
 conservar/retransmitir si necesita garantía de entrega. No se promete recuperar
 bytes perdidos por driver/receptor al desconectar.
 
+Cada recepción (incluida evidencia de frame rechazado) y lookup de fuente tiene
+deadline DB de 5 s, también ante locks o espera del pool. El worker conserva su
+contexto de vida: timeout devuelve error, cierra/reintenta con backoff y permite
+recuperar después de liberar DB. No confirma una recepción fallida ni guarda
+cola durable; el receptor debe retransmitir. El arranque serial acota también
+la resolución de identidad/fuente a 5 s.
+
 Docker Linux opcional, sobre instalación propia aprovisionada:
 
 ```sh
@@ -70,6 +77,13 @@ claves duplicadas y metadatos nulos rechazados. RSSI/SNR no se insertan en
 payload compacto. 200 aceptación/duplicado; 422 rechazo auditado; 401 credencial
 inválida/revocada/otro transporte; 413 límite previo; 503 DB indisponible.
 No CORS: Origin/Fetch-Site de navegador rechazados.
+
+Claves de envelope y receiver deben coincidir exactamente con el esquema:
+`Payload`, `EnvelopeVersion` o `RSSIDbm` son inválidas, aunque el decoder de
+structs Go pudiera tratarlas como aliases. Se auditan sin modificar proyección.
+`envelopeVersion` acepta números matemáticamente iguales a 1 (`1.0`, `1e0`),
+sin coercionar strings/booleanos ni redondear otros valores a 1; expansión de
+exponente queda acotada como recurso antes de comparar el racional exacto.
 
 Gestión sigue en loopback. Para ESP32 en LAN privada y confiable, ejecución
 nativa ofrece segunda escucha opt-in:

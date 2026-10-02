@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { spawn, spawnSync, execFileSync } from "node:child_process";
 import { setTimeout as delay } from "node:timers/promises";
 import { once } from "node:events";
+import { simulate } from "../src/index.ts";
 
 const binary = process.env.CUBEOS_API_BINARY;
 const database = process.env.TEST_TRANSPORT_DATABASE_URL;
@@ -41,6 +42,9 @@ try {
   assert.equal(projection.revision, 10); assert.equal(projection.snapshot.sensors.guvaS12sd.uvIndex, null); assert.ok(projection.snapshot.sensors.mpu6050.angularRateDps);
   const history = await request(`/api/v1/devices/${device.id}/packets?limit=100`); assert.equal(history.status, 200);
   const page = await history.json() as { packets: { status: string }[] }; assert.equal(page.packets.length, 10); assert.ok(page.packets.every(packet => packet.status === "accepted"));
+  const numericFrame = JSON.stringify(simulate({ seed: 42, durationMs: 2000 })[0].envelope).replace('"envelopeVersion":1', '"envelopeVersion":1.0');
+  const numeric = await fetch(`http://${ingress}/api/v1/ingestion/packets`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${source.credential}` }, body: numericFrame });
+  assert.equal(numeric.status, 200); assert.equal((await numeric.json() as { status: string }).status, "duplicated");
   const listed = await request(`/api/v1/devices/${device.id}/sources`); assert.equal(listed.status, 200); assert.ok(!JSON.stringify(await listed.json()).includes(source.credential));
   assert.equal((await request(`/api/v1/devices/${device.id}/sources/${source.id}`, "DELETE")).status, 204);
   assert.equal((await request("/api/v1/ingestion/packets", "POST", {}, source.credential)).status, 401);

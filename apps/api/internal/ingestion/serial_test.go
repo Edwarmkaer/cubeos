@@ -126,3 +126,38 @@ func TestEnvelopeRejectsClientAuthorityAndDuplicateKeys(t *testing.T) {
 		}
 	}
 }
+
+func TestEnvelopeUsesExactSchemaKeys(t *testing.T) {
+	for _, raw := range []string{
+		strings.Replace(envelopeH, `"payload"`, `"Payload"`, 1),
+		strings.Replace(envelopeH, `"envelopeVersion"`, `"EnvelopeVersion"`, 1),
+		strings.Replace(envelopeH, `"receiver"`, `"Receiver"`, 1),
+		strings.Replace(envelopeH, `"rssiDbm":-80`, `"rssiDbm":-80,"RSSIDbm":0`, 1),
+		strings.Replace(envelopeH, `"snrDb"`, `"SNRDb"`, 1),
+	} {
+		r := &evidenceStore{}
+		result, err := NewService(r).IngestEnvelope(context.Background(), "source", []byte(raw))
+		if err != nil || result.Cause != "invalid_envelope" || len(r.rows) != 1 || r.rows[0].Patch != nil {
+			t.Errorf("schema-invalid keys not rejected: %s result=%+v err=%v", raw, result, err)
+		}
+	}
+}
+
+func TestEnvelopeVersionNumericConstWithoutCoercion(t *testing.T) {
+	for _, version := range []string{"1", "1.0", "1e0", "10e-1", "0.10e1"} {
+		r := &evidenceStore{}
+		raw := strings.Replace(envelopeH, `"envelopeVersion":1`, `"envelopeVersion":`+version, 1)
+		result, err := NewService(r).IngestEnvelope(context.Background(), "source", []byte(raw))
+		if err != nil || result.Status != "accepted" {
+			t.Errorf("numeric const1 rejected %s: %+v %v", version, result, err)
+		}
+	}
+	for _, version := range []string{`"1"`, `true`, `null`, `1.0000000000000001`, `0.9999999999999999`, `1e999999999`, `1e-999999999`, `2`} {
+		r := &evidenceStore{}
+		raw := strings.Replace(envelopeH, `"envelopeVersion":1`, `"envelopeVersion":`+version, 1)
+		result, err := NewService(r).IngestEnvelope(context.Background(), "source", []byte(raw))
+		if err != nil || result.Cause != "invalid_envelope" {
+			t.Errorf("non-const1 coerced %s: %+v %v", version, result, err)
+		}
+	}
+}

@@ -3,8 +3,28 @@ import { test } from "node:test";
 import { createServer } from "node:http";
 import { Writable } from "node:stream";
 import { randomBytes } from "node:crypto";
+import { validateReceivedEnvelopeV1 } from "@cubeos/contracts";
 import { deliver } from "../src/transports.ts";
 import { simulate } from "../src/index.ts";
+
+test("schema requires exact envelope and receiver keys, matching Go rejections", () => {
+  const valid = simulate({ durationMs: 2000 })[0].envelope;
+  assert.equal(validateReceivedEnvelopeV1(valid), true);
+  const { payload, envelopeVersion, receiver } = valid;
+  for (const invalid of [
+    { envelopeVersion, Payload: payload, receiver },
+    { EnvelopeVersion: envelopeVersion, payload, receiver },
+    { envelopeVersion, payload, Receiver: receiver },
+    { envelopeVersion, payload, receiver: { rssiDbm: -80, RSSIDbm: 0 } },
+    { envelopeVersion, payload, receiver: { SNRDb: 4 } },
+  ]) assert.equal(validateReceivedEnvelopeV1(invalid), false);
+});
+
+test("schema version const1 accepts equivalent numeric syntax without string coercion", () => {
+  const raw = JSON.stringify(simulate({ durationMs: 2000 })[0].envelope);
+  for (const version of ["1", "1.0", "1e0", "10e-1", "0.10e1"]) assert.equal(validateReceivedEnvelopeV1(JSON.parse(raw.replace('"envelopeVersion":1', `"envelopeVersion":${version}`))), true);
+  for (const version of ['"1"', "true", "null", "2", "1.1", "0.9"]) assert.equal(validateReceivedEnvelopeV1(JSON.parse(raw.replace('"envelopeVersion":1', `"envelopeVersion":${version}`))), false);
+});
 
 test("serial delivery preserves seeded envelopes and honours backpressure", async () => {
   const lines: string[] = [];

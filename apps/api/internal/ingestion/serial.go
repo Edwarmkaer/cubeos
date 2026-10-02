@@ -9,6 +9,9 @@ import (
 	"time"
 )
 
+// TransportOperationTimeout bounds DB work, never the serial worker lifetime.
+const TransportOperationTimeout = 5 * time.Second
+
 // ReadSerial consumes LF-delimited envelopes. CRLF is accepted; a disconnected
 // partial line is audited and never joined to bytes from a new connection.
 // A blocking Reader must be closed by its owner on cancellation (RunSerial does).
@@ -21,19 +24,21 @@ func ReadSerial(ctx context.Context, r io.Reader, s *Service, source string) err
 		if size == 0 {
 			return nil
 		}
+		operation, cancel := context.WithTimeout(ctx, TransportOperationTimeout)
+		defer cancel()
 		var err error
 		if partial || size > MaxEnvelopeBytes {
 			cause := "envelope_too_large"
 			if partial {
 				cause = "incomplete_frame"
 			}
-			_, err = s.rejectFrame(ctx, source, line, size, fmt.Sprintf("%x", hash.Sum(nil)), cause)
+			_, err = s.rejectFrame(operation, source, line, size, fmt.Sprintf("%x", hash.Sum(nil)), cause)
 		} else {
 			raw := line
 			if raw[len(raw)-1] == '\r' {
 				raw = raw[:len(raw)-1]
 			}
-			_, err = s.IngestEnvelope(ctx, source, raw)
+			_, err = s.IngestEnvelope(operation, source, raw)
 		}
 		line = line[:0]
 		size = 0
