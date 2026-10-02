@@ -24,7 +24,7 @@
     "@cubeos/api#test": {
       "cache": false,
       "inputs": ["$TURBO_DEFAULT$", "../../packages/contracts/**"],
-      "env": ["TEST_DATABASE_URL", "TEST_MIGRATION_DATABASE_URL"]
+      "env": ["TEST_DATABASE_URL", "TEST_MIGRATION_DATABASE_URL", "TEST_INGESTION_DATABASE_URL", "CI"]
     },
     "web#typecheck": {
       "dependsOn": ["^typecheck"],

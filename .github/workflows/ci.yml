@@ -90,6 +90,7 @@ jobs:
     env:
       TEST_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_http_test?sslmode=disable
       TEST_MIGRATION_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_migrations_test?sslmode=disable
+      TEST_INGESTION_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_ingestion_test?sslmode=disable
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -104,6 +105,7 @@ jobs:
         run: |
           createdb -h localhost -U postgres cubeos_http_test
           createdb -h localhost -U postgres cubeos_migrations_test
+          createdb -h localhost -U postgres cubeos_ingestion_test
       - name: Format, vet and race tests against PostgreSQL
         working-directory: apps/api
         run: |

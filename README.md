@@ -35,7 +35,7 @@ El build descarga fuentes de Google y las empaqueta para el runtime local offlin
 
 ## Documentación
 
-Arquitectura objetivo: [diseño backend/local/cloud](docs/superpowers/specs/2026-10-01-cubeos-backend-design.md), [modelo de dominio Mermaid](docs/domain-model.md) y [plan de PRs](docs/superpowers/plans/2026-10-01-cubeos-backend.md). El frontend sigue siendo una vista previa. PR3 implementa identidad/dispositivos locales; ingestión, SSE, Clerk y medios siguen pendientes.
+Arquitectura objetivo: [diseño backend/local/cloud](docs/superpowers/specs/2026-10-01-cubeos-backend-design.md), [modelo de dominio Mermaid](docs/domain-model.md) y [plan de PRs](docs/superpowers/plans/2026-10-01-cubeos-backend.md). El frontend sigue siendo una vista previa. PR3 implementa identidad/dispositivos locales; PR4 añade ingestión transaccional, historial, snapshots y REST/CSV con propiedad. Adaptadores, SSE, Clerk y medios siguen pendientes. [Operación API](apps/api/README.md) incluye fixtures locales y reconstrucción; [OpenAPI de telemetría](packages/contracts/openapi/telemetry.yaml) define las lecturas.
 
 | Archivo | Contenido |
 | --- | --- |

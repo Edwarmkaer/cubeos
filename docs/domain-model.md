@@ -13,6 +13,7 @@ erDiagram
     DEVICES ||--o{ INGESTION_SOURCES : receives_from
     INGESTION_SOURCES ||--o{ RECEIVED_PACKETS : receives
     DEVICES ||--o| DEVICE_SNAPSHOTS : has_latest
+    DEVICES ||--o| DEVICE_TELEMETRY_STATE : orders
     DEVICES ||--o{ PHOTOS : captures
 
     USERS {
@@ -53,13 +54,19 @@ erDiagram
         datetime revoked_at
     }
     RECEIVED_PACKETS {
-        uuid id PK
+        bigint id PK
+        uuid device_id FK
         uuid source_id FK
         bigint reception_epoch
         datetime received_at
-        text raw_payload
-        string validation_status
-        jsonb rejection_details
+        bytea raw_payload
+        bigint raw_size
+        boolean raw_truncated
+        string raw_sha256
+        string status
+        string cause
+        boolean logical
+        boolean projected
         string message_type
         bigint sequence
         bigint uptime_ms
@@ -67,10 +74,13 @@ erDiagram
     }
     DEVICE_SNAPSHOTS {
         uuid device_id PK,FK
-        bigint revision
-        jsonb snapshot
-        jsonb freshness_by_group
+        jsonb projection
         datetime updated_at
+    }
+    DEVICE_TELEMETRY_STATE {
+        uuid device_id PK,FK
+        bigint revision
+        jsonb order_state
     }
     PHOTOS {
         uuid id PK

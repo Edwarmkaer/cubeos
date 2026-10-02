@@ -27,6 +27,14 @@ test "$("${compose[@]}" exec -T web id -u)" != 0
 device=$("${curl_probe[@]}" --fail --silent -H 'Content-Type: application/json' -d '{"name":"Smoke persistente","protocolDeviceId":"CS01"}' "$api_url/api/v1/devices")
 device_id=$(jq -er .id <<<"$device")
 profile_before=$("${compose[@]}" exec -T db psql -U cubeos -d cubeos -Atc "SELECT user_id FROM auth_identities WHERE provider='local' AND subject='installation'")
+# Trusted local fixture command exercises the same transactional ingestion use
+# case as future transports, without adding a credential-free HTTP endpoint.
+fixture=$("${compose[@]}" exec -T api server fixture < packages/contracts/fixtures/chasqui-v2/uplink-examples-v2.json)
+telemetry_id=$(jq -er .deviceId <<<"$fixture")
+snapshot_before=$("${curl_probe[@]}" --fail --silent "$api_url/api/v1/devices/$telemetry_id/snapshot" | jq -cS .)
+history_before=$("${curl_probe[@]}" --fail --silent "$api_url/api/v1/devices/$telemetry_id/packets" | jq -cS .)
+test "$(jq -er .revision <<<"$snapshot_before")" = 5
+test "$(jq -er '.packets | length' <<<"$history_before")" = 5
 "${compose[@]}" stop db
 test "$("${curl_probe[@]}" -s -o /dev/null -w '%{http_code}' "$api_url/healthz")" = 200
 test "$("${curl_probe[@]}" -s -o /dev/null -w '%{http_code}' "$api_url/readyz")" = 503
@@ -44,6 +52,13 @@ test "$(jq -er .protocolDeviceId <<<"$restored")" = CS01
 profile_after=$("${compose[@]}" exec -T db psql -U cubeos -d cubeos -Atc "SELECT user_id FROM auth_identities WHERE provider='local' AND subject='installation'")
 test -n "$profile_before"
 test "$profile_before" = "$profile_after"
+snapshot_after=$("${offline[@]}" exec -T api wget -T 6 -q -O - "http://127.0.0.1:${API_PORT:-8080}/api/v1/devices/$telemetry_id/snapshot" | jq -cS .)
+history_after=$("${offline[@]}" exec -T api wget -T 6 -q -O - "http://127.0.0.1:${API_PORT:-8080}/api/v1/devices/$telemetry_id/packets" | jq -cS .)
+test "$snapshot_before" = "$snapshot_after"
+test "$history_before" = "$history_after"
+"${offline[@]}" exec -T api server rebuild "$telemetry_id"
+rebuilt=$("${offline[@]}" exec -T api wget -T 6 -q -O - "http://127.0.0.1:${API_PORT:-8080}/api/v1/devices/$telemetry_id/snapshot" | jq -cS .)
+test "$snapshot_before" = "$rebuilt"
 network=$(docker inspect "$("${compose[@]}" ps -q api)" --format '{{range $name,$conf := .NetworkSettings.Networks}}{{$name}}{{end}}')
 test "$(docker network inspect "$network" --format '{{.Internal}}')" = true
 "${compose[@]}" exec -T api sh -c 'if wget -T 3 -q -O /dev/null http://1.1.1.1; then exit 1; fi'
@@ -62,4 +77,4 @@ done
 "${offline[@]}" down
 "${compose[@]}" up --no-build --pull never -d
 wait_ready
-echo "Smoke passed: non-root, DB-down readiness, persistent device/profile, blocked-egress boot, offline visor/font and six original photos; loopback installation restored."
+echo "Smoke passed: non-root, DB-down readiness, persistent device/profile/raw/history/snapshot, deterministic rebuild, blocked-egress boot, offline visor/font and six original photos; loopback installation restored."

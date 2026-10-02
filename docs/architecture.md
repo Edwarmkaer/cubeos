@@ -2,7 +2,8 @@
 
 Estado 2026-10-01: web, UI compartida, contratos hardware v2 y simulador de
 reproducción implementados. PR3 añade API Go local con identidad/dispositivos
-persistidos en PostgreSQL; ingestión, SSE y autenticación pública siguen pendientes.
+persistidos en PostgreSQL; PR4 añade caso de uso de ingestión, historial y snapshots
+reconstruibles con lecturas REST/CSV. Adaptadores, SSE y auth pública siguen pendientes.
 [ADR 0005](adr/0005-backend-local-cloud-media.md),
 [diseño objetivo](superpowers/specs/2026-10-01-cubeos-backend-design.md),
 [modelo de dominio](domain-model.md) y
@@ -18,7 +19,9 @@ FastAPI/SQLite/WebSocket son antecedentes sustituidos.
 | Demo de frontend | `packages/telemetry`, fuente en web | Muestra legacy sintética e historial breve |
 | Contrato hardware | `packages/contracts` | Esquemas JSON, tipos y fixtures compartidos TS/Go |
 | Reproducción | `tools/simulator` | Envelopes v1 deterministas NDJSON o fixtures con tiempo lógico |
-| API local | `apps/api` | Health/readiness, identidad persistente y CRUD de dispositivos con propiedad |
+| API local | `apps/api` | Health/readiness, identidad/dispositivos, snapshot/historial/CSV con propiedad |
+| Ingestión | `apps/api/internal/ingestion` | Validación/normalización y transacción por fuente registrada; sin transporte expuesto |
+| Telemetría | `apps/api/internal/telemetry` | Orden, proyección, procedencia por campo, consultas y reconstrucción |
 | Instalación local | `infra/docker` | Contenedores sin root, PostgreSQL persistente, publicación loopback y runtime verificado sin Internet |
 
 Web todavía usa `TelemetrySource`/`simulatorSource`: el hook inicia y detiene la
@@ -34,8 +37,10 @@ cambiar contratos invalida consumidores. Desarrollo no se cachea. CI añade el j
 también ante un job omitido/cancelado.
 
 Los puertos de persistencia pertenecen a sus consumidores: HTTP consume
-`DeviceStore`, y PostgreSQL aplica propiedad en cada consulta. No existe todavía
-`PacketRepository`: su consumidor entra en PR4. Operación, límites, entorno y
+`DeviceStore` y `TelemetryStore`; ingestión consume `PacketRepository`, no un ORM
+genérico. PostgreSQL aplica propiedad en cada consulta y lock por dispositivo
+en ingestión/reconstrucción. Orden, épocas y evidencia tienen un único dueño en
+[telemetría](telemetry.md). Operación, límites, entorno y
 comandos de migración tienen su fuente en [API local](../apps/api/README.md).
 
 ## Flujo objetivo pendiente
@@ -53,7 +58,7 @@ flowchart LR
   Contracts -.-> Client
 ```
 
-Ambos adaptadores de recepción invocarán el mismo procesamiento. Payload compacto
+Ambos adaptadores de recepción invocarán el mismo `Ingest` ya implementado. Payload compacto
 intacto, metadatos externos y fuente/tiempo del servidor: [contrato y unidades](telemetry.md).
 LoRa pertenece a la cadena de hardware documental; CubeOS no implementa un
 receptor LoRa. NDJSON serial es una propuesta de framing pendiente con el firmware.

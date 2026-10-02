@@ -12,6 +12,9 @@ import (
 func TestConcurrentMigrationAndTransactionalRollback(t *testing.T) {
 	url := os.Getenv("TEST_MIGRATION_DATABASE_URL")
 	if url == "" {
+		if os.Getenv("CI") != "" {
+			t.Fatal("TEST_MIGRATION_DATABASE_URL required")
+		}
 		t.Skip("TEST_MIGRATION_DATABASE_URL required")
 	}
 	ctx := context.Background()
