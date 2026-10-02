@@ -8,6 +8,8 @@ PR6 añade SSE autorizado y cliente TypeScript; PR7 conecta el visor a v2 con
 selección explícita de fuente y dispositivo. PR8 añade Clerk/Google con inscripción
 explícita, JWT verificado y revalidación de sesión sin fallback local; operación
 y variables tienen dueño en [identidad pública](public-auth.md).
+PR9 añade pasos comunes y progreso persistido por dispositivo; operación y carga
+de contenido aprobado tienen dueño en [construcción](construction-progress.md).
 [ADR 0005](adr/0005-backend-local-cloud-media.md),
 [diseño objetivo](superpowers/specs/2026-10-01-cubeos-backend-design.md),
 [modelo de dominio](domain-model.md) y
@@ -27,6 +29,7 @@ FastAPI/SQLite/WebSocket son antecedentes sustituidos.
 | Ingestión | `apps/api/internal/ingestion` | Validación/normalización y transacción por fuente; adaptadores serial y HTTP |
 | Telemetría | `apps/api/internal/telemetry` | Orden, proyección, procedencia por campo, consultas y reconstrucción |
 | Realtime | `apps/api/internal/realtime` | Avisos transaccionales PostgreSQL, colas acotadas y SSE con autorización prolongada |
+| Construcción | `apps/api/internal/construction` | Catálogo común y progreso con propiedad, identidad estable y porcentaje derivado |
 | Cliente API | `packages/api-client` | REST tipado y fetch SSE, contrato validado, cancelación y reconexión |
 | Instalación local | `infra/docker` | Contenedores sin root, PostgreSQL persistente, publicación loopback y runtime verificado sin Internet |
 

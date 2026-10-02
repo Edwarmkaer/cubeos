@@ -2,6 +2,38 @@
 
 Actualizado: 2026-10-02.
 
+## PR 9 — Progreso de construcción
+
+Base PR8 integrada `0bbdf00f06ac86385e920ad2c0b04820043e1225`; rama
+`feat/construction-progress`, checkout nativo exclusivo. Operación, persistencia
+y carga de contenido aprobado tienen dueño en
+[construcción](docs/construction-progress.md); JSON en
+[OpenAPI](packages/contracts/openapi/telemetry.yaml). Pozo se conserva y
+`DESIGN.md` permanece draft. PR10/PR11 no se implementan.
+
+RED→GREEN: rutas inexistentes en HTTP/PG, métodos ausentes del cliente,
+controlador de sesión ausente y casilla ausente en navegador. Fixtures únicamente
+en DBs descartables; JWT/JWKS/sesión efímeros sustituyen al proveedor externo,
+manteniendo API/DB/propiedad reales. Regresiones: A/B en HTTP y repositorio,
+pasos inexistentes, boolean/body estricto, dos CubeSats, reordenamiento, total
+derivado, marcar/desmarcar/re-marcar y fechas. Navegador: recarga y GET/PUT tardíos,
+cambio de dispositivo/cuenta y logout. Ruta Next real inspeccionada desktop/mobile
+vacía y con fixture de prueba.
+
+Verificación local: frozen install; 14 tareas JS lint/tipos/tests sin caché;
+build web; Go vet/race con siete DBs propias; navegador local offline/telemetría,
+auth firmado y construcción; CLI real; Docker con reinicio API/DB y volumen,
+fechas/progreso persistidos, boot sin egress y gates anteriores conservados.
+Runners y revisión independiente se informan por SHA en el handoff; esta nota
+no declara checks remotos ni merge aprobados. Google/Clerk externo, guía
+educativa real y hardware siguen sin probar.
+
+Recursos propios: `cubeos-pr9-test-pg`, puerto 55439 y volumen
+`cubeos-pr9-test-data`; Compose `cubeos-pr9-smoke` (8099/3129) y volumen propio;
+web nativa 3127 y API browser 8097; fixture firmado 3128.
+Evidencia ignorada en `.superpowers/sdd/pr9-progress/`. Ningún volumen ajeno
+se modifica/elimina. Root conserva revisión independiente, CI exact SHA y merge.
+
 ## PR 8 — Identidad pública y permisos
 
 Base PR7 integrada `d06f50e`; rama `feat/google-auth`, checkout nativo.

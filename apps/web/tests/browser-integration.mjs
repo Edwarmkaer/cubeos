@@ -9,7 +9,8 @@ import { reading, appendReadings, chartFields, gpsPosition } from "../src/lib/re
 
 const binary = process.env.CUBEOS_API_BINARY;
 const database = process.env.TEST_BROWSER_DATABASE_URL;
-assert.ok(binary && database, "built API and exclusive browser database required");
+const pgContainer = process.env.CUBEOS_BROWSER_PG_CONTAINER;
+assert.ok(binary && database && pgContainer, "built API, owned PG container and exclusive browser database required");
 const web = process.env.CUBEOS_WEB_URL ?? "http://localhost:3108";
 const port = process.env.CUBEOS_BROWSER_API_PORT ?? "8087";
 const base = `http://localhost:${port}`;
@@ -110,6 +111,37 @@ try {
   await page.getByRole("button", { name: "Renombrar" }).click();
   for (let i = 0; i < 100; i++) { if ((await page.getByLabel("Dispositivo", { exact: true }).locator('option:checked').textContent()).includes("PR7 Renamed")) break; await delay(50); }
   assert.match(await page.getByLabel("Dispositivo", { exact: true }).locator('option:checked').textContent(), /PR7 Renamed/);
+  // Actual production route with a migrated empty guide, no test instructions.
+  await page.getByRole("link", { name: "Construcción", exact: true }).first().click();
+  await expectText(/Guía en preparación/);
+  assert.equal(await page.getByRole("checkbox").count(), 0);
+  assert.equal(await page.getByRole("progressbar", { name: "Progreso de construcción" }).getAttribute("aria-valuenow"), "0");
+  await page.screenshot({ path: `${evidence}/construction-empty-desktop.png` });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({ path: `${evidence}/construction-empty-mobile.png` });
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, "construction mobile overflow");
+  await page.setViewportSize({ width: 1440, height: 900 });
+  // Fixture catalog belongs only to this explicit isolated browser database.
+  execFileSync("docker", ["exec", pgContainer, "psql", "-v", "ON_ERROR_STOP=1", "-U", "postgres", "-d", new URL(database).pathname.slice(1), "-c",
+    "INSERT INTO steps(id,title,instructions,display_order) VALUES('11111111-1111-4111-8111-111111111111','Fixture one','Contenido exclusivo de prueba; no es una guía educativa.',1),('22222222-2222-4222-8222-222222222222','Fixture two','Contenido exclusivo de prueba.',2)"], { stdio: "pipe" });
+  await page.getByRole("link", { name: "Visor", exact: true }).first().click();
+  await page.getByRole("link", { name: "Construcción", exact: true }).first().click();
+  const constructionMark = page.getByRole("checkbox", { name: "Completar Fixture one", exact: true });
+  await constructionMark.waitFor();
+  await constructionMark.click();
+  await expectText(/1 \/ 2 pasos · 50%/);
+  assert.equal(await constructionMark.isChecked(), true);
+  const savedProgress = await request(`/api/v1/devices/${device.id}/progress`);
+  assert.equal(savedProgress.percentage, 50); assert.ok(savedProgress.steps[0].completedAt);
+  await page.screenshot({ path: `${evidence}/construction-saved-desktop.png` });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({ path: `${evidence}/construction-saved-mobile.png` });
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, "saved construction mobile overflow");
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.getByRole("link", { name: "Visor", exact: true }).first().click();
+  await page.getByRole("link", { name: "Construcción", exact: true }).first().click();
+  await expectText(/1 \/ 2 pasos · 50%/); assert.equal(await constructionMark.isChecked(), true);
+  assert.deepEqual(await request(`/api/v1/devices/${device.id}/progress`), savedProgress, "remount changed persisted date");
   await page.getByRole("link", { name: "Visor", exact: true }).first().click();
   await expectText(/API conectada/);
   await expectText(/Esperando primera muestra real/);
