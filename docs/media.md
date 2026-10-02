@@ -50,6 +50,10 @@ no se puede descargar; `hasThumbnail=false` no impide descargar un original list
 La galería muestra únicamente miniaturas listas, 24 por petición; pulsar una imagen
 descarga el original. Configuración importa el archivo seleccionado. NASA permanece
 exclusivamente en DEMO. No hay captions, instrucciones ni scrollbar visible en la tira.
+Si una miniatura desaparece entre lista y descarga, su 404 omite solo esa imagen:
+las vecinas y el cursor permanecen disponibles. Errores de sesión o almacenamiento
+se muestran, abortan las operaciones en curso, limpian las fotos en memoria y
+revocan todos los blobs, incluso los creados parcialmente durante la página fallida.
 
 La credencial de medios, prefijo `media_`, se devuelve solo al crearla; se guarda
 su hash. Está ligada a dispositivo **y propietario de emisión**, revocable, máximo
@@ -124,13 +128,15 @@ pnpm --filter @cubeos/api exec go run ./cmd/server media-reconcile
 docker compose -f infra/docker/compose.yaml exec api server media-reconcile
 ```
 
-Reconciliación considera hasta 100 filas pendientes/sin miniatura de ese backend,
-mayores de un minuto. Ordena por último intento (o importación inicial), rotando
+Reconciliación inspecciona hasta 100 filas de ese backend, incluso originales listos
+con miniatura registrada, mayores de un minuto. Ordena por último intento (o importación inicial), rotando
 los pendientes ausentes para que no bloqueen fotos recuperables posteriores.
 Adquiere lock sin esperar un upload activo, verifica tamaño/SHA
 y recupera `ready`/miniatura. Un original ausente o distinto permanece pendiente;
 no inventa readiness ni borra originales. Las consultas detectan originales ausentes
-y degradan metadata. Staging `stage-UUID` de más de 24 horas y temporales locales
+y degradan metadata. Lista y GET de miniatura borrada limpian solo su clave de
+derivado: el original permanece listo. El comando también detecta y regenera
+derivados ausentes sin requerir una consulta previa. Staging `stage-UUID` de más de 24 horas y temporales locales
 `.upload-hex` de directorios ligados a esas filas se limpian; archivos con otros
 nombres y objetos ajenos no se enumeran/purgan. El comando tiene deadline de 30 min.
 Inspeccionar pendientes que no se recuperan y volver a ejecutar tras resolver la

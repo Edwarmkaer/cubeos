@@ -113,6 +113,56 @@ func mediaFailureContract(t *testing.T, backend string) {
 	if err != nil || !photo.HasThumbnail {
 		t.Fatal("thumbnail retry", photo, err)
 	}
+	// Losing only the derivative must not poison original readiness or prevent
+	// direct reconciliation, thumbnail GET repair, or list repair on either store.
+	for _, detect := range []string{"reconcile", "open", "list"} {
+		if err = local.Delete(ctx, photo.ThumbnailKey); err != nil {
+			t.Fatal(err)
+		}
+		switch detect {
+		case "open":
+			if _, _, err = s.Open(ctx, user, photo.ID, true); !errors.Is(err, devices.ErrNotFound) {
+				t.Fatal("missing derivative GET", err)
+			}
+		case "list":
+			page, e := s.List(ctx, user, d.ID, 20, "")
+			if e != nil {
+				t.Fatal(e)
+			}
+			for _, listed := range page.Items {
+				if listed.ID == photo.ID && (listed.HasThumbnail || listed.Status != "ready") {
+					t.Fatal("stale derivative list", listed)
+				}
+			}
+		}
+		if detect != "reconcile" {
+			metadata, e := s.Get(ctx, user, photo.ID)
+			if e != nil || metadata.HasThumbnail || metadata.Status != "ready" {
+				t.Fatal("missing derivative metadata", metadata, e)
+			}
+		}
+		if err = s.Reconcile(ctx, 0); err != nil {
+			t.Fatal(err)
+		}
+		photo, err = s.Get(ctx, user, photo.ID)
+		if err != nil || !photo.HasThumbnail || photo.Status != "ready" {
+			t.Fatal("derivative recovery metadata", photo, err)
+		}
+		_, thumbnail, e := s.Open(ctx, user, photo.ID, true)
+		if e != nil {
+			t.Fatal("derivative still missing after reconcile", detect, e)
+		}
+		thumbnail.Close()
+		_, original, e := s.Open(ctx, user, photo.ID, false)
+		if e != nil {
+			t.Fatal(e)
+		}
+		got, e := io.ReadAll(original)
+		original.Close()
+		if e != nil || !bytes.Equal(got, raw) {
+			t.Fatal("derivative recovery changed original", e)
+		}
+	}
 	fs.original = true
 	if _, err = s.Upload(ctx, access, d.ID, bytes.NewReader(raw), "image/png", nil, "manual"); err == nil {
 		t.Fatal("storage error")

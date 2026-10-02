@@ -20,7 +20,7 @@ func (s *Service) Reconcile(ctx context.Context, minAge time.Duration) error {
 	default:
 		return ErrLimit
 	}
-	rows, err := s.pool.Query(ctx, "SELECT id::text FROM photos WHERE storage_backend=$1 AND (status='pending' OR thumbnail_key IS NULL) AND imported_at<clock_timestamp()-$2::interval ORDER BY COALESCE(reconciled_at,imported_at),id LIMIT 100", s.cfg.MediaStorage, minAge.String())
+	rows, err := s.pool.Query(ctx, "SELECT id::text FROM photos WHERE storage_backend=$1 AND imported_at<clock_timestamp()-$2::interval ORDER BY COALESCE(reconciled_at,imported_at),id LIMIT 100", s.cfg.MediaStorage, minAge.String())
 	if err != nil {
 		return err
 	}
@@ -83,7 +83,19 @@ func (s *Service) reconcileOne(ctx context.Context, id string) error {
 	}
 	p.Status = "ready"
 	if p.HasThumbnail {
-		return nil
+		derivative, e := s.store.Open(ctx, p.ThumbnailKey)
+		if e == nil {
+			derivative.Close()
+			return nil
+		}
+		if !errors.Is(e, objects.ErrNotFound) {
+			return e
+		}
+		if _, err = conn.Exec(ctx, "UPDATE photos SET thumbnail_key=NULL WHERE id=$1 AND thumbnail_key=$2", id, p.ThumbnailKey); err != nil {
+			return err
+		}
+		p.HasThumbnail = false
+		p.ThumbnailKey = ""
 	}
 	source, err := s.store.Open(ctx, p.OriginalKey)
 	if err != nil {

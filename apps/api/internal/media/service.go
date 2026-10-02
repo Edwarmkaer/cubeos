@@ -285,6 +285,20 @@ func (s *Service) List(ctx context.Context, user identity.Principal, device stri
 			object, e := s.store.Open(ctx, p.OriginalKey)
 			if e == nil {
 				object.Close()
+				if p.HasThumbnail {
+					derivative, thumbErr := s.store.Open(ctx, p.ThumbnailKey)
+					if thumbErr == nil {
+						derivative.Close()
+					} else if errors.Is(thumbErr, objects.ErrNotFound) {
+						if err = s.clearThumbnail(ctx, p); err != nil {
+							return result, err
+						}
+						p.HasThumbnail = false
+						p.ThumbnailKey = ""
+					} else {
+						return result, thumbErr
+					}
+				}
 			} else {
 				if !errors.Is(e, objects.ErrNotFound) {
 					return result, e
@@ -342,7 +356,17 @@ func (s *Service) Open(ctx context.Context, user identity.Principal, id string, 
 	}
 	r, err := s.store.Open(ctx, key)
 	if errors.Is(err, objects.ErrNotFound) {
+		if repairErr := s.clearThumbnail(ctx, p); repairErr != nil {
+			return p, nil, repairErr
+		}
 		err = devices.ErrNotFound
 	}
 	return p, r, err
+}
+
+// Only derivative evidence is cleared. The verified original stays ready, and
+// comparison with the observed key avoids clearing unrelated metadata.
+func (s *Service) clearThumbnail(ctx context.Context, p Photo) error {
+	_, err := s.pool.Exec(ctx, "UPDATE photos SET thumbnail_key=NULL WHERE id=$1 AND storage_backend=$2 AND thumbnail_key=$3", p.ID, p.Backend, p.ThumbnailKey)
+	return err
 }

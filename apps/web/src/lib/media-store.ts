@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { StoreApi } from "zustand";
-import { APIClient } from "@cubeos/api-client";
+import { APIClient, APIError } from "@cubeos/api-client";
 import type { Photo } from "@cubeos/api-client";
 import type { TelemetryState } from "./telemetry-store.ts";
 import { sourceToken, validateSelection } from "./telemetry-source.ts";
@@ -28,7 +28,14 @@ export function startMedia(source: StoreApi<TelemetryState>) {
    if (photo.status !== "ready" || !photo.hasThumbnail) continue;
    const fresh = await sourceToken(selection.mode);
    if (!live(g, signal)) return;
-   const blob = await client.photoBlob(photo.id, "thumbnail", fresh, signal);
+   let blob: Blob;
+   try { blob = await client.photoBlob(photo.id, "thumbnail", fresh, signal); }
+   catch (error) {
+    // The derivative can disappear after a successful list. Only its 404 is
+    // recoverable here; session/storage errors still fail closed visibly.
+    if (live(g, signal) && error instanceof APIError && error.status === 404) { photo.hasThumbnail = false; continue; }
+    throw error;
+   }
    if (!live(g, signal)) return;
    const url = URL.createObjectURL(blob); urls.add(url); frames.push({ id: photo.id, src: url, alt: "Captura del CubeSat" });
   }
@@ -44,7 +51,11 @@ export function startMedia(source: StoreApi<TelemetryState>) {
   void page("", g, signal).catch(error => fail(error, g, signal));
  };
  const fail = (error: unknown, g: number, signal: AbortSignal) => {
-  if (live(g, signal)) useMediaStore.setState({ status: "error", error: error instanceof Error ? error.message : "No se pudieron cargar las capturas." });
+  if (live(g, signal)) {
+   controller.abort();
+   revoke();
+   useMediaStore.setState({ photos: [], frames: [], selected: null, nextCursor: "", status: "error", error: error instanceof Error ? error.message : "No se pudieron cargar las capturas." });
+  }
  };
  const unsubscribe = source.subscribe(next => { if (next.generation !== generation) reset(); }); reset();
  return {

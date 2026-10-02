@@ -34,6 +34,19 @@ SHA y logs finales; runners/revisión/merge pertenecen al chat raíz.
 Hardware, Google/Clerk externo y proveedor S3 cloud no fueron probados.
 PR11/Railway no se inicia en esta entrega.
 
+Revisión PR10: miniatura borrada dejaba metadata obsoleta y un 404 vaciaba la
+página completa. Regresiones reproducen ambos fallos, filesystem/S3 y cliente
+con HTTP binario real. Lista/GET limpian únicamente la clave de derivado;
+reconciliación inspecciona lotes rotativos de filas listas además de pendientes
+y regenera el derivado manteniendo original/SHA. Galería conserva vecinas/cursor
+ante ese 404; errores de sesión/storage siguen visibles y revocan blobs completos
+y parciales. Browser firmado borra una miniatura real después de listar, verifica
+vecinas/página siguiente, original exacto y reparación por reconciliador real.
+La revocación de sesión firmada se prueba con un blob previamente legible y una
+página 200 retenida: el download recibe 401, el blob deja de leerse y la página
+tardía no restaura imágenes. Errores fatales abortan la sesión de medios hasta
+una recarga explícita, además de limpiar estado.
+
 ## PR 9 — Progreso de construcción
 
 Base PR8 integrada `0bbdf00f06ac86385e920ad2c0b04820043e1225`; rama
