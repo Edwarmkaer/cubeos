@@ -100,11 +100,12 @@ Tramas válidas y fotografías originales se conservan por defecto, sin purga au
 
 Destino previsto: web/API en Railway y PostgreSQL persistente, con bucket S3 configurable. La nube recibe HTTP; USB permanece en la instalación local. Contenedores escuchan `PORT` y exponen readiness. Los originales cloud no se guardan en filesystem efímero.
 
-Recomendación inicial: Cloudflare R2 Standard por su cuota gratuita, Railway Buckets como alternativa integrada y AWS S3 compatible. Condiciones consultadas 2026-10-01: R2 incluye 10 GB-mes, 1 millón de operaciones clase A y 10 millones clase B mensuales, sin cargo de egress R2; excedentes se facturan. Railway puede cobrar su propio tráfico saliente al subir archivos. Railway Buckets cobra $0.015/GB-mes y advierte egress del servicio al subir por red pública. No se promete costo cero de despliegue.
-
-Fuentes: [R2 pricing](https://developers.cloudflare.com/r2/pricing/), [Railway Buckets](https://docs.railway.com/guides/storage-buckets-guide), [Railway Buckets billing](https://docs.railway.com/storage-buckets/billing). Supabase ofrece 1 GB en Free, pero no se añade otro ecosistema de backend por esa cuota: [Supabase billing](https://supabase.com/docs/guides/platform/billing-on-supabase).
-
-Railway Free permite hasta 10 GB-mes de buckets, pero el uso consume el crédito mensual compartido de $1; agotarlo suspende el acceso. No es una cuota independiente garantizada para fotografías. En local no hay tarifa de proveedor, pero disco, capacidad y backups corren por cuenta de la instalación. Antes de producción se configuran alertas de cuota y se verifica el plan contratado.
+R2 Standard es el proveedor inicial recomendado, con Railway Buckets/AWS S3
+como alternativas configurables. Configuración, tarifas variables consultadas,
+fuentes oficiales y aceptación externa tienen un único dueño en
+[deployment](../../deployment.md). Operación de backup/restauración:
+[backups](../../backups.md). No se promete costo cero ni durabilidad sin capacidad
+y backups; no se añade otro ecosistema de backend por una cuota gratuita.
 
 ## Calidad y operaciones
 

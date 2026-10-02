@@ -167,3 +167,7 @@ Límites, variables local/S3, credenciales hardware, importación de archivos y
 reconciliación tienen dueño en [medios](../../docs/media.md). Después de migrar,
 `server media-reconcile` recupera metadata pendiente sin purgar originales.
 Compose persiste objetos en `media-data` además de PostgreSQL.
+
+Preparación cloud por SHA y configuración de proxy/entorno:
+[Railway](../../docs/deployment.md). Backup/restauración DB **y objetos**
+a destino nuevo explícito: [recuperación](../../docs/backups.md).

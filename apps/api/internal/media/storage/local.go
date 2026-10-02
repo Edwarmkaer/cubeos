@@ -6,11 +6,55 @@ import (
 	"encoding/hex"
 	"errors"
 	"io"
+	"io/fs"
 	"os"
 	"path"
+	"path/filepath"
 )
 
 type Local struct{ directory string }
+
+// Keys is for quiesced recovery, not user requests. Refuse unfamiliar data
+// rather than silently omitting files or following a link out of the store.
+func (s *Local) Keys(ctx context.Context) ([]string, error) {
+	var keys []string
+	resolved, err := filepath.EvalSymlinks(s.directory)
+	absolute, e := filepath.Abs(s.directory)
+	if err != nil || e != nil || resolved != absolute {
+		return nil, errors.New("storage root must be absolute and without symlinks")
+	}
+	err = filepath.WalkDir(s.directory, func(name string, d fs.DirEntry, e error) error {
+		if e != nil {
+			return e
+		}
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+		if d.IsDir() {
+			return nil
+		}
+		info, e := d.Info()
+		if e != nil {
+			return e
+		}
+		if !info.Mode().IsRegular() {
+			return errors.New("nonregular recovery object")
+		}
+		key, e := filepath.Rel(s.directory, name)
+		if e != nil {
+			return e
+		}
+		if validKey(key) != nil {
+			return errors.New("foreign recovery object")
+		}
+		keys = append(keys, key)
+		if len(keys) > 100000 {
+			return errors.New("recovery inventory limit")
+		}
+		return nil
+	})
+	return keys, err
+}
 
 func NewLocal(directory string) (*Local, error) {
 	if directory == "" {

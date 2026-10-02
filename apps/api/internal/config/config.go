@@ -9,6 +9,7 @@ import (
 )
 
 type Config struct {
+	RailwayHealthcheck                                                      bool
 	Mode, PublicAPIHost                                                     string
 	ClerkIssuer, ClerkJWKSURL, ClerkAudience, ClerkSecretKey                string
 	Address, DatabaseURL, Origin                                            string
@@ -64,6 +65,12 @@ func Load(get func(string) string) (Config, error) {
 	}
 	c := Config{Address: net.JoinHostPort(host, port), DatabaseURL: db, Origin: origin, Port: port, IngestionAddress: get("INGESTION_ADDRESS"), SerialPort: get("SERIAL_PORT"), SerialSourceID: get("SERIAL_SOURCE_ID")}
 	c.Mode = mode
+	if v := get("RAILWAY_HEALTHCHECK"); v != "" {
+		if (v != "true" && v != "false") || (v == "true" && mode != "public") {
+			return Config{}, errors.New("Railway healthcheck requires explicit public mode")
+		}
+		c.RailwayHealthcheck = v == "true"
+	}
 	if mode == "public" {
 		c.PublicAPIHost = get("PUBLIC_API_HOST")
 		c.ClerkIssuer = get("CLERK_ISSUER")

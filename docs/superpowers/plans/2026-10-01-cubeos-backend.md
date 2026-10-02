@@ -221,10 +221,10 @@ Rama: `chore/railway-deployment`. Depende de PR 5, PR 9 y PR 10.
 
 Archivos: `infra/railway/`, documentación de variables/despliegue; scripts de backup/restore y workflow de imágenes si no existe. No crear ni desplegar recursos cloud sin encargo de ejecución del propietario.
 
-- [ ] Configurar servicios web/API, `PORT`, checks readiness, PostgreSQL y variables de S3/Clerk. Subida a R2 o Railway Buckets por configuración; no usar disco efímero para originales.
-- [ ] Documentar secrets por entorno, URL API/orígenes, SSE a través del proxy, límites de upload y costes salientes del proveedor.
-- [ ] Probar backup/restauración en instalación descartable: DB y objetos mantienen fotos/propiedad/progreso e historial. Nunca usar DB de producción para tests de restauración.
-- [ ] Workflow de build/publicación con tags y SHA en ramas confiables; jobs de PR verifican imágenes y configuración sin desplegar ni recibir secretos.
+- [x] Configurar servicios web/API, `PORT`, checks readiness, PostgreSQL y variables de S3/Clerk. Subida a R2 o Railway Buckets por configuración; no usar disco efímero para originales.
+- [x] Documentar secrets por entorno, URL API/orígenes, SSE a través del proxy, límites de upload y costes salientes del proveedor.
+- [x] Probar backup/restauración en instalación descartable: DB y objetos mantienen fotos/propiedad/progreso e historial. Nunca usar DB de producción para tests de restauración.
+- [x] Workflow de build/publicación con tags y SHA en ramas confiables; jobs de PR verifican imágenes y configuración sin desplegar ni recibir secretos.
 - [ ] Despliegue real y smoke test público solo cuando estén configuradas cuentas y destino; registrar resultados reales, no confundir validación CI con despliegue confirmado.
 
 ## Puerta de cada PR y publicación

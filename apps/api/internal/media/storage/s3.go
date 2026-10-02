@@ -17,6 +17,28 @@ type S3 struct {
 	tempRoot string
 }
 
+// Recovery requires ListBucket on this private bucket in addition to object
+// permissions. The API does not enumerate the bucket or change its ACL.
+func (s *S3) Keys(ctx context.Context) ([]string, error) {
+	var keys []string
+	for object := range s.client.ListObjects(ctx, s.bucket, minio.ListObjectsOptions{Recursive: true}) {
+		if object.Err != nil {
+			return nil, object.Err
+		}
+		if validKey(object.Key) != nil {
+			return nil, errors.New("foreign recovery object")
+		}
+		keys = append(keys, object.Key)
+		if len(keys) > 100000 {
+			return nil, errors.New("recovery inventory limit")
+		}
+	}
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+	return keys, nil
+}
+
 func NewS3(c S3Config) (*S3, error) {
 	u, err := url.Parse(c.Endpoint)
 	if err != nil || (u.Scheme != "https" && u.Scheme != "http") || u.Host == "" || u.User != nil || u.Path != "" || u.RawQuery != "" || u.Fragment != "" || c.Bucket == "" || c.Region == "" || c.AccessKey == "" || c.SecretKey == "" {

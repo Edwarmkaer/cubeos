@@ -57,9 +57,10 @@ async function check(mode, key, port) {
   } finally { await context?.close(); proc.kill("SIGTERM"); await exit; await log.close(); }
 }
 try {
-  await check("local", "ignored-local-key", 3121);
-  await check("public", "", 3122);
-  await check("public", "broken", 3123);
-  await check("public", "pk_test_Zml4dHVyZS5jbGVyay5hY2NvdW50cy5kZXYk", 3124);
+  const port = Number(process.env.CUBEOS_AUTH_RUNTIME_PORT ?? 3121);
+  await check("local", "ignored-local-key", port);
+  await check("public", "", port + 1);
+  await check("public", "broken", port + 2);
+  await check("public", "pk_test_Zml4dHVyZS5jbGVyay5hY2NvdW50cy5kZXYk", port + 3);
   console.log("PASS prepared Next runtime: local has zero remote auth requests; public missing/broken config closed; desktop/mobile");
 } finally { await browser.close(); }

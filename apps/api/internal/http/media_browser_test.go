@@ -52,6 +52,9 @@ func TestMediaSignedBrowser(t *testing.T) {
 	}
 	provider := authfixture.New(t)
 	origin := "http://localhost:3134"
+	if override := os.Getenv("CUBEOS_MEDIA_BROWSER_ORIGIN"); override != "" {
+		origin = override
+	}
 	server := httptest.NewUnstartedServer(nil)
 	server.StartTLS()
 	defer server.Close()

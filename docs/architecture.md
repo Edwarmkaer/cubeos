@@ -10,6 +10,9 @@ explícita, JWT verificado y revalidación de sesión sin fallback local; operac
 y variables tienen dueño en [identidad pública](public-auth.md).
 PR9 añade pasos comunes y progreso persistido por dispositivo; operación y carga
 de contenido aprobado tienen dueño en [construcción](construction-progress.md).
+PR10 implementa medios privados local/S3. PR11 prepara imágenes/topología pública
+sin desplegar y recuperación DB+objetos; operación tiene dueño en
+[deployment](deployment.md) y [backups](backups.md).
 [ADR 0005](adr/0005-backend-local-cloud-media.md),
 [diseño objetivo](superpowers/specs/2026-10-01-cubeos-backend-design.md),
 [modelo de dominio](domain-model.md) y
@@ -32,6 +35,8 @@ FastAPI/SQLite/WebSocket son antecedentes sustituidos.
 | Construcción | `apps/api/internal/construction` | Catálogo común y progreso con propiedad, identidad estable y porcentaje derivado |
 | Cliente API | `packages/api-client` | REST tipado y fetch SSE, contrato validado, cancelación y reconexión |
 | Instalación local | `infra/docker` | Contenedores sin root, PostgreSQL persistente, publicación loopback y runtime verificado sin Internet |
+| Preparación pública | `infra/railway` | Grafo IaC por SHA, readiness/PORT/migración y configuración por entorno |
+| Recuperación | `apps/api/internal/recovery`, `infra/recovery` | Backup quiesced DB+objetos, restore a destino explícito vacío |
 
 Web usa `startTelemetry` desde el hook: selecciona demo o `APIClient`, cancela
 al salir del visor o cambiar la generación de fuente/dispositivo/sesión e ignora
