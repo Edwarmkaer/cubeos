@@ -10,13 +10,15 @@ Usar Node.js `22.23.2` (`.node-version`) y pnpm `11.22.0` (`packageManager`); pn
 
 ```bash
 pnpm install --frozen-lockfile
-pnpm --filter web dev
+pnpm setup
+pnpm dev
 ```
 
 Rutas: `/` Landing, `/visor` shell del visor, `/equipo` plazas por confirmar.
-La [API local](apps/api/README.md) requiere Go y PostgreSQL preparados;
-allí están los comandos nativos, migraciones y Docker Compose. `pnpm dev`
-coordina web y API cuando el entorno del backend está exportado.
+El [desarrollo local](docs/local-development.md) prepara PostgreSQL en Docker,
+configuración y migraciones; Turbo coordina web/API nativas. Fotos locales y
+datos se conservan tras `pnpm stop`. La [API](apps/api/README.md) documenta la
+operación avanzada y la alternativa completamente dockerizada.
 
 ## Verificación
 

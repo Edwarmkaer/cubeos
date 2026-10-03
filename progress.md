@@ -2,6 +2,17 @@
 
 Actualizado: 2026-10-02.
 
+## PR adicional — Experiencia de desarrollo local
+
+Base `c179ae4`, rama `feat/local-developer-workflow`. `pnpm setup/dev/stop`
+preparan configuración privada, PostgreSQL propio y migraciones; Turbo conserva
+web/API nativas. Fotos locales en `.cubeos`, volúmenes preservados; sin cambios
+al contrato ni despliegue Railway. Operación canónica:
+[desarrollo local](docs/local-development.md). CI añade `developer-workflow`
+obligatorio: configuración repetible, puertos y arranque real con persistencia
+de dispositivo/foto byte a byte después de reinicio. La verificación del SHA
+final y los runners se informa al entregar el PR.
+
 ## PR 11 — Preparación Railway y recuperación
 
 Base PR10 integrada `fca07e8641adb6289d3817743fd0d82f09c18531`; rama

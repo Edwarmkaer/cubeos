@@ -13,3 +13,4 @@ dist
 !.env.example
 *.pem
 *.key
+.cubeos/
