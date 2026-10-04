@@ -29,6 +29,10 @@ local y Compose: [API](../apps/api/README.md).
 
 ## Publicar una guía aprobada
 
+Edwar validará el contenido y el orden de los pasos (confirmado el 2026-10-03).
+Esta designación no equivale a una guía ya aprobada. La revisión física del CubeSat
+que representará la guía sigue pendiente de identificar al recibir sus archivos.
+
 Las migraciones de producción no insertan pasos. Mientras CHASQUI-II no entregue
 contenido educativo aprobado, Construcción muestra **Guía en preparación**. Los
 catálogos de fixtures solo se insertan en bases descartables de tests.

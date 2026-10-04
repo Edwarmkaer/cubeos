@@ -1,6 +1,23 @@
 # Progreso — CubeOS
 
-Actualizado: 2026-10-02.
+Actualizado: 2026-10-03.
+
+## Planificación — Frontend local completo
+
+PR #13 integrado en `79d9c59`. El trabajo actual planifica los issues #14–#17;
+la [hoja de ruta](docs/frontend-local-roadmap.md) distingue decisiones acordadas,
+PRs propuestos y preguntas pendientes. Se registraron las respuestas Q1/Q2 de
+Edwar y el responsable de validar la guía en sus documentos canónicos. Los modelos
+3D aún no están importados. Se preparó el [taller de diseño](delivery/design/README.md):
+biblioteca compartida y cinco archivos Pencil por flujo, con escritorio/móvil.
+El [inventario](delivery/design/inventory/ui-current.md) registra estado y límites
+reales del traslado. Esta base se entrega en `design/pencil-foundation`; después
+sigue la propuesta de Configuración. Sin cambios de runtime. La publicación del
+PR fue autorizada por Edwar; integración y aprobación visual son pasos distintos.
+La preparación de originales 3D se trabaja en un chat separado solicitado por
+Edwar, sobre copias fuera del repositorio; el orden físico aún requiere su validación.
+`DESIGN.md` permanece en `draft`. Las secciones anteriores en el tiempo que siguen
+son historial; sus próximos pasos no sustituyen esta planificación.
 
 ## PR adicional — Experiencia de desarrollo local
 

@@ -1,0 +1,760 @@
+{
+  "version": "2.20",
+  "children": [
+    {
+      "type": "frame",
+      "id": "c8UVWU",
+      "x": 0,
+      "y": 300,
+      "name": "20 / Equipo / Plazas pendientes / 1440x900",
+      "context": "body",
+      "clip": true,
+      "width": 1440,
+      "height": 900,
+      "fill": "$W:background",
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "q219h",
+          "type": "ref",
+          "ref": "W:xgqxd",
+          "name": "Shared header",
+          "width": "fill_container",
+          "height": 64,
+          "descendants": {
+            "W:lFthh": {
+              "x": 618.83,
+              "y": 12
+            },
+            "W:d1QCG": {
+              "fill": "#00000000"
+            },
+            "W:P0PiMY": {
+              "fill": "$W:muted"
+            },
+            "W:h159E": {
+              "fill": "#00000000"
+            },
+            "W:Y4KxEt": {
+              "fill": "$W:muted"
+            },
+            "W:D4tOA8": {
+              "fill": "$W:well"
+            },
+            "W:IaMHK": {
+              "fill": "$W:foreground"
+            },
+            "W:wRlfN": {
+              "enabled": false
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "n20ps",
+          "name": "main",
+          "context": "EquipoPage - main",
+          "clip": true,
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "id": "xyxaS",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "div",
+              "context": "Lamp - div",
+              "fill": {
+                "type": "gradient",
+                "gradientType": "radial",
+                "enabled": true,
+                "rotation": 0,
+                "size": {
+                  "width": 1.6,
+                  "height": 1
+                },
+                "colors": [
+                  {
+                    "color": "#ffffff0f",
+                    "position": 0
+                  },
+                  {
+                    "color": "#00000000",
+                    "position": 0.55
+                  }
+                ],
+                "center": {
+                  "y": -0.1
+                }
+              },
+              "width": 1440,
+              "height": 836
+            },
+            {
+              "type": "frame",
+              "id": "ZNuue",
+              "name": "section",
+              "context": "section",
+              "width": 1024,
+              "height": 691.19,
+              "layout": "vertical",
+              "gap": 20,
+              "padding": [
+                64,
+                40
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "MSVhh",
+                  "name": "CHASQUI-II",
+                  "context": "p",
+                  "fill": "$W:muted",
+                  "content": "CHASQUI-II",
+                  "lineHeight": 1.43,
+                  "fontFamily": "Barlow",
+                  "fontSize": 14,
+                  "fontWeight": "500",
+                  "letterSpacing": 1.96
+                },
+                {
+                  "type": "frame",
+                  "id": "hRg4M",
+                  "name": "div",
+                  "context": "MotionDOMComponent - div",
+                  "width": "fill_container",
+                  "height": 83.19,
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "cQtzg",
+                      "name": "Las personas del proyecto",
+                      "context": "h1",
+                      "fill": "$W:foreground",
+                      "content": "Las personas del proyecto",
+                      "lineHeight": 1.1,
+                      "fontFamily": "Big Shoulders",
+                      "fontSize": 72,
+                      "fontWeight": "600",
+                      "letterSpacing": -1.44
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "gbqJs",
+                  "name": "div",
+                  "context": "MotionDOMComponent - div",
+                  "width": "fill_container",
+                  "height": 92,
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "XMcgm",
+                      "name": "Esta página guarda el lugar de cada inte",
+                      "context": "p",
+                      "fill": "$W:muted",
+                      "textGrowth": "fixed-width-height",
+                      "width": 640,
+                      "height": 64,
+                      "content": "Esta página guarda el lugar de cada integrante. Los nombres reales se cargan cuando el grupo los entregue; no se inventan.",
+                      "lineHeight": 1.78,
+                      "fontFamily": "Barlow",
+                      "fontSize": 18,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "L3wwPO",
+                  "name": "ul",
+                  "context": "ul",
+                  "width": 576,
+                  "layout": "vertical",
+                  "gap": 12,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "T24Up",
+                      "name": "li",
+                      "context": "li",
+                      "width": "fill_container",
+                      "height": 68,
+                      "fill": "$W:well",
+                      "cornerRadius": 8,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "wshAI",
+                          "x": 20,
+                          "y": 20,
+                          "name": "Por confirmar",
+                          "context": "p",
+                          "fill": "$W:foreground",
+                          "content": "Por confirmar",
+                          "lineHeight": 1.4,
+                          "fontFamily": "Barlow",
+                          "fontSize": 20,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "text",
+                          "id": "FaWGN",
+                          "x": 475.41,
+                          "y": 27,
+                          "name": "Coordinación",
+                          "context": "p",
+                          "fill": "$W:muted",
+                          "content": "Coordinación",
+                          "lineHeight": 1.43,
+                          "fontFamily": "Barlow",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Y5lHZ",
+                      "name": "li",
+                      "context": "li",
+                      "width": "fill_container",
+                      "height": 68,
+                      "fill": "$W:well",
+                      "cornerRadius": 8,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "oM50M",
+                          "x": 20,
+                          "y": 20,
+                          "name": "Por confirmar",
+                          "context": "p",
+                          "fill": "$W:foreground",
+                          "content": "Por confirmar",
+                          "lineHeight": 1.4,
+                          "fontFamily": "Barlow",
+                          "fontSize": 20,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "text",
+                          "id": "w1mjt",
+                          "x": 455.22,
+                          "y": 27,
+                          "name": "Estación terrena",
+                          "context": "p",
+                          "fill": "$W:muted",
+                          "content": "Estación terrena",
+                          "lineHeight": 1.43,
+                          "fontFamily": "Barlow",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "a1WeZ5",
+                      "name": "li",
+                      "context": "li",
+                      "width": "fill_container",
+                      "height": 68,
+                      "fill": "$W:well",
+                      "cornerRadius": 8,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "jxZlx",
+                          "x": 20,
+                          "y": 20,
+                          "name": "Por confirmar",
+                          "context": "p",
+                          "fill": "$W:foreground",
+                          "content": "Por confirmar",
+                          "lineHeight": 1.4,
+                          "fontFamily": "Barlow",
+                          "fontSize": 20,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "text",
+                          "id": "LYYbu",
+                          "x": 474.23,
+                          "y": 27,
+                          "name": "Estructura 1U",
+                          "context": "p",
+                          "fill": "$W:muted",
+                          "content": "Estructura 1U",
+                          "lineHeight": 1.43,
+                          "fontFamily": "Barlow",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "gSgqe",
+                      "name": "li",
+                      "context": "li",
+                      "width": "fill_container",
+                      "height": 68,
+                      "fill": "$W:well",
+                      "cornerRadius": 8,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Pc4JW",
+                          "x": 20,
+                          "y": 20,
+                          "name": "Por confirmar",
+                          "context": "p",
+                          "fill": "$W:foreground",
+                          "content": "Por confirmar",
+                          "lineHeight": 1.4,
+                          "fontFamily": "Barlow",
+                          "fontSize": 20,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "text",
+                          "id": "J7kDeQ",
+                          "x": 499.34,
+                          "y": 27,
+                          "name": "Sensores",
+                          "context": "p",
+                          "fill": "$W:muted",
+                          "content": "Sensores",
+                          "lineHeight": 1.43,
+                          "fontFamily": "Barlow",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "pSeZc",
+      "x": 1520,
+      "y": 300,
+      "name": "20 / Equipo / Plazas pendientes / 390x844",
+      "context": "body",
+      "clip": true,
+      "width": 390,
+      "height": 844,
+      "fill": "$W:background",
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "iD8ts",
+          "type": "ref",
+          "ref": "W:Uk6gY",
+          "name": "Shared header",
+          "width": "fill_container",
+          "height": 64,
+          "descendants": {
+            "W:LJgIU": {
+              "x": 149.44,
+              "y": 14
+            },
+            "W:pbFdr": {
+              "fill": "#00000000"
+            },
+            "W:N8cbU": {
+              "fill": "$W:muted"
+            },
+            "W:Ybgym": {
+              "fill": "#00000000"
+            },
+            "W:ECLsu": {
+              "fill": "$W:muted"
+            },
+            "W:Eu05e": {
+              "fill": "$W:well"
+            },
+            "W:VImNX": {
+              "fill": "$W:foreground"
+            },
+            "W:hMRP8": {
+              "enabled": false
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "x1uvP2",
+          "name": "main",
+          "context": "EquipoPage - main",
+          "clip": true,
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "rectangle",
+              "id": "wHbEb",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "div",
+              "context": "Lamp - div",
+              "fill": {
+                "type": "gradient",
+                "gradientType": "radial",
+                "enabled": true,
+                "rotation": 0,
+                "size": {
+                  "width": 1.6,
+                  "height": 1
+                },
+                "colors": [
+                  {
+                    "color": "#ffffff0f",
+                    "position": 0
+                  },
+                  {
+                    "color": "#00000000",
+                    "position": 0.55
+                  }
+                ],
+                "center": {
+                  "y": -0.1
+                }
+              },
+              "width": 390,
+              "height": 780
+            },
+            {
+              "type": "frame",
+              "id": "xKCol",
+              "name": "section",
+              "context": "section",
+              "width": "fill_container",
+              "height": 772.78,
+              "layout": "vertical",
+              "padding": [
+                64,
+                24
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "X8EeI",
+                  "name": "CHASQUI-II",
+                  "context": "p",
+                  "fill": "$W:muted",
+                  "content": "CHASQUI-II",
+                  "lineHeight": 1.43,
+                  "fontFamily": "Barlow",
+                  "fontSize": 14,
+                  "fontWeight": "500",
+                  "letterSpacing": 1.96
+                },
+                {
+                  "type": "frame",
+                  "id": "ecscj",
+                  "name": "spacer",
+                  "width": "fill_container",
+                  "height": 20,
+                  "layout": "none"
+                },
+                {
+                  "type": "text",
+                  "id": "LQN0o",
+                  "name": "Las personas del proyecto",
+                  "context": "h1",
+                  "fill": "$W:foreground",
+                  "textGrowth": "fixed-width-height",
+                  "width": "fill_container",
+                  "height": 96.78,
+                  "content": "Las personas del proyecto",
+                  "lineHeight": 1.1,
+                  "fontFamily": "Big Shoulders",
+                  "fontSize": 44,
+                  "fontWeight": "600",
+                  "letterSpacing": -0.88
+                },
+                {
+                  "type": "frame",
+                  "id": "oJQE9",
+                  "name": "spacer",
+                  "width": "fill_container",
+                  "height": 24,
+                  "layout": "none"
+                },
+                {
+                  "type": "text",
+                  "id": "YvzEP",
+                  "name": "Esta página guarda el lugar de cada inte",
+                  "context": "p",
+                  "fill": "$W:muted",
+                  "textGrowth": "fixed-width-height",
+                  "width": "fill_container",
+                  "height": 128,
+                  "content": "Esta página guarda el lugar de cada integrante. Los nombres reales se cargan cuando el grupo los entregue; no se inventan.",
+                  "lineHeight": 1.78,
+                  "fontFamily": "Barlow",
+                  "fontSize": 18,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "Bb4aJ",
+                  "name": "spacer",
+                  "width": "fill_container",
+                  "height": 48,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "RykE6",
+                  "name": "ul",
+                  "context": "ul",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "szPu6",
+                      "name": "li",
+                      "context": "li",
+                      "width": "fill_container",
+                      "height": 68,
+                      "fill": "$W:well",
+                      "cornerRadius": 8,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "O2cMQ",
+                          "x": 20,
+                          "y": 20,
+                          "name": "Por confirmar",
+                          "context": "p",
+                          "fill": "$W:foreground",
+                          "content": "Por confirmar",
+                          "lineHeight": 1.4,
+                          "fontFamily": "Barlow",
+                          "fontSize": 20,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "text",
+                          "id": "jd4Sw",
+                          "x": 241.41,
+                          "y": 27,
+                          "name": "Coordinación",
+                          "context": "p",
+                          "fill": "$W:muted",
+                          "content": "Coordinación",
+                          "lineHeight": 1.43,
+                          "fontFamily": "Barlow",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "pguA1",
+                      "name": "li",
+                      "context": "li",
+                      "width": "fill_container",
+                      "height": 68,
+                      "fill": "$W:well",
+                      "cornerRadius": 8,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ExomX",
+                          "x": 20,
+                          "y": 20,
+                          "name": "Por confirmar",
+                          "context": "p",
+                          "fill": "$W:foreground",
+                          "content": "Por confirmar",
+                          "lineHeight": 1.4,
+                          "fontFamily": "Barlow",
+                          "fontSize": 20,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "text",
+                          "id": "TkchZ",
+                          "x": 221.22,
+                          "y": 27,
+                          "name": "Estación terrena",
+                          "context": "p",
+                          "fill": "$W:muted",
+                          "content": "Estación terrena",
+                          "lineHeight": 1.43,
+                          "fontFamily": "Barlow",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "b1hil",
+                      "name": "li",
+                      "context": "li",
+                      "width": "fill_container",
+                      "height": 68,
+                      "fill": "$W:well",
+                      "cornerRadius": 8,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ltJsF",
+                          "x": 20,
+                          "y": 20,
+                          "name": "Por confirmar",
+                          "context": "p",
+                          "fill": "$W:foreground",
+                          "content": "Por confirmar",
+                          "lineHeight": 1.4,
+                          "fontFamily": "Barlow",
+                          "fontSize": 20,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "text",
+                          "id": "o5qxvZ",
+                          "x": 240.23,
+                          "y": 27,
+                          "name": "Estructura 1U",
+                          "context": "p",
+                          "fill": "$W:muted",
+                          "content": "Estructura 1U",
+                          "lineHeight": 1.43,
+                          "fontFamily": "Barlow",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "x9HJz6",
+                      "name": "li",
+                      "context": "li",
+                      "width": "fill_container",
+                      "height": 68,
+                      "fill": "$W:well",
+                      "cornerRadius": 8,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "s0cuL",
+                          "x": 20,
+                          "y": 20,
+                          "name": "Por confirmar",
+                          "context": "p",
+                          "fill": "$W:foreground",
+                          "content": "Por confirmar",
+                          "lineHeight": 1.4,
+                          "fontFamily": "Barlow",
+                          "fontSize": 20,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "text",
+                          "id": "U5MzCK",
+                          "x": 265.34,
+                          "y": 27,
+                          "name": "Sensores",
+                          "context": "p",
+                          "fill": "$W:muted",
+                          "content": "Sensores",
+                          "lineHeight": 1.43,
+                          "fontFamily": "Barlow",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "eWmnz",
+      "x": 0,
+      "y": 0,
+      "name": "00 / Brief / Equipo",
+      "width": 1440,
+      "height": 220,
+      "fill": "$W:background",
+      "layout": "vertical",
+      "gap": 14,
+      "padding": 28,
+      "children": [
+        {
+          "type": "text",
+          "id": "v6TCZt",
+          "name": "Título",
+          "fill": "$W:foreground",
+          "content": "Equipo · taller editable",
+          "fontFamily": "Big Shoulders",
+          "fontSize": 36,
+          "fontWeight": "600"
+        },
+        {
+          "type": "text",
+          "id": "WyUzS",
+          "name": "Base",
+          "fill": "$W:muted",
+          "content": "Plazas pendientes · 79d9c59 · Extracción, sin aprobación visual",
+          "fontFamily": "Barlow",
+          "fontSize": 16,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "aiW7T",
+          "name": "Alcance y límites",
+          "fill": "$W:muted",
+          "content": "Cuatro puestos sin nombres inventados. Lámpara radial editable.\nToda modificación compartida debe pasar por cubeos-components.lib.pen.",
+          "lineHeight": 1.5,
+          "fontFamily": "Barlow",
+          "fontSize": 16,
+          "fontWeight": "normal"
+        }
+      ]
+    }
+  ],
+  "imports": {
+    "W": "cubeos-components.lib.pen"
+  },
+  "fileToken": "e7d1f467-ef2a-4e25-ab61-21d1f2f8d4b9"
+}

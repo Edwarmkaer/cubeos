@@ -1,0 +1,631 @@
+{
+  "version": "2.20",
+  "children": [
+    {
+      "type": "frame",
+      "id": "d3STF",
+      "x": 0,
+      "y": 300,
+      "name": "20 / Landing / Actual / 1440x900",
+      "context": "body",
+      "clip": true,
+      "width": 1440,
+      "height": 900,
+      "fill": "$I:background",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "Qq3lS",
+          "x": 0,
+          "y": 0,
+          "name": "main",
+          "context": "InnerLayoutRouter - main",
+          "clip": true,
+          "width": 1440,
+          "height": 900,
+          "layout": "vertical",
+          "padding": [
+            64,
+            0,
+            0,
+            0
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "x4ZvXo",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "Contenedor",
+              "context": "div",
+              "opacity": 0.5,
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "rectangle",
+                  "id": "n2ZG5s",
+                  "name": "Galaxy / WebGL no capturado (referencia runtime)",
+                  "context": "canvas",
+                  "fill": "#00000000",
+                  "width": 1440,
+                  "height": 900
+                }
+              ]
+            },
+            {
+              "type": "rectangle",
+              "id": "A0aVm6",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "div",
+              "context": "div",
+              "fill": [
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "rotation": 0,
+                  "size": {
+                    "width": 1.4,
+                    "height": 1.3
+                  },
+                  "colors": [
+                    {
+                      "color": "#00000000",
+                      "position": 0
+                    },
+                    {
+                      "color": "#16161e47",
+                      "position": 0.55
+                    },
+                    {
+                      "color": "#16161ecc",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 0.38,
+                    "y": 0.48
+                  }
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "linear",
+                  "enabled": true,
+                  "rotation": -90,
+                  "size": {
+                    "height": 1
+                  },
+                  "colors": [
+                    {
+                      "color": "#16161eb8",
+                      "position": 0
+                    },
+                    {
+                      "color": "#16161e40",
+                      "position": 0.55
+                    },
+                    {
+                      "color": "#00000000",
+                      "position": 1
+                    }
+                  ]
+                }
+              ],
+              "width": 1440,
+              "height": 900
+            },
+            {
+              "type": "frame",
+              "id": "UfLGH",
+              "name": "section",
+              "context": "section",
+              "width": 1152,
+              "height": "fill_container",
+              "padding": [
+                64,
+                40
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "a7mo1",
+                  "name": "Contenedor",
+                  "context": "div",
+                  "width": 768,
+                  "height": 385.44,
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "hpErU",
+                      "name": "UNIVERSIDAD NACIONAL DE INGENIERÍA",
+                      "context": "p",
+                      "fill": "$I:muted",
+                      "content": "UNIVERSIDAD NACIONAL DE INGENIERÍA",
+                      "lineHeight": 1.43,
+                      "fontFamily": "Barlow",
+                      "fontSize": 14,
+                      "fontWeight": "500",
+                      "letterSpacing": 1.96
+                    },
+                    {
+                      "type": "frame",
+                      "id": "i0vgl",
+                      "name": "spacer",
+                      "width": "fill_container",
+                      "height": 24,
+                      "layout": "none"
+                    },
+                    {
+                      "type": "text",
+                      "id": "AzNZb",
+                      "name": "Estación terrena para leer el CubeSat",
+                      "context": "h1",
+                      "fill": "$I:foreground",
+                      "textGrowth": "fixed-width-height",
+                      "width": "fill_container",
+                      "height": 181.44,
+                      "content": "Estación terrena para leer el CubeSat",
+                      "lineHeight": 1.08,
+                      "fontFamily": "Big Shoulders",
+                      "fontSize": 84,
+                      "fontWeight": "600",
+                      "letterSpacing": -1.68
+                    },
+                    {
+                      "type": "frame",
+                      "id": "eK73Q",
+                      "name": "spacer",
+                      "width": "fill_container",
+                      "height": 28,
+                      "layout": "none"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "FLoS5",
+                      "name": "div",
+                      "context": "MotionDOMComponent - div",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "E4guAo",
+                          "name": "CubeOS muestra orientación, ambiente y p",
+                          "context": "p",
+                          "fill": "$I:muted",
+                          "textGrowth": "fixed-width-height",
+                          "width": 640,
+                          "height": 64,
+                          "content": "CubeOS muestra orientación, ambiente y posición en el navegador. Lo construye el grupo CHASQUI-II. No envía comandos al satélite.",
+                          "lineHeight": 1.78,
+                          "fontFamily": "Barlow",
+                          "fontSize": 18,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "pUmrl",
+                      "name": "spacer",
+                      "width": "fill_container",
+                      "height": 40,
+                      "layout": "none"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "GZDhQ",
+                      "name": "Contenedor",
+                      "context": "div",
+                      "width": "fill_container",
+                      "gap": 32,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "id": "p8zXx",
+                          "type": "ref",
+                          "ref": "I:jHM7d",
+                          "name": "Action / Entrar al Visor",
+                          "width": 140,
+                          "height": 28
+                        },
+                        {
+                          "type": "text",
+                          "id": "L8raJ",
+                          "name": "Ver el Equipo",
+                          "context": "LinkComponent - a",
+                          "fill": "$I:muted",
+                          "content": "Ver el Equipo",
+                          "lineHeight": 1.56,
+                          "fontFamily": "Barlow",
+                          "fontSize": 18,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "UjlxD",
+          "type": "ref",
+          "ref": "I:xgqxd",
+          "name": "Shared header",
+          "width": 1440,
+          "height": 64,
+          "x": 0,
+          "y": 0,
+          "descendants": {
+            "I:lFthh": {
+              "x": 618.83,
+              "y": 12
+            },
+            "I:d1QCG": {
+              "fill": "$I:well"
+            },
+            "I:P0PiMY": {
+              "fill": "$I:foreground"
+            },
+            "I:h159E": {
+              "fill": "#00000000"
+            },
+            "I:Y4KxEt": {
+              "fill": "$I:muted"
+            },
+            "I:D4tOA8": {
+              "fill": "#00000000"
+            },
+            "I:IaMHK": {
+              "fill": "$I:muted"
+            },
+            "I:wRlfN": {
+              "enabled": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "A9aGRc",
+      "x": 1520,
+      "y": 300,
+      "name": "20 / Landing / Actual / 390x844",
+      "context": "body",
+      "clip": true,
+      "width": 390,
+      "height": 844,
+      "fill": "$I:background",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "OhMN5",
+          "x": 0,
+          "y": 0,
+          "name": "main",
+          "context": "InnerLayoutRouter - main",
+          "clip": true,
+          "width": 390,
+          "height": 844,
+          "layout": "vertical",
+          "padding": [
+            64,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "e8gXb",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "Contenedor",
+              "context": "div",
+              "opacity": 0.5,
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "rectangle",
+                  "id": "vL1A5",
+                  "name": "Galaxy / WebGL no capturado (referencia runtime)",
+                  "context": "canvas",
+                  "fill": "#00000000",
+                  "width": 390,
+                  "height": 844
+                }
+              ]
+            },
+            {
+              "type": "rectangle",
+              "id": "TBPrI",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "div",
+              "context": "div",
+              "fill": [
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "rotation": 0,
+                  "size": {
+                    "width": 1.4,
+                    "height": 1.3
+                  },
+                  "colors": [
+                    {
+                      "color": "#00000000",
+                      "position": 0
+                    },
+                    {
+                      "color": "#16161e47",
+                      "position": 0.55
+                    },
+                    {
+                      "color": "#16161ecc",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 0.38,
+                    "y": 0.48
+                  }
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "linear",
+                  "enabled": true,
+                  "rotation": -90,
+                  "size": {
+                    "height": 1
+                  },
+                  "colors": [
+                    {
+                      "color": "#16161eb8",
+                      "position": 0
+                    },
+                    {
+                      "color": "#16161e40",
+                      "position": 0.55
+                    },
+                    {
+                      "color": "#00000000",
+                      "position": 1
+                    }
+                  ]
+                }
+              ],
+              "width": 390,
+              "height": 844
+            },
+            {
+              "type": "frame",
+              "id": "bv2Um",
+              "name": "section",
+              "context": "section",
+              "height": "fill_container",
+              "padding": [
+                64,
+                24
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "E1PhZ",
+                  "name": "Contenedor",
+                  "context": "div",
+                  "width": 342,
+                  "height": 371.66,
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "qRJCF",
+                      "name": "UNIVERSIDAD NACIONAL DE INGENIERÍA",
+                      "context": "p",
+                      "fill": "$I:muted",
+                      "content": "UNIVERSIDAD NACIONAL DE INGENIERÍA",
+                      "lineHeight": 1.43,
+                      "fontFamily": "Barlow",
+                      "fontSize": 14,
+                      "fontWeight": "500",
+                      "letterSpacing": 1.96
+                    },
+                    {
+                      "type": "frame",
+                      "id": "diZ5D",
+                      "name": "spacer",
+                      "width": "fill_container",
+                      "height": 24,
+                      "layout": "none"
+                    },
+                    {
+                      "type": "text",
+                      "id": "ObV4w",
+                      "name": "Estación terrena para leer el CubeSat",
+                      "context": "h1",
+                      "fill": "$I:foreground",
+                      "textGrowth": "fixed-width-height",
+                      "width": "fill_container",
+                      "height": 103.66,
+                      "content": "Estación terrena para leer el CubeSat",
+                      "lineHeight": 1.08,
+                      "fontFamily": "Big Shoulders",
+                      "fontSize": 48,
+                      "fontWeight": "600",
+                      "letterSpacing": -0.96
+                    },
+                    {
+                      "type": "frame",
+                      "id": "KkVaG",
+                      "name": "spacer",
+                      "width": "fill_container",
+                      "height": 28,
+                      "layout": "none"
+                    },
+                    {
+                      "type": "text",
+                      "id": "t8nAOU",
+                      "name": "CubeOS muestra orientación, ambiente y p",
+                      "context": "p",
+                      "fill": "$I:muted",
+                      "textGrowth": "fixed-width-height",
+                      "width": "fill_container",
+                      "height": 128,
+                      "content": "CubeOS muestra orientación, ambiente y posición en el navegador. Lo construye el grupo CHASQUI-II. No envía comandos al satélite.",
+                      "lineHeight": 1.78,
+                      "fontFamily": "Barlow",
+                      "fontSize": 18,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "J2K17J",
+                      "name": "spacer",
+                      "width": "fill_container",
+                      "height": 40,
+                      "layout": "none"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "HQEiu",
+                      "name": "Contenedor",
+                      "context": "div",
+                      "width": "fill_container",
+                      "gap": 32,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "id": "UVlIv",
+                          "type": "ref",
+                          "ref": "I:jHM7d",
+                          "name": "Action / Entrar al Visor",
+                          "width": 140,
+                          "height": 28
+                        },
+                        {
+                          "type": "text",
+                          "id": "P537B",
+                          "name": "Ver el Equipo",
+                          "context": "LinkComponent - a",
+                          "fill": "$I:muted",
+                          "content": "Ver el Equipo",
+                          "lineHeight": 1.56,
+                          "fontFamily": "Barlow",
+                          "fontSize": 18,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "s2TOU",
+          "type": "ref",
+          "ref": "I:Uk6gY",
+          "name": "Shared header",
+          "width": 390,
+          "height": 64,
+          "x": 0,
+          "y": 0,
+          "descendants": {
+            "I:LJgIU": {
+              "x": 149.44,
+              "y": 14
+            },
+            "I:pbFdr": {
+              "fill": "$I:well"
+            },
+            "I:N8cbU": {
+              "fill": "$I:foreground"
+            },
+            "I:Ybgym": {
+              "fill": "#00000000"
+            },
+            "I:ECLsu": {
+              "fill": "$I:muted"
+            },
+            "I:Eu05e": {
+              "fill": "#00000000"
+            },
+            "I:VImNX": {
+              "fill": "$I:muted"
+            },
+            "I:hMRP8": {
+              "enabled": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "r4TZp",
+      "x": 0,
+      "y": 0,
+      "name": "00 / Brief / Landing",
+      "width": 1440,
+      "height": 220,
+      "fill": "$I:background",
+      "layout": "vertical",
+      "gap": 14,
+      "padding": 28,
+      "children": [
+        {
+          "type": "text",
+          "id": "tVHmw",
+          "name": "Título",
+          "fill": "$I:foreground",
+          "content": "Landing · taller editable",
+          "fontFamily": "Big Shoulders",
+          "fontSize": 36,
+          "fontWeight": "600"
+        },
+        {
+          "type": "text",
+          "id": "wCfCt",
+          "name": "Base",
+          "fill": "$I:muted",
+          "content": "UI actual · Pozo / 79d9c59 · Extracción, sin aprobación visual",
+          "fontFamily": "Barlow",
+          "fontSize": 16,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "N9cxAm",
+          "name": "Alcance y límites",
+          "fill": "$I:muted",
+          "content": "Textos y navegación editables. Galaxy no se transfirió: comprobar su animación en la web.\nLas pantallas son estado actual, no una propuesta aprobada.",
+          "lineHeight": 1.5,
+          "fontFamily": "Barlow",
+          "fontSize": 16,
+          "fontWeight": "normal"
+        }
+      ]
+    }
+  ],
+  "imports": {
+    "I": "cubeos-components.lib.pen"
+  },
+  "fileToken": "dc3f3f54-5033-449f-bafc-42e51eba16eb"
+}

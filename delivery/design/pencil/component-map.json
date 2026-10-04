@@ -1,0 +1,235 @@
+{
+  "version": 1,
+  "baseCommit": "79d9c59",
+  "approval": "draft",
+  "library": "cubeos-components.lib.pen",
+  "tokensSource": "packages/ui/src/styles/tokens.css",
+  "masters": [
+    {
+      "id": "xgqxd",
+      "name": "Shell / Header desktop",
+      "source": "apps/web/src/components/site-header.tsx",
+      "consumers": [
+        "landingpage",
+        "equipo",
+        "visor",
+        "construccion",
+        "configuracion"
+      ]
+    },
+    {
+      "id": "Uk6gY",
+      "name": "Shell / Header mobile",
+      "source": "apps/web/src/components/site-header.tsx",
+      "consumers": [
+        "landingpage",
+        "equipo",
+        "visor",
+        "construccion",
+        "configuracion"
+      ]
+    },
+    {
+      "id": "bMUtz",
+      "name": "Navigation / Dock desktop",
+      "source": "packages/ui/src/components/floating-dock.tsx",
+      "composition": "apps/web/src/components/station-dock.tsx",
+      "consumers": [
+        "visor",
+        "construccion",
+        "configuracion"
+      ]
+    },
+    {
+      "id": "VdaVz",
+      "name": "Navigation / Mobile toggle",
+      "source": "packages/ui/src/components/floating-dock.tsx",
+      "consumers": [
+        "visor",
+        "construccion",
+        "configuracion"
+      ]
+    },
+    {
+      "id": "i1Kcv",
+      "name": "Controls / Form action",
+      "source": "apps/web/src/components/settings-view.tsx",
+      "note": "Native form action; not the generic packages/ui Button.",
+      "consumers": [
+        "configuracion"
+      ]
+    },
+    {
+      "id": "RqmlI",
+      "name": "Controls / Form field",
+      "source": "apps/web/src/components/settings-view.tsx",
+      "descendants": {
+        "label": "hwPVD",
+        "control": "t50qZe",
+        "value": "iaqtY",
+        "selectIndicator": "bHcoS"
+      },
+      "consumers": [
+        "configuracion"
+      ]
+    },
+    {
+      "id": "RPLDv",
+      "name": "Layout / Tile",
+      "source": "apps/web/src/components/visor/tile.tsx",
+      "descendants": {
+        "title": "a8h6V",
+        "contentSlot": "ISrBo"
+      },
+      "consumers": [
+        "visor",
+        "construccion",
+        "configuracion"
+      ]
+    },
+    {
+      "id": "jHM7d",
+      "name": "Actions / Text link",
+      "source": "apps/web/src/components/landing-hero.tsx",
+      "consumers": [
+        "landingpage"
+      ]
+    }
+  ],
+  "documents": [
+    {
+      "file": "landingpage.pen",
+      "importAlias": "I",
+      "frames": [
+        {
+          "id": "d3STF",
+          "state": "current-static",
+          "viewport": [
+            1440,
+            900
+          ]
+        },
+        {
+          "id": "A9aGRc",
+          "state": "current-static",
+          "viewport": [
+            390,
+            844
+          ]
+        }
+      ]
+    },
+    {
+      "file": "equipo.pen",
+      "importAlias": "W",
+      "frames": [
+        {
+          "id": "c8UVWU",
+          "state": "current",
+          "viewport": [
+            1440,
+            900
+          ]
+        },
+        {
+          "id": "pSeZc",
+          "state": "current",
+          "viewport": [
+            390,
+            844
+          ]
+        }
+      ]
+    },
+    {
+      "file": "construccion.pen",
+      "importAlias": "O",
+      "frames": [
+        {
+          "id": "lvs6R",
+          "state": "no-device",
+          "viewport": [
+            1440,
+            900
+          ]
+        },
+        {
+          "id": "o47awj",
+          "state": "no-device",
+          "viewport": [
+            390,
+            844
+          ]
+        }
+      ]
+    },
+    {
+      "file": "configuracion.pen",
+      "importAlias": "1",
+      "frames": [
+        {
+          "id": "W9krOZ",
+          "state": "local-no-device",
+          "viewport": [
+            1440,
+            900
+          ]
+        },
+        {
+          "id": "FERuh",
+          "state": "local-no-device",
+          "viewport": [
+            390,
+            844
+          ]
+        },
+        {
+          "id": "oUm3M",
+          "state": "demo-source",
+          "viewport": [
+            1440,
+            900
+          ]
+        }
+      ]
+    },
+    {
+      "file": "visor.pen",
+      "importAlias": "V",
+      "frames": [
+        {
+          "id": "mal7a",
+          "state": "local-pending",
+          "viewport": [
+            1440,
+            900
+          ]
+        },
+        {
+          "id": "NFE7b",
+          "state": "local-pending-horizontal-scroll",
+          "viewport": [
+            390,
+            844
+          ]
+        },
+        {
+          "id": "VDZEo",
+          "state": "demo-partial-reference",
+          "viewport": [
+            1440,
+            900
+          ]
+        },
+        {
+          "id": "VfRHb",
+          "state": "demo-partial-reference-horizontal-scroll",
+          "viewport": [
+            390,
+            844
+          ]
+        }
+      ]
+    }
+  ]
+}

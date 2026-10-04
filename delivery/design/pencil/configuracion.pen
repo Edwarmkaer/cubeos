@@ -1,0 +1,953 @@
+{
+  "version": "2.20",
+  "children": [
+    {
+      "type": "frame",
+      "id": "W9krOZ",
+      "x": 0,
+      "y": 300,
+      "name": "20 / Configuración / Local sin dispositivo / 1440x900",
+      "context": "body",
+      "clip": true,
+      "width": 1440,
+      "height": 900,
+      "fill": "$1:background",
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "X5cxZ",
+          "type": "ref",
+          "ref": "1:xgqxd",
+          "name": "Header / Configuración",
+          "width": "fill_container",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "type": "frame",
+          "id": "rnIkk",
+          "name": "main",
+          "context": "InnerLayoutRouter - main",
+          "clip": true,
+          "width": "fill_container",
+          "height": "fill_container",
+          "gap": 12,
+          "padding": [
+            0,
+            12,
+            12,
+            12
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "j54fU",
+              "name": "div",
+              "context": "StationDock - div",
+              "width": 80,
+              "height": 824,
+              "layout": "none",
+              "children": [
+                {
+                  "id": "oKyiN",
+                  "type": "ref",
+                  "ref": "1:bMUtz",
+                  "name": "Station dock / Configuración",
+                  "x": 10,
+                  "y": 318
+                }
+              ]
+            },
+            {
+              "id": "h3H9Ks",
+              "type": "ref",
+              "ref": "1:RPLDv",
+              "name": "Tile / Fuente de datos",
+              "width": "fill_container",
+              "height": 824,
+              "clip": true,
+              "descendants": {
+                "1:a8h6V": {
+                  "content": "Fuente de datos"
+                },
+                "1:ISrBo": {
+                  "type": "frame",
+                  "id": "XfHw0",
+                  "name": "Contenido / Fuente de datos",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "I2UYx",
+                      "name": "div",
+                      "context": "div",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "IsPtB",
+                          "name": "div",
+                          "context": "div",
+                          "width": 512,
+                          "layout": "vertical",
+                          "gap": 16,
+                          "padding": [
+                            0,
+                            0,
+                            32,
+                            0
+                          ],
+                          "children": [
+                            {
+                              "id": "ARYLt",
+                              "type": "ref",
+                              "ref": "1:RqmlI",
+                              "name": "Origen",
+                              "width": "fill_container",
+                              "x": 0,
+                              "y": 0,
+                              "descendants": {
+                                "1:hwPVD": {
+                                  "content": "Origen"
+                                },
+                                "1:t50qZe": {
+                                  "height": 37
+                                },
+                                "1:iaqtY": {
+                                  "content": "API local",
+                                  "fill": "$1:foreground"
+                                },
+                                "1:bHcoS": {
+                                  "enabled": true
+                                }
+                              }
+                            },
+                            {
+                              "id": "uvpYG",
+                              "type": "ref",
+                              "ref": "1:RqmlI",
+                              "name": "URL de API",
+                              "width": "fill_container",
+                              "x": 0,
+                              "y": 73,
+                              "descendants": {
+                                "1:hwPVD": {
+                                  "content": "URL de API"
+                                },
+                                "1:t50qZe": {
+                                  "height": 40
+                                },
+                                "1:iaqtY": {
+                                  "content": "http://localhost:8080",
+                                  "fill": "$1:muted"
+                                },
+                                "1:bHcoS": {
+                                  "enabled": false
+                                }
+                              }
+                            },
+                            {
+                              "type": "frame",
+                              "id": "dyXcN",
+                              "name": "label",
+                              "context": "label",
+                              "width": "fill_container",
+                              "height": 20,
+                              "gap": 8,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "BkfGt",
+                                  "name": "Offline seleccionado",
+                                  "width": 13,
+                                  "height": 13,
+                                  "fill": "#0075FF",
+                                  "layout": "none",
+                                  "children": [
+                                    {
+                                      "type": "path",
+                                      "id": "BMz5n",
+                                      "x": 2,
+                                      "y": 3,
+                                      "name": "Marcado",
+                                      "geometry": "M0 3l3 3 6-6",
+                                      "width": 9,
+                                      "height": 7,
+                                      "stroke": "#FFFFFF",
+                                      "strokeWidth": 1.5
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "LlArq",
+                                  "name": "Modo sin Internet (sin mapa remoto)",
+                                  "fill": "$1:foreground",
+                                  "content": "Modo sin Internet (sin mapa remoto)",
+                                  "lineHeight": 1.43,
+                                  "fontFamily": "Barlow",
+                                  "fontSize": 14,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "cQvxd",
+                              "name": "La API local usa el perfil de esta insta",
+                              "context": "p",
+                              "fill": "$1:muted",
+                              "textGrowth": "fixed-width-height",
+                              "width": "fill_container",
+                              "height": 40,
+                              "content": "La API local usa el perfil de esta instalación. La conexión API no prueba el enlace del receptor con el CubeSat.",
+                              "lineHeight": 1.43,
+                              "fontFamily": "Barlow",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "id": "qP8bs",
+                              "type": "ref",
+                              "ref": "1:i1Kcv",
+                              "name": "Consultar dispositivos",
+                              "width": "fill_container",
+                              "height": 40,
+                              "opacity": 0.5,
+                              "x": 0,
+                              "y": 241,
+                              "descendants": {
+                                "1:DxzbW": {
+                                  "content": "Consultar dispositivos"
+                                }
+                              }
+                            },
+                            {
+                              "id": "AdpUK",
+                              "type": "ref",
+                              "ref": "1:RqmlI",
+                              "name": "Dispositivo",
+                              "width": "fill_container",
+                              "x": 0,
+                              "y": 297,
+                              "descendants": {
+                                "1:hwPVD": {
+                                  "content": "Dispositivo"
+                                },
+                                "1:t50qZe": {
+                                  "height": 37
+                                },
+                                "1:iaqtY": {
+                                  "content": "Selecciona un dispositivo",
+                                  "fill": "$1:foreground"
+                                },
+                                "1:bHcoS": {
+                                  "enabled": true
+                                }
+                              }
+                            },
+                            {
+                              "type": "text",
+                              "id": "FVi11",
+                              "name": "Consulta tus dispositivos o registra uno",
+                              "context": "p",
+                              "fill": "$1:muted",
+                              "content": "Consulta tus dispositivos o registra uno.",
+                              "lineHeight": 1.43,
+                              "fontFamily": "Barlow",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "id": "JcRzV",
+                              "type": "ref",
+                              "ref": "1:RqmlI",
+                              "name": "Nombre visible",
+                              "width": "fill_container",
+                              "x": 0,
+                              "y": 406,
+                              "descendants": {
+                                "1:hwPVD": {
+                                  "content": "Nombre visible"
+                                },
+                                "1:t50qZe": {
+                                  "height": 40
+                                },
+                                "1:iaqtY": {
+                                  "content": "",
+                                  "fill": "$1:muted"
+                                },
+                                "1:bHcoS": {
+                                  "enabled": false
+                                }
+                              }
+                            },
+                            {
+                              "id": "m5SJSP",
+                              "type": "ref",
+                              "ref": "1:RqmlI",
+                              "name": "Identificador de vuelo",
+                              "width": "fill_container",
+                              "x": 0,
+                              "y": 482,
+                              "descendants": {
+                                "1:hwPVD": {
+                                  "content": "Identificador de vuelo"
+                                },
+                                "1:t50qZe": {
+                                  "height": 40
+                                },
+                                "1:iaqtY": {
+                                  "content": "CS01",
+                                  "fill": "$1:muted"
+                                },
+                                "1:bHcoS": {
+                                  "enabled": false
+                                }
+                              }
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Sq8wh",
+                              "name": "div",
+                              "context": "div",
+                              "gap": 12,
+                              "children": [
+                                {
+                                  "id": "EvZar",
+                                  "type": "ref",
+                                  "ref": "1:i1Kcv",
+                                  "name": "Registrar dispositivo",
+                                  "width": 250,
+                                  "height": 40,
+                                  "opacity": 0.5,
+                                  "x": 0,
+                                  "y": 0,
+                                  "descendants": {
+                                    "1:DxzbW": {
+                                      "content": "Registrar dispositivo"
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "RSCuz",
+                                  "type": "ref",
+                                  "ref": "1:i1Kcv",
+                                  "name": "Renombrar",
+                                  "width": 250,
+                                  "height": 40,
+                                  "opacity": 0.5,
+                                  "x": 262,
+                                  "y": 0,
+                                  "descendants": {
+                                    "1:DxzbW": {
+                                      "content": "Renombrar"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "FERuh",
+      "x": 1480,
+      "y": 300,
+      "name": "20 / Configuración / Local sin dispositivo / 390x844",
+      "context": "body",
+      "clip": true,
+      "width": 390,
+      "height": 844,
+      "fill": "$1:background",
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "aPl5b",
+          "type": "ref",
+          "ref": "1:Uk6gY",
+          "name": "Header mobile",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "KMwHF",
+          "name": "main",
+          "context": "InnerLayoutRouter - main",
+          "clip": true,
+          "width": "fill_container",
+          "height": "fill_container",
+          "padding": [
+            0,
+            12,
+            12,
+            12
+          ],
+          "children": [
+            {
+              "id": "Ta55q",
+              "type": "ref",
+              "ref": "1:RPLDv",
+              "name": "Tile / Fuente de datos",
+              "width": "fill_container",
+              "height": 768,
+              "clip": true,
+              "descendants": {
+                "1:a8h6V": {
+                  "content": "Fuente de datos"
+                },
+                "1:ISrBo": {
+                  "type": "frame",
+                  "id": "Hc1BS",
+                  "name": "Contenido / Fuente de datos",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "zQ5PC",
+                      "name": "div",
+                      "context": "div",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "DrvBY",
+                          "name": "div",
+                          "context": "div",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 16,
+                          "padding": [
+                            0,
+                            0,
+                            32,
+                            0
+                          ],
+                          "children": [
+                            {
+                              "id": "JRs2p",
+                              "type": "ref",
+                              "ref": "1:RqmlI",
+                              "name": "Origen",
+                              "width": "fill_container",
+                              "descendants": {
+                                "1:hwPVD": {
+                                  "content": "Origen"
+                                },
+                                "1:t50qZe": {
+                                  "height": 37
+                                },
+                                "1:iaqtY": {
+                                  "content": "API local",
+                                  "fill": "$1:foreground"
+                                },
+                                "1:bHcoS": {
+                                  "enabled": true
+                                }
+                              }
+                            },
+                            {
+                              "id": "fp900",
+                              "type": "ref",
+                              "ref": "1:RqmlI",
+                              "name": "URL de API",
+                              "width": "fill_container",
+                              "descendants": {
+                                "1:hwPVD": {
+                                  "content": "URL de API"
+                                },
+                                "1:t50qZe": {
+                                  "height": 40
+                                },
+                                "1:iaqtY": {
+                                  "content": "http://localhost:8080",
+                                  "fill": "$1:muted"
+                                },
+                                "1:bHcoS": {
+                                  "enabled": false
+                                }
+                              }
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Bj1qv",
+                              "name": "label",
+                              "context": "label",
+                              "width": "fill_container",
+                              "height": 20,
+                              "gap": 8,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "QK4ES",
+                                  "name": "Offline seleccionado",
+                                  "width": 13,
+                                  "height": 13,
+                                  "fill": "#0075FF",
+                                  "layout": "none",
+                                  "children": [
+                                    {
+                                      "type": "path",
+                                      "id": "HoYnL",
+                                      "x": 2,
+                                      "y": 3,
+                                      "name": "Marcado",
+                                      "geometry": "M0 3l3 3 6-6",
+                                      "width": 9,
+                                      "height": 7,
+                                      "stroke": "#FFFFFF",
+                                      "strokeWidth": 1.5
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "xsHkx",
+                                  "name": "Modo sin Internet (sin mapa remoto)",
+                                  "fill": "$1:foreground",
+                                  "content": "Modo sin Internet (sin mapa remoto)",
+                                  "lineHeight": 1.43,
+                                  "fontFamily": "Barlow",
+                                  "fontSize": 14,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "ZgwWz",
+                              "name": "La API local usa el perfil de esta insta",
+                              "context": "p",
+                              "fill": "$1:muted",
+                              "textGrowth": "fixed-width-height",
+                              "width": "fill_container",
+                              "height": 60,
+                              "content": "La API local usa el perfil de esta instalación. La conexión API no prueba el enlace del receptor con el CubeSat.",
+                              "lineHeight": 1.43,
+                              "fontFamily": "Barlow",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "id": "YUEzE",
+                              "type": "ref",
+                              "ref": "1:i1Kcv",
+                              "name": "Consultar dispositivos",
+                              "width": "fill_container",
+                              "height": 40,
+                              "opacity": 0.5,
+                              "descendants": {
+                                "1:DxzbW": {
+                                  "content": "Consultar dispositivos"
+                                }
+                              }
+                            },
+                            {
+                              "id": "Nc6Yi",
+                              "type": "ref",
+                              "ref": "1:RqmlI",
+                              "name": "Dispositivo",
+                              "width": "fill_container",
+                              "descendants": {
+                                "1:hwPVD": {
+                                  "content": "Dispositivo"
+                                },
+                                "1:t50qZe": {
+                                  "height": 37
+                                },
+                                "1:iaqtY": {
+                                  "content": "Selecciona un dispositivo",
+                                  "fill": "$1:foreground"
+                                },
+                                "1:bHcoS": {
+                                  "enabled": true
+                                }
+                              }
+                            },
+                            {
+                              "type": "text",
+                              "id": "r2MCpc",
+                              "name": "Consulta tus dispositivos o registra uno",
+                              "context": "p",
+                              "fill": "$1:muted",
+                              "content": "Consulta tus dispositivos o registra uno.",
+                              "lineHeight": 1.43,
+                              "fontFamily": "Barlow",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "id": "UzoL2",
+                              "type": "ref",
+                              "ref": "1:RqmlI",
+                              "name": "Nombre visible",
+                              "width": "fill_container",
+                              "descendants": {
+                                "1:hwPVD": {
+                                  "content": "Nombre visible"
+                                },
+                                "1:t50qZe": {
+                                  "height": 40
+                                },
+                                "1:iaqtY": {
+                                  "content": "",
+                                  "fill": "$1:muted"
+                                },
+                                "1:bHcoS": {
+                                  "enabled": false
+                                }
+                              }
+                            },
+                            {
+                              "id": "vSP1a",
+                              "type": "ref",
+                              "ref": "1:RqmlI",
+                              "name": "Identificador de vuelo",
+                              "width": "fill_container",
+                              "descendants": {
+                                "1:hwPVD": {
+                                  "content": "Identificador de vuelo"
+                                },
+                                "1:t50qZe": {
+                                  "height": 40
+                                },
+                                "1:iaqtY": {
+                                  "content": "CS01",
+                                  "fill": "$1:muted"
+                                },
+                                "1:bHcoS": {
+                                  "enabled": false
+                                }
+                              }
+                            },
+                            {
+                              "type": "frame",
+                              "id": "PVQcP",
+                              "name": "div",
+                              "context": "div",
+                              "gap": 12,
+                              "children": [
+                                {
+                                  "id": "b6XhRi",
+                                  "type": "ref",
+                                  "ref": "1:i1Kcv",
+                                  "name": "Registrar dispositivo",
+                                  "width": 161,
+                                  "height": 64,
+                                  "opacity": 0.5,
+                                  "descendants": {
+                                    "1:DxzbW": {
+                                      "content": "Registrar dispositivo"
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "cKA5h",
+                                  "type": "ref",
+                                  "ref": "1:i1Kcv",
+                                  "name": "Renombrar",
+                                  "width": 161,
+                                  "height": 64,
+                                  "opacity": 0.5,
+                                  "descendants": {
+                                    "1:DxzbW": {
+                                      "content": "Renombrar"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": "k5BWN",
+              "type": "ref",
+              "ref": "1:VdaVz",
+              "name": "Navigation toggle",
+              "x": 16,
+              "y": 724,
+              "layoutPosition": "absolute"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "oUm3M",
+      "x": 0,
+      "y": 1300,
+      "name": "20 / Configuración / DEMO sintética / 1440x900",
+      "context": "body",
+      "clip": true,
+      "width": 1440,
+      "height": 900,
+      "fill": "$1:background",
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "LTVMI",
+          "type": "ref",
+          "ref": "1:xgqxd",
+          "name": "Shared header",
+          "width": "fill_container",
+          "height": 64,
+          "descendants": {
+            "1:lFthh": {
+              "x": 618.83,
+              "y": 12
+            },
+            "1:d1QCG": {
+              "fill": "#00000000"
+            },
+            "1:P0PiMY": {
+              "fill": "$1:muted"
+            },
+            "1:h159E": {
+              "fill": "$1:well"
+            },
+            "1:Y4KxEt": {
+              "fill": "$1:foreground"
+            },
+            "1:D4tOA8": {
+              "fill": "#00000000"
+            },
+            "1:IaMHK": {
+              "fill": "$1:muted"
+            },
+            "1:wRlfN": {
+              "enabled": true,
+              "x": 1184.11,
+              "y": 22
+            },
+            "1:XPTzj": {
+              "content": "Configuración"
+            },
+            "1:tFTgU": {
+              "content": "DEMO · sintética"
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "g8Zvdx",
+          "name": "main",
+          "context": "InnerLayoutRouter - main",
+          "clip": true,
+          "width": "fill_container",
+          "height": "fill_container",
+          "gap": 12,
+          "padding": [
+            0,
+            12,
+            12,
+            12
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "L3v30",
+              "name": "div",
+              "context": "StationDock - div",
+              "width": 80,
+              "height": 824,
+              "layout": "none",
+              "children": [
+                {
+                  "id": "kjDEa",
+                  "type": "ref",
+                  "ref": "1:bMUtz",
+                  "name": "Shared dock / Configuración",
+                  "width": 60,
+                  "height": 188,
+                  "x": 10,
+                  "y": 318,
+                  "descendants": {
+                    "1:JWtS4": {
+                      "fill": "$1:surface"
+                    },
+                    "1:d5yU0": {
+                      "stroke": "$1:muted"
+                    },
+                    "1:LdpCg": {
+                      "fill": "$1:surface"
+                    },
+                    "1:KKShp": {
+                      "stroke": "$1:muted"
+                    },
+                    "1:cxnQM": {
+                      "fill": "$1:foreground"
+                    },
+                    "1:iluVF": {
+                      "stroke": "$1:well"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "id": "K97HB",
+              "type": "ref",
+              "ref": "1:RPLDv",
+              "name": "Tile / Fuente de datos",
+              "width": 1324,
+              "height": 824,
+              "clip": true,
+              "descendants": {
+                "1:a8h6V": {
+                  "content": "Fuente de datos"
+                },
+                "1:ISrBo": {
+                  "type": "frame",
+                  "id": "iEjj3",
+                  "name": "Contenido / Fuente de datos",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "iX7VA",
+                      "name": "div",
+                      "context": "div",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "fv31h",
+                          "name": "div",
+                          "context": "div",
+                          "width": 512,
+                          "layout": "vertical",
+                          "gap": 16,
+                          "padding": [
+                            0,
+                            0,
+                            32,
+                            0
+                          ],
+                          "children": [
+                            {
+                              "id": "v8foV5",
+                              "type": "ref",
+                              "ref": "1:RqmlI",
+                              "name": "Origen / DEMO",
+                              "width": "fill_container",
+                              "descendants": {
+                                "1:hwPVD": {
+                                  "content": "Origen"
+                                },
+                                "1:iaqtY": {
+                                  "content": "DEMO · datos sintéticos"
+                                },
+                                "1:bHcoS": {
+                                  "enabled": true
+                                }
+                              }
+                            },
+                            {
+                              "type": "text",
+                              "id": "Y54WIe",
+                              "name": "Simulador legacy a 2 Hz. Ángulos, baterí",
+                              "context": "p",
+                              "fill": "$1:muted",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Simulador legacy a 2 Hz. Ángulos, batería y fotografías de ejemplo son sintéticos.",
+                              "lineHeight": 1.43,
+                              "fontFamily": "Barlow",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "P9L3n",
+      "x": 0,
+      "y": 0,
+      "name": "00 / Brief / Configuración",
+      "width": 1440,
+      "height": 220,
+      "fill": "$1:background",
+      "layout": "vertical",
+      "gap": 14,
+      "padding": 28,
+      "children": [
+        {
+          "type": "text",
+          "id": "nMN2N",
+          "name": "Título",
+          "fill": "$1:foreground",
+          "content": "Configuración · taller editable",
+          "fontFamily": "Big Shoulders",
+          "fontSize": 36,
+          "fontWeight": "600"
+        },
+        {
+          "type": "text",
+          "id": "fLl0v",
+          "name": "Base",
+          "fill": "$1:muted",
+          "content": "API local vacía + DEMO · 79d9c59 · Extracción, sin aprobación visual",
+          "fontFamily": "Barlow",
+          "fontSize": 16,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "gO49B",
+          "name": "Alcance y límites",
+          "fill": "$1:muted",
+          "content": "Desktop y móvil: fuente local sin API ni dispositivo. Controles deshabilitados según runtime.\nRegistro, renombrado, fotos y errores con backend se revisarán en el próximo slice.",
+          "lineHeight": 1.5,
+          "fontFamily": "Barlow",
+          "fontSize": 16,
+          "fontWeight": "normal"
+        }
+      ]
+    }
+  ],
+  "imports": {
+    "1": "cubeos-components.lib.pen"
+  },
+  "fileToken": "328417be-b887-4d7e-b8af-7142097d392f"
+}
