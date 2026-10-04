@@ -57,6 +57,10 @@ components:
 
 `status: draft`. Dirección **Pozo** elegida en `/lab` (2026-09-02). Falta aprobar el producto aplicado (`/`, `/visor`, `/equipo`).
 
+El [taller Pencil](delivery/design/README.md) conserva la extracción editable de
+la UI actual y su biblioteca compartida. Sus capturas y archivos no cambian este
+estado ni constituyen aprobación de las propuestas futuras.
+
 Hay **dos superficies**. No se mezclan.
 
 | Superficie | Registro | Referencia dominante | Evidencia |
@@ -126,6 +130,11 @@ Laboratorio o aula, portátil, luz de clase. Fondo oscuro para que el dato recib
 
 ### Construcción
 
+- Dirección acordada con Edwar el 2026-10-03: conservar Pozo y adaptar el
+  flujo de [uKit](https://play.google.com/store/apps/details?id=com.ubtedu.ukit):
+  piezas/cantidades a la izquierda, armado central, vista de resultado y navegación
+  inferior. Esta aprobación de dirección no aprueba todavía la composición aplicada.
+  Guardar evidencia durable de la referencia antes de implementar esta superficie.
 - `references/ui/ConstruccionPrincipal.png`: paso + lista | canvas del armazón | vista; barra de progreso abajo.
 - Sin catálogo inventado (D-005).
 - PR9 reutiliza los pozos y controles nativos: secuencia común, casillas,

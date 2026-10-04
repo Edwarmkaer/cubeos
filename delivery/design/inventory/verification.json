@@ -1,0 +1,84 @@
+{
+  "date": "2026-10-03",
+  "baseCommit": "79d9c59",
+  "tool": "pen interactive 0.3.10",
+  "approved": false,
+  "checks": [
+    {
+      "file": "landingpage.pen",
+      "rootFrames": 3,
+      "sharedInstances": 4,
+      "missingVariables": [],
+      "unresolvedMasters": [],
+      "missingImages": [],
+      "unfinishedFrames": [],
+      "libraryStatus": "ok"
+    },
+    {
+      "file": "equipo.pen",
+      "rootFrames": 3,
+      "sharedInstances": 2,
+      "missingVariables": [],
+      "unresolvedMasters": [],
+      "missingImages": [],
+      "unfinishedFrames": [],
+      "libraryStatus": "ok"
+    },
+    {
+      "file": "construccion.pen",
+      "rootFrames": 3,
+      "sharedInstances": 10,
+      "missingVariables": [],
+      "unresolvedMasters": [],
+      "missingImages": [],
+      "unfinishedFrames": [],
+      "libraryStatus": "ok"
+    },
+    {
+      "file": "configuracion.pen",
+      "rootFrames": 4,
+      "sharedInstances": 26,
+      "missingVariables": [],
+      "unresolvedMasters": [],
+      "missingImages": [],
+      "unfinishedFrames": [],
+      "libraryStatus": "ok"
+    },
+    {
+      "file": "visor.pen",
+      "rootFrames": 5,
+      "sharedInstances": 56,
+      "missingVariables": [],
+      "unresolvedMasters": [],
+      "missingImages": [],
+      "unfinishedFrames": [],
+      "libraryStatus": "ok"
+    }
+  ],
+  "propagation": {
+    "consumers": 5,
+    "headerInstances": 13,
+    "temporaryValueObserved": true,
+    "originalValueRestored": true
+  },
+  "relocation": {
+    "consumer": "landingpage.pen",
+    "libraryResolvedFromNewDirectory": true
+  },
+  "notes": [
+    "Static canvas verification, not runtime interaction tests.",
+    "Dynamic and state-coverage limits are recorded in ui-current.md.",
+    "Pencil font downloads used the existing proxy via NODE_USE_ENV_PROXY=1."
+  ],
+  "recoveredConfiguration": {
+    "screens": [
+      "W9krOZ",
+      "FERuh",
+      "oUm3M"
+    ],
+    "pixelIdenticalToPriorExports": true,
+    "freshReopenSharedInstances": 26,
+    "relocatedPropagationHeaders": 3,
+    "canonicalLibraryUntouched": true
+  }
+}

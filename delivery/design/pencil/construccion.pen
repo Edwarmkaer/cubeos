@@ -1,0 +1,1048 @@
+{
+  "version": "2.20",
+  "children": [
+    {
+      "type": "frame",
+      "id": "lvs6R",
+      "x": 0,
+      "y": 300,
+      "name": "20 / Construcción / Sin dispositivo / 1440x900",
+      "context": "body",
+      "clip": true,
+      "width": 1440,
+      "height": 900,
+      "fill": "$O:background",
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "eI9sq",
+          "type": "ref",
+          "ref": "O:xgqxd",
+          "name": "Shared header",
+          "width": "fill_container",
+          "height": 64,
+          "descendants": {
+            "O:lFthh": {
+              "x": 618.83,
+              "y": 12
+            },
+            "O:d1QCG": {
+              "fill": "#00000000"
+            },
+            "O:P0PiMY": {
+              "fill": "$O:muted"
+            },
+            "O:h159E": {
+              "fill": "$O:well"
+            },
+            "O:Y4KxEt": {
+              "fill": "$O:foreground"
+            },
+            "O:D4tOA8": {
+              "fill": "#00000000"
+            },
+            "O:IaMHK": {
+              "fill": "$O:muted"
+            },
+            "O:wRlfN": {
+              "enabled": true,
+              "x": 1224.3,
+              "y": 22
+            },
+            "O:XPTzj": {
+              "content": "Construcción"
+            },
+            "O:tFTgU": {
+              "content": "Pendiente"
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "D08pdy",
+          "name": "main",
+          "context": "InnerLayoutRouter - main",
+          "clip": true,
+          "width": "fill_container",
+          "height": "fill_container",
+          "gap": 12,
+          "padding": [
+            0,
+            12,
+            12,
+            12
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "s1V26z",
+              "name": "div",
+              "context": "StationDock - div",
+              "width": 80,
+              "height": 824,
+              "layout": "none",
+              "children": [
+                {
+                  "id": "ta3bP",
+                  "type": "ref",
+                  "ref": "O:bMUtz",
+                  "name": "Shared dock / Construcción",
+                  "width": 60,
+                  "height": 188,
+                  "x": 10,
+                  "y": 318,
+                  "descendants": {
+                    "O:JWtS4": {
+                      "fill": "$O:surface"
+                    },
+                    "O:d5yU0": {
+                      "stroke": "$O:muted"
+                    },
+                    "O:LdpCg": {
+                      "fill": "$O:foreground"
+                    },
+                    "O:KKShp": {
+                      "stroke": "$O:well"
+                    },
+                    "O:cxnQM": {
+                      "fill": "$O:surface"
+                    },
+                    "O:iluVF": {
+                      "stroke": "$O:muted"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "OCTJ8",
+              "name": "Contenedor",
+              "context": "div",
+              "clip": true,
+              "width": "fill_container",
+              "height": "fill_container",
+              "layout": "vertical",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "QRJJG",
+                  "name": "Contenedor",
+                  "context": "div",
+                  "gap": 12,
+                  "children": [
+                    {
+                      "id": "LiSdT",
+                      "type": "ref",
+                      "ref": "O:RPLDv",
+                      "name": "Tile / Paso",
+                      "width": 208,
+                      "height": 756,
+                      "clip": true,
+                      "descendants": {
+                        "O:a8h6V": {
+                          "content": "Paso"
+                        },
+                        "O:ISrBo": {
+                          "type": "frame",
+                          "id": "fZohM",
+                          "name": "Contenido / Paso",
+                          "width": "fill_container",
+                          "height": "fill_container",
+                          "layout": "vertical",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "FeCxB",
+                              "name": "div",
+                              "context": "div",
+                              "width": "fill_container",
+                              "height": "fill_container",
+                              "layout": "vertical",
+                              "gap": 592,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "Edp00",
+                                  "name": "— / —",
+                                  "context": "p",
+                                  "fill": "$O:foreground",
+                                  "content": "— / —",
+                                  "lineHeight": 1.2,
+                                  "fontFamily": "Geist Mono",
+                                  "fontSize": 30,
+                                  "fontWeight": "normal",
+                                  "letterSpacing": -0.75
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "EkT7E",
+                                  "name": "div",
+                                  "context": "div",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "padding": [
+                                    16,
+                                    0,
+                                    0,
+                                    0
+                                  ],
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "K79gg",
+                                      "name": "Selecciona tu CubeSat en Configuración p",
+                                      "context": "p",
+                                      "fill": "$O:muted",
+                                      "textGrowth": "fixed-width-height",
+                                      "width": "fill_container",
+                                      "height": 60,
+                                      "content": "Selecciona tu CubeSat en Configuración para recuperar su progreso.",
+                                      "lineHeight": 1.43,
+                                      "fontFamily": "Barlow",
+                                      "fontSize": 14,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "id": "nCU0Q",
+                      "type": "ref",
+                      "ref": "O:RPLDv",
+                      "name": "Tile / Armazón",
+                      "width": 916,
+                      "height": 756,
+                      "clip": true,
+                      "descendants": {
+                        "O:a8h6V": {
+                          "content": "Armazón"
+                        },
+                        "O:ISrBo": {
+                          "type": "frame",
+                          "id": "y155HL",
+                          "name": "Contenido / Armazón",
+                          "width": "fill_container",
+                          "height": "fill_container",
+                          "layout": "vertical",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "OTUT2",
+                              "name": "svg",
+                              "context": "Frame - svg",
+                              "clip": true,
+                              "width": 884,
+                              "height": 704,
+                              "layout": "none",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "jZC6l",
+                                  "x": 140.29,
+                                  "y": 0,
+                                  "name": "Armazón / esquema SVG existente",
+                                  "width": 482.74285714285713,
+                                  "height": 593.3714285714286,
+                                  "layout": "none",
+                                  "children": [
+                                    {
+                                      "type": "path",
+                                      "id": "gErNA",
+                                      "x": 140.8,
+                                      "y": 140.8,
+                                      "name": "path",
+                                      "geometry": "M0 20l0 70m50-70l0 70m-32-90l0 70m50-70l0 70",
+                                      "width": 341.9428571428571,
+                                      "height": 452.57142857142856,
+                                      "stroke": "#e8e8f099",
+                                      "strokeWidth": 16.091428571428573,
+                                      "strokeLinecap": "square"
+                                    },
+                                    {
+                                      "type": "path",
+                                      "id": "UT0A4",
+                                      "x": 140.8,
+                                      "y": 140.8,
+                                      "name": "path",
+                                      "geometry": "M0 20l18-20 50 0-18 20-50 0z m0 70l18-20 50 0-18 20-50 0z",
+                                      "width": 341.9428571428571,
+                                      "height": 452.57142857142856,
+                                      "stroke": "#e8e8f099",
+                                      "strokeWidth": 5.531428571428572
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "id": "mun9z",
+                      "type": "ref",
+                      "ref": "O:RPLDv",
+                      "name": "Tile / Vista",
+                      "width": 176,
+                      "height": 756,
+                      "clip": true,
+                      "descendants": {
+                        "O:a8h6V": {
+                          "content": "Vista"
+                        },
+                        "O:ISrBo": {
+                          "type": "frame",
+                          "id": "XvOt9",
+                          "name": "Contenido / Vista",
+                          "width": "fill_container",
+                          "height": "fill_container",
+                          "layout": "vertical",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "MMtiw",
+                              "name": "div",
+                              "context": "div",
+                              "height": "fill_container",
+                              "layout": "vertical",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "r8SD4",
+                                  "name": "svg",
+                                  "context": "Frame - svg",
+                                  "clip": true,
+                                  "width": 144,
+                                  "height": 192,
+                                  "layout": "none",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "ljbkY",
+                                      "x": 0,
+                                      "y": 12,
+                                      "name": "Armazón / esquema SVG existente",
+                                      "width": 115.19999999999999,
+                                      "height": 141.6,
+                                      "layout": "none",
+                                      "children": [
+                                        {
+                                          "type": "path",
+                                          "id": "Pxo4e",
+                                          "x": 33.6,
+                                          "y": 33.6,
+                                          "name": "path",
+                                          "geometry": "M0 20l0 70m50-70l0 70m-32-90l0 70m50-70l0 70",
+                                          "width": 81.6,
+                                          "height": 108,
+                                          "stroke": "#e8e8f099",
+                                          "strokeWidth": 3.84,
+                                          "strokeLinecap": "square"
+                                        },
+                                        {
+                                          "type": "path",
+                                          "id": "COSPQ",
+                                          "x": 33.6,
+                                          "y": 33.6,
+                                          "name": "path",
+                                          "geometry": "M0 20l18-20 50 0-18 20-50 0z m0 70l18-20 50 0-18 20-50 0z",
+                                          "width": 81.6,
+                                          "height": 108,
+                                          "stroke": "#e8e8f099",
+                                          "strokeWidth": 1.32
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "GPtZm",
+                  "name": "Contenedor",
+                  "context": "div",
+                  "width": "fill_container",
+                  "fill": "$O:well",
+                  "cornerRadius": 8,
+                  "gap": 12,
+                  "padding": [
+                    12,
+                    16
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "tuQDi",
+                      "name": "svg",
+                      "context": "Puzzle - svg",
+                      "clip": true,
+                      "width": 16,
+                      "height": 16,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "path",
+                          "id": "qe9Ox",
+                          "x": 1.3327197233835855,
+                          "y": 1.3332566420237222,
+                          "name": "path",
+                          "geometry": "M13.39092 2.39011c0.25596 0.25622 0.63045 0.35402 0.97901 0.25568 0.34856-0.09834 0.6167-0.37746 0.70099-0.72968 0.28725-1.19572 1.40145-2.00498 2.62739-1.90829 1.22594 0.09668 2.19951 1.07057 2.29578 2.29654 0.09627 1.22597-0.71335 2.3399-1.90917 2.62676-0.35222 0.08429-0.63133 0.35244-0.72968 0.70099-0.09834 0.34856-0.00054 0.72305 0.25568 0.97901l1.683 1.682c0.45274 0.45272 0.70709 1.06675 0.70709 1.70699 0 0.64025-0.25435 1.25428-0.70709 1.70701l-1.683 1.683c-0.25596 0.25622-0.63045 0.35402-0.979 0.25567-0.34856-0.09834-0.6167-0.37746-0.701-0.72967-0.28725-1.19573-1.40145-2.00498-2.62738-1.9083-1.22594 0.09668-2.19951 1.07057-2.29579 2.29654-0.09627 1.22597 0.71335 2.3399 1.90917 2.62676 0.35222 0.08429 0.63133 0.35244 0.72968 0.70099 0.09834 0.34856 0.00054 0.72304-0.25568 0.97901l-1.683 1.68199c-0.45272 0.45274-1.06675 0.70709-1.707 0.70709-0.64025 0-1.25428-0.25435-1.707-0.70709l-1.683-1.68299c-0.25596-0.25622-0.63045-0.35402-0.979-0.25568-0.34856 0.09834-0.6167 0.37746-0.701 0.72967-0.28725 1.19572-1.40145 2.00498-2.62738 1.9083-1.22594-0.09668-2.19951-1.07058-2.29579-2.29654-0.09627-1.22597 0.71335-2.33989 1.90917-2.62675 0.35222-0.08429 0.63133-0.35244 0.72968-0.701 0.09834-0.34856 0.00054-0.72305-0.25568-0.97901l-1.683-1.682c-0.45274-0.45272-0.70709-1.06675-0.70709-1.707 0-0.64025 0.25435-1.25428 0.70709-1.70699l1.683-1.68301c0.25596-0.25622 0.63045-0.35402 0.97901-0.25567 0.34856 0.09834 0.6167 0.37746 0.70099 0.72967 0.28725 1.19573 1.40145 2.00498 2.62738 1.9083 1.22594-0.09668 2.19951-1.07057 2.29579-2.29654 0.09627-1.22597-0.71335-2.3399-1.90917-2.62676-0.35222-0.08429-0.63133-0.35244-0.72968-0.70099-0.09834-0.34856-0.00054-0.72305 0.25568-0.97901l1.683-1.682c0.45272-0.45274 1.06675-0.70709 1.707-0.70708 0.64025 0 1.25428 0.25435 1.707 0.70709l1.683 1.68299z",
+                          "width": 13.334561109542847,
+                          "height": 13.333486318588257,
+                          "stroke": "$O:muted",
+                          "strokeWidth": 1.3333333333333333,
+                          "strokeLinejoin": "round",
+                          "strokeLinecap": "round"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "S8cIf",
+                      "name": "button",
+                      "context": "button",
+                      "width": 32,
+                      "height": 32,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Wb8yN",
+                          "x": 8,
+                          "y": 8,
+                          "name": "svg",
+                          "context": "ChevronLeft - svg",
+                          "clip": true,
+                          "width": 16,
+                          "height": 16,
+                          "layout": "none",
+                          "children": [
+                            {
+                              "type": "path",
+                              "id": "XCMjz",
+                              "x": 6,
+                              "y": 4,
+                              "name": "path",
+                              "geometry": "M6 12l-6-6 6-6",
+                              "width": 4,
+                              "height": 8,
+                              "stroke": "$O:muted",
+                              "strokeWidth": 1.3333333333333333,
+                              "strokeLinejoin": "round",
+                              "strokeLinecap": "round"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 33554400,
+                      "id": "I3CU9Y",
+                      "name": "div",
+                      "context": "div",
+                      "fill": "$O:background",
+                      "width": "fill_container",
+                      "height": 6
+                    },
+                    {
+                      "type": "text",
+                      "id": "i3fCjN",
+                      "name": "Sin pasos publicados",
+                      "context": "span",
+                      "fill": "$O:muted",
+                      "content": "Sin pasos publicados",
+                      "lineHeight": 1.43,
+                      "fontFamily": "Barlow",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "kOlta",
+                      "name": "button",
+                      "context": "button",
+                      "width": 32,
+                      "height": 32,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "e6chHN",
+                          "x": 8,
+                          "y": 8,
+                          "name": "svg",
+                          "context": "ChevronRight - svg",
+                          "clip": true,
+                          "width": 16,
+                          "height": 16,
+                          "layout": "none",
+                          "children": [
+                            {
+                              "type": "path",
+                              "id": "Ugvm0",
+                              "x": 6,
+                              "y": 4,
+                              "name": "path",
+                              "geometry": "M0 12l6-6-6-6",
+                              "width": 4,
+                              "height": 8,
+                              "stroke": "$O:muted",
+                              "strokeWidth": 1.3333333333333333,
+                              "strokeLinejoin": "round",
+                              "strokeLinecap": "round"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "o47awj",
+      "x": 1520,
+      "y": 300,
+      "name": "20 / Construcción / Sin dispositivo / 390x844",
+      "context": "body",
+      "clip": true,
+      "width": 390,
+      "height": 844,
+      "fill": "$O:background",
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "tTRsA",
+          "type": "ref",
+          "ref": "O:Uk6gY",
+          "name": "Shared header",
+          "width": "fill_container",
+          "height": 64,
+          "descendants": {
+            "O:LJgIU": {
+              "x": 116.08,
+              "y": 14
+            },
+            "O:pbFdr": {
+              "fill": "#00000000"
+            },
+            "O:N8cbU": {
+              "fill": "$O:muted"
+            },
+            "O:Ybgym": {
+              "fill": "$O:well"
+            },
+            "O:ECLsu": {
+              "fill": "$O:foreground"
+            },
+            "O:Eu05e": {
+              "fill": "#00000000"
+            },
+            "O:VImNX": {
+              "fill": "$O:muted"
+            },
+            "O:hMRP8": {
+              "enabled": true,
+              "x": 311.27,
+              "y": 24
+            },
+            "O:HlQxR": {
+              "content": "Pendiente"
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "xj89g",
+          "name": "main",
+          "context": "InnerLayoutRouter - main",
+          "clip": true,
+          "width": "fill_container",
+          "height": "fill_container",
+          "padding": [
+            0,
+            12,
+            12,
+            12
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "nO2n5",
+              "name": "Contenedor",
+              "context": "div",
+              "clip": true,
+              "width": "fill_container",
+              "height": "fill_container",
+              "layout": "vertical",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "gCqo5",
+                  "name": "Contenedor",
+                  "context": "div",
+                  "width": 366,
+                  "layout": "vertical",
+                  "gap": 12,
+                  "children": [
+                    {
+                      "id": "Nv061",
+                      "type": "ref",
+                      "ref": "O:RPLDv",
+                      "name": "Tile / Paso",
+                      "width": "fill_container",
+                      "height": 144,
+                      "clip": true,
+                      "descendants": {
+                        "O:a8h6V": {
+                          "content": "Paso"
+                        },
+                        "O:ISrBo": {
+                          "type": "frame",
+                          "id": "N4CtKF",
+                          "name": "Contenido / Paso",
+                          "width": "fill_container",
+                          "height": "fill_container",
+                          "layout": "vertical",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "zIPhY",
+                              "name": "div",
+                              "context": "div",
+                              "width": "fill_container",
+                              "height": "fill_container",
+                              "layout": "vertical",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "rGPQe",
+                                  "name": "— / —",
+                                  "context": "p",
+                                  "fill": "$O:foreground",
+                                  "content": "— / —",
+                                  "lineHeight": 1.2,
+                                  "fontFamily": "Geist Mono",
+                                  "fontSize": 30,
+                                  "fontWeight": "normal",
+                                  "letterSpacing": -0.75
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "vMyLV",
+                                  "name": "div",
+                                  "context": "div",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "padding": [
+                                    16,
+                                    0,
+                                    0,
+                                    0
+                                  ],
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "CSA0I",
+                                      "name": "Selecciona tu CubeSat en Configuración p",
+                                      "context": "p",
+                                      "fill": "$O:muted",
+                                      "textGrowth": "fixed-width-height",
+                                      "width": "fill_container",
+                                      "height": 40,
+                                      "content": "Selecciona tu CubeSat en Configuración para recuperar su progreso.",
+                                      "lineHeight": 1.43,
+                                      "fontFamily": "Barlow",
+                                      "fontSize": 14,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "id": "Vot2m",
+                      "type": "ref",
+                      "ref": "O:RPLDv",
+                      "name": "Tile / Armazón",
+                      "width": "fill_container",
+                      "height": 288,
+                      "clip": true,
+                      "descendants": {
+                        "O:a8h6V": {
+                          "content": "Armazón"
+                        },
+                        "O:ISrBo": {
+                          "type": "frame",
+                          "id": "KlUKX",
+                          "name": "Contenido / Armazón",
+                          "width": "fill_container",
+                          "height": "fill_container",
+                          "layout": "vertical",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "o4nCWb",
+                              "name": "svg",
+                              "context": "Frame - svg",
+                              "clip": true,
+                              "width": 334,
+                              "height": 236,
+                              "layout": "none",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "a6u8H",
+                                  "x": 65.86,
+                                  "y": 0,
+                                  "name": "Armazón / esquema SVG existente",
+                                  "width": 163,
+                                  "height": 200,
+                                  "layout": "none",
+                                  "children": [
+                                    {
+                                      "type": "path",
+                                      "id": "mIPCW",
+                                      "x": 47.2,
+                                      "y": 47.2,
+                                      "name": "path",
+                                      "geometry": "M0 20l0 70m50-70l0 70m-32-90l0 70m50-70l0 70",
+                                      "width": 114.62857142857143,
+                                      "height": 151.71428571428572,
+                                      "stroke": "#e8e8f099",
+                                      "strokeWidth": 5.394285714285715,
+                                      "strokeLinecap": "square"
+                                    },
+                                    {
+                                      "type": "path",
+                                      "id": "Gu5u0",
+                                      "x": 47.2,
+                                      "y": 47.2,
+                                      "name": "path",
+                                      "geometry": "M0 20l18-20 50 0-18 20-50 0z m0 70l18-20 50 0-18 20-50 0z",
+                                      "width": 114.62857142857143,
+                                      "height": 151.71428571428572,
+                                      "stroke": "#e8e8f099",
+                                      "strokeWidth": 1.8542857142857145
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "id": "H6f2a",
+                      "type": "ref",
+                      "ref": "O:RPLDv",
+                      "name": "Tile / Vista",
+                      "width": "fill_container",
+                      "height": 244,
+                      "clip": true,
+                      "descendants": {
+                        "O:a8h6V": {
+                          "content": "Vista"
+                        },
+                        "O:ISrBo": {
+                          "type": "frame",
+                          "id": "CTguR",
+                          "name": "Contenido / Vista",
+                          "width": "fill_container",
+                          "height": "fill_container",
+                          "layout": "vertical",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "WT5ME",
+                              "name": "svg",
+                              "context": "Frame - svg",
+                              "clip": true,
+                              "width": 334,
+                              "height": 192,
+                              "layout": "none",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "iHiwL",
+                                  "x": 84.71,
+                                  "y": 0,
+                                  "name": "Armazón / esquema SVG existente",
+                                  "width": 131.65714285714284,
+                                  "height": 161.82857142857142,
+                                  "layout": "none",
+                                  "children": [
+                                    {
+                                      "type": "path",
+                                      "id": "vad3t",
+                                      "x": 38.4,
+                                      "y": 38.4,
+                                      "name": "path",
+                                      "geometry": "M0 20l0 70m50-70l0 70m-32-90l0 70m50-70l0 70",
+                                      "width": 93.25714285714285,
+                                      "height": 123.42857142857143,
+                                      "stroke": "#e8e8f099",
+                                      "strokeWidth": 4.388571428571429,
+                                      "strokeLinecap": "square"
+                                    },
+                                    {
+                                      "type": "path",
+                                      "id": "O0TrTu",
+                                      "x": 38.4,
+                                      "y": 38.4,
+                                      "name": "path",
+                                      "geometry": "M0 20l18-20 50 0-18 20-50 0z m0 70l18-20 50 0-18 20-50 0z",
+                                      "width": 93.25714285714285,
+                                      "height": 123.42857142857143,
+                                      "stroke": "#e8e8f099",
+                                      "strokeWidth": 1.5085714285714287
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "kxzaa",
+                  "name": "Contenedor",
+                  "context": "div",
+                  "width": 366,
+                  "fill": "$O:well",
+                  "cornerRadius": 8,
+                  "gap": 12,
+                  "padding": [
+                    12,
+                    16
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "KgsNa",
+                      "name": "svg",
+                      "context": "Puzzle - svg",
+                      "clip": true,
+                      "width": 16,
+                      "height": 16,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "path",
+                          "id": "ZjSkl",
+                          "x": 1.3327197233835855,
+                          "y": 1.3332566420237222,
+                          "name": "path",
+                          "geometry": "M13.39092 2.39011c0.25596 0.25622 0.63045 0.35402 0.97901 0.25568 0.34856-0.09834 0.6167-0.37746 0.70099-0.72968 0.28725-1.19572 1.40145-2.00498 2.62739-1.90829 1.22594 0.09668 2.19951 1.07057 2.29578 2.29654 0.09627 1.22597-0.71335 2.3399-1.90917 2.62676-0.35222 0.08429-0.63133 0.35244-0.72968 0.70099-0.09834 0.34856-0.00054 0.72305 0.25568 0.97901l1.683 1.682c0.45274 0.45272 0.70709 1.06675 0.70709 1.70699 0 0.64025-0.25435 1.25428-0.70709 1.70701l-1.683 1.683c-0.25596 0.25622-0.63045 0.35402-0.979 0.25567-0.34856-0.09834-0.6167-0.37746-0.701-0.72967-0.28725-1.19573-1.40145-2.00498-2.62738-1.9083-1.22594 0.09668-2.19951 1.07057-2.29579 2.29654-0.09627 1.22597 0.71335 2.3399 1.90917 2.62676 0.35222 0.08429 0.63133 0.35244 0.72968 0.70099 0.09834 0.34856 0.00054 0.72304-0.25568 0.97901l-1.683 1.68199c-0.45272 0.45274-1.06675 0.70709-1.707 0.70709-0.64025 0-1.25428-0.25435-1.707-0.70709l-1.683-1.68299c-0.25596-0.25622-0.63045-0.35402-0.979-0.25568-0.34856 0.09834-0.6167 0.37746-0.701 0.72967-0.28725 1.19572-1.40145 2.00498-2.62738 1.9083-1.22594-0.09668-2.19951-1.07058-2.29579-2.29654-0.09627-1.22597 0.71335-2.33989 1.90917-2.62675 0.35222-0.08429 0.63133-0.35244 0.72968-0.701 0.09834-0.34856 0.00054-0.72305-0.25568-0.97901l-1.683-1.682c-0.45274-0.45272-0.70709-1.06675-0.70709-1.707 0-0.64025 0.25435-1.25428 0.70709-1.70699l1.683-1.68301c0.25596-0.25622 0.63045-0.35402 0.97901-0.25567 0.34856 0.09834 0.6167 0.37746 0.70099 0.72967 0.28725 1.19573 1.40145 2.00498 2.62738 1.9083 1.22594-0.09668 2.19951-1.07057 2.29579-2.29654 0.09627-1.22597-0.71335-2.3399-1.90917-2.62676-0.35222-0.08429-0.63133-0.35244-0.72968-0.70099-0.09834-0.34856-0.00054-0.72305 0.25568-0.97901l1.683-1.682c0.45272-0.45274 1.06675-0.70709 1.707-0.70708 0.64025 0 1.25428 0.25435 1.707 0.70709l1.683 1.68299z",
+                          "width": 13.334561109542847,
+                          "height": 13.333486318588257,
+                          "stroke": "$O:muted",
+                          "strokeWidth": 1.3333333333333333,
+                          "strokeLinejoin": "round",
+                          "strokeLinecap": "round"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "lAoTU",
+                      "name": "button",
+                      "context": "button",
+                      "width": 32,
+                      "height": 32,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "V6QyW",
+                          "x": 8,
+                          "y": 8,
+                          "name": "svg",
+                          "context": "ChevronLeft - svg",
+                          "clip": true,
+                          "width": 16,
+                          "height": 16,
+                          "layout": "none",
+                          "children": [
+                            {
+                              "type": "path",
+                              "id": "yb0KD",
+                              "x": 6,
+                              "y": 4,
+                              "name": "path",
+                              "geometry": "M6 12l-6-6 6-6",
+                              "width": 4,
+                              "height": 8,
+                              "stroke": "$O:muted",
+                              "strokeWidth": 1.3333333333333333,
+                              "strokeLinejoin": "round",
+                              "strokeLinecap": "round"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 33554400,
+                      "id": "q6INr",
+                      "name": "div",
+                      "context": "div",
+                      "fill": "$O:background",
+                      "width": "fill_container",
+                      "height": 6
+                    },
+                    {
+                      "type": "text",
+                      "id": "U7xWb",
+                      "name": "Sin pasos publicados",
+                      "context": "span",
+                      "fill": "$O:muted",
+                      "content": "Sin pasos publicados",
+                      "lineHeight": 1.43,
+                      "fontFamily": "Barlow",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "bB6Gs",
+                      "name": "button",
+                      "context": "button",
+                      "width": 32,
+                      "height": 32,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "xY5uc",
+                          "x": 8,
+                          "y": 8,
+                          "name": "svg",
+                          "context": "ChevronRight - svg",
+                          "clip": true,
+                          "width": 16,
+                          "height": 16,
+                          "layout": "none",
+                          "children": [
+                            {
+                              "type": "path",
+                              "id": "Ra43e",
+                              "x": 6,
+                              "y": 4,
+                              "name": "path",
+                              "geometry": "M0 12l6-6-6-6",
+                              "width": 4,
+                              "height": 8,
+                              "stroke": "$O:muted",
+                              "strokeWidth": 1.3333333333333333,
+                              "strokeLinejoin": "round",
+                              "strokeLinecap": "round"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "yLCID",
+              "type": "ref",
+              "ref": "O:VdaVz",
+              "name": "Shared mobile dock / cerrado",
+              "width": 40,
+              "height": 40,
+              "layoutPosition": "absolute",
+              "x": 16,
+              "y": 724
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "z2eUN",
+      "x": 0,
+      "y": 0,
+      "name": "00 / Brief / Construcción",
+      "width": 1440,
+      "height": 220,
+      "fill": "$O:background",
+      "layout": "vertical",
+      "gap": 14,
+      "padding": 28,
+      "children": [
+        {
+          "type": "text",
+          "id": "YQW9U",
+          "name": "Título",
+          "fill": "$O:foreground",
+          "content": "Construcción · taller editable",
+          "fontFamily": "Big Shoulders",
+          "fontSize": 36,
+          "fontWeight": "600"
+        },
+        {
+          "type": "text",
+          "id": "qQrDa",
+          "name": "Base",
+          "fill": "$O:muted",
+          "content": "Sin dispositivo · 79d9c59 · Extracción, sin aprobación visual",
+          "fontFamily": "Barlow",
+          "fontSize": 16,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "w4wL6r",
+          "name": "Alcance y límites",
+          "fill": "$O:muted",
+          "content": "Esquema SVG actual; no es un modelo físico validado. Guía y piezas pendientes de Edwar.\nLa escena futura tendrá su propia validación de GLB, fallback y movimiento reducido.",
+          "lineHeight": 1.5,
+          "fontFamily": "Barlow",
+          "fontSize": 16,
+          "fontWeight": "normal"
+        }
+      ]
+    }
+  ],
+  "imports": {
+    "O": "cubeos-components.lib.pen"
+  },
+  "fileToken": "6d2a05d2-a545-4081-b223-fa9cde0903b5"
+}
