@@ -26,6 +26,18 @@ func ValidID(id string) bool { var u pgtype.UUID; return len(id) == 36 && u.Scan
 
 // Ensure never adopts by name/protocol ID and never repairs a revoked binding.
 func Ensure(ctx context.Context, pool *pgxpool.Pool, bindingID string) (Binding, error) {
+	return ensure(ctx, pool, bindingID, nil)
+}
+
+// EnsureExisting refuses automatic reprovisioning after restore/replacement.
+func EnsureExisting(ctx context.Context, pool *pgxpool.Pool, expected Binding) (Binding, error) {
+	if !ValidID(expected.DeviceID) || !ValidID(expected.SourceID) {
+		return Binding{}, errors.New("invalid expected receiver identity")
+	}
+	return ensure(ctx, pool, expected.BindingID, &expected)
+}
+
+func ensure(ctx context.Context, pool *pgxpool.Pool, bindingID string, expected *Binding) (Binding, error) {
 	if !ValidID(bindingID) {
 		return Binding{}, errors.New("invalid receiver binding ID")
 	}
@@ -49,10 +61,16 @@ func Ensure(ctx context.Context, pool *pgxpool.Pool, bindingID string) (Binding,
 	err = tx.QueryRow(ctx, `SELECT r.device_id::text,r.source_id::text,d.protocol_device_id,d.owner_user_id::text,s.device_id::text,s.transport,s.revoked_at IS NULL
  FROM local_receivers r JOIN devices d ON d.id=r.device_id JOIN ingestion_sources s ON s.id=r.source_id WHERE r.id=$1`, bindingID).Scan(&b.DeviceID, &b.SourceID, &b.ProtocolDeviceID, &owner, &sourceDevice, &transport, &active)
 	if err == nil {
+		if expected != nil && (b.DeviceID != expected.DeviceID || b.SourceID != expected.SourceID) {
+			return Binding{}, errors.New("receiver identity differs from saved installation; inspect backup/restore")
+		}
 		if owner != p.UserID || sourceDevice != b.DeviceID || transport != "serial" || !active || b.ProtocolDeviceID != "CS01" {
 			return Binding{}, errors.New("receiver binding changed or revoked; inspect the installation before retrying")
 		}
 	} else if errors.Is(err, pgx.ErrNoRows) {
+		if expected != nil {
+			return Binding{}, errors.New("saved receiver is absent; restore the matching database instead of reprovisioning")
+		}
 		b.ProtocolDeviceID = "CS01"
 		err = tx.QueryRow(ctx, "INSERT INTO devices(owner_user_id,protocol_device_id,name) VALUES($1,'CS01','ESP32-C3 · datos sintéticos') RETURNING id::text", p.UserID).Scan(&b.DeviceID)
 		if err != nil {

@@ -152,3 +152,28 @@ func TestEnsureRollbackAndMismatchedSource(t *testing.T) {
 		t.Fatal("mismatched source accepted")
 	}
 }
+
+func TestExistingBindingNeverCreatesRecordsAfterRestore(t *testing.T) {
+	p := testPool(t)
+	ctx := context.Background()
+	want := Binding{BindingID: "85f25882-661d-4e01-82d0-48c97b7c8c45", DeviceID: "11111111-1111-4111-8111-111111111111", SourceID: "22222222-2222-4222-8222-222222222222", ProtocolDeviceID: "CS01"}
+	if _, e := EnsureExisting(ctx, p, want); e == nil {
+		t.Fatal("missing restored binding accepted")
+	}
+	var n int
+	p.QueryRow(ctx, "SELECT count(*) FROM devices").Scan(&n)
+	if n != 0 {
+		t.Fatal("restore silently created device")
+	}
+	b, e := Ensure(ctx, p, want.BindingID)
+	if e != nil {
+		t.Fatal(e)
+	}
+	if _, e = EnsureExisting(ctx, p, want); e == nil {
+		t.Fatal("different device accepted")
+	}
+	got, e := EnsureExisting(ctx, p, b)
+	if e != nil || got != b {
+		t.Fatal(got, e)
+	}
+}

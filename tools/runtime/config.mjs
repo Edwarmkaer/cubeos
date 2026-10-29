@@ -63,7 +63,7 @@ export async function inspectSerial(path){
 export function runtimeEnv(c,inherited=process.env){
  const e={};
  for(const k of ['PATH','HOME','XDG_RUNTIME_DIR','LANG','TMPDIR','DOCKER_CONFIG'])if(inherited[k])e[k]=inherited[k];
- return {...e,POSTGRES_PASSWORD:c.password,WEB_PORT:String(c.webPort),API_PORT:String(c.apiPort),DEPLOYMENT_MODE:'local',AUTH_MODE:'local',MEDIA_STORAGE:'local',SERIAL_PORT:'',CUBEOS_API_IMAGE:c.images?.api??'',CUBEOS_WEB_IMAGE:c.images?.web??''};
+ return {...e,DOCKER_CONTEXT:'default',POSTGRES_PASSWORD:c.password,WEB_PORT:String(c.webPort),API_PORT:String(c.apiPort),DEPLOYMENT_MODE:'local',AUTH_MODE:'local',MEDIA_STORAGE:'local',SERIAL_PORT:'',CUBEOS_API_IMAGE:c.images?.api??'',CUBEOS_WEB_IMAGE:c.images?.web??''};
 }
 export async function withRuntimeLock(root,fn){
  const path=join(runtimeDirectory(root),'operation.lock');let handle;

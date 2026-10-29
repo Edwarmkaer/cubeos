@@ -6,9 +6,14 @@
     "setup": "node tools/dev/local.mjs setup",
     "dev": "node tools/dev/local.mjs dev",
     "stop": "node tools/dev/local.mjs stop",
+    "local:setup": "node tools/runtime/index.mjs setup",
+    "local:start": "node tools/runtime/index.mjs start",
+    "local:status": "node tools/runtime/index.mjs status",
+    "local:stop": "node tools/runtime/index.mjs stop",
+    "local:doctor": "node tools/runtime/index.mjs doctor",
     "build": "turbo run build",
     "lint": "turbo run lint",
-    "test": "node --test tools/dev/*.test.mjs && turbo run test",
+    "test": "node --test tools/dev/*.test.mjs tools/runtime/*.test.mjs && turbo run test",
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": { "turbo": "2.10.11", "railway": "3.12.0" }

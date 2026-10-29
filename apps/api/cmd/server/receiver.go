@@ -19,7 +19,9 @@ func prepareReceiver(ctx context.Context, pool *pgxpool.Pool, input io.Reader, o
 		return errors.New("receiver input must be at most 4 KiB")
 	}
 	var request struct {
-		BindingID string `json:"bindingId"`
+		BindingID        string `json:"bindingId"`
+		ExpectedDeviceID string `json:"expectedDeviceId,omitempty"`
+		ExpectedSourceID string `json:"expectedSourceId,omitempty"`
 	}
 	decoder := json.NewDecoder(bytes.NewReader(raw))
 	decoder.DisallowUnknownFields()
@@ -33,7 +35,12 @@ func prepareReceiver(ctx context.Context, pool *pgxpool.Pool, input io.Reader, o
 	if decoder.Decode(&extra) != io.EOF {
 		return errors.New("receiver input requires one JSON object")
 	}
-	binding, err := receiver.Ensure(ctx, pool, request.BindingID)
+	var binding receiver.Binding
+	if request.ExpectedDeviceID != "" || request.ExpectedSourceID != "" {
+		binding, err = receiver.EnsureExisting(ctx, pool, receiver.Binding{BindingID: request.BindingID, DeviceID: request.ExpectedDeviceID, SourceID: request.ExpectedSourceID})
+	} else {
+		binding, err = receiver.Ensure(ctx, pool, request.BindingID)
+	}
 	if err != nil {
 		return err
 	}

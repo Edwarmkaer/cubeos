@@ -49,3 +49,14 @@ test('different roots do not share projects and exported cloud values cannot alt
  assert.equal(e.CLERK_SECRET_KEY,undefined);assert.equal(e.COMPOSE_FILE,undefined);assert.equal(e.DOCKER_HOST,undefined);
  assert.equal(e.POSTGRES_PASSWORD,c.password);
 });
+test('active lock prevents a second operation and is released after errors',async t=>{
+ const root=await temp(t);await api.loadRuntime(root,true);
+ let release;const wait=new Promise(r=>release=r);
+ const first=api.withRuntimeLock(root,()=>wait);
+ // Await the actual lock creation rather than guessing disk timing.
+ for(let i=0;i<100;i++){try{await stat(join(root,'.cubeos/runtime/operation.lock'));break;}catch{await new Promise(r=>setTimeout(r,5));}}
+ await assert.rejects(api.withRuntimeLock(root,async()=>{}),/operación/);
+ release();await first;
+ await assert.rejects(api.withRuntimeLock(root,async()=>{throw Error('failure');}),/failure/);
+ await api.withRuntimeLock(root,async()=>{});
+});
