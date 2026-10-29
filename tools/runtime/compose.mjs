@@ -1,6 +1,6 @@
 import {spawn} from 'node:child_process';
 import {writeFile} from 'node:fs/promises';
-import {join} from 'node:path';
+import {join,basename} from 'node:path';
 import {projectName,runtimeEnv} from './config.mjs';
 
 // Only external process execution is replaceable in unit tests. No shell/env dumps.
@@ -14,8 +14,9 @@ export function runProcess(command,args,{cwd,env,input='',signal}={}){
   child.on('close',async code=>{
    process.removeListener('SIGINT',interrupt);process.removeListener('SIGTERM',interrupt);
    if(code===0&&size<=4*1024*1024)return resolve({stdout,stderr});
-   if(cwd)await writeFile(join(cwd,'.cubeos/runtime/last-error.log'),stdout+'\n'+stderr,{mode:0o600}).catch(()=>{});
-   reject(Error(`${command} falló (salida ${code??'interrumpida'}). Revisa local:doctor y el registro privado .cubeos/runtime/last-error.log.`));
+   const log='last-error-'+basename(command).replace(/[^a-zA-Z0-9_-]/g,'')+'.log';
+   if(cwd)await writeFile(join(cwd,'.cubeos/runtime',log),stdout+'\n'+stderr,{mode:0o600}).catch(()=>{});
+   reject(Error(`${command} falló (salida ${code??'interrumpida'}). Revisa local:doctor y el registro privado .cubeos/runtime/${log}.`));
   });
   const interrupt=()=>child.kill('SIGTERM');
   process.once('SIGINT',interrupt);process.once('SIGTERM',interrupt);

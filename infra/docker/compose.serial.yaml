@@ -1,6 +1,12 @@
 # Opt-in Linux physical serial device only. No privileged/host network or mounts.
 services:
   api:
+    # Keep the selected device inode (also needed for isolated devpts TTYs).
+    # Still exactly one validated port, never /dev or a privileged container.
+    volumes:
+      - type: bind
+        source: ${SERIAL_HOST_DEVICE:?Choose one physical serial device}
+        target: /dev/cubeos-serial
     devices:
       - "${SERIAL_HOST_DEVICE:?Choose one physical serial device}:/dev/cubeos-serial:rw"
     group_add:

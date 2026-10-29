@@ -1,4 +1,4 @@
-import {readFile,writeFile,mkdir,lstat,realpath,rename,open} from 'node:fs/promises';
+import {readFile,writeFile,mkdir,lstat,realpath,rename,open,unlink} from 'node:fs/promises';
 import {createHash,randomBytes,randomUUID} from 'node:crypto';
 import {resolve,join} from 'node:path';
 
@@ -66,8 +66,27 @@ export function runtimeEnv(c,inherited=process.env){
  return {...e,DOCKER_CONTEXT:'default',POSTGRES_PASSWORD:c.password,WEB_PORT:String(c.webPort),API_PORT:String(c.apiPort),DEPLOYMENT_MODE:'local',AUTH_MODE:'local',MEDIA_STORAGE:'local',SERIAL_PORT:'',CUBEOS_API_IMAGE:c.images?.api??'',CUBEOS_WEB_IMAGE:c.images?.web??''};
 }
 export async function withRuntimeLock(root,fn){
+ try{await lstat(join(runtimeDirectory(root),'recovery.lock'));throw Error('Hay una recuperación de lock en curso; no se inició otra operación.');}catch(e){if(e.code!=='ENOENT')throw e;}
  const path=join(runtimeDirectory(root),'operation.lock');let handle;
  try{handle=await open(path,'wx',0o600);}catch(e){if(e.code==='EEXIST')throw Error('Hay una operación runtime activa o interrumpida. Consulta local:doctor; no se modificó el lock.');throw e;}
  try{await handle.writeFile(JSON.stringify({pid:process.pid,root:resolve(root)}));return await fn();}
- finally{await handle.close();const {unlink}=await import('node:fs/promises');await unlink(path);}
+ finally{await handle.close();await unlink(path);}
+}
+export async function lockStatus(root){
+ const file=join(runtimeDirectory(root),'operation.lock');
+ try{
+  await privatePath(file);
+  const v=JSON.parse(await readFile(file,'utf8'));
+  if(v.root!==resolve(root)||!Number.isInteger(v.pid)||v.pid<2)throw Error('Lock de otra instalación o inválido; inspección manual requerida.');
+  try{process.kill(v.pid,0);return {active:true,pid:v.pid};}catch(e){if(e.code==='ESRCH')return {active:false,pid:v.pid};throw Error('No se puede verificar el proceso del lock.');}
+ }catch(e){if(e.code==='ENOENT')return null;throw e;}
+}
+// Explicit opt-in; a second guard prevents races between competing recoveries.
+export async function recoverRuntimeLock(root){
+ const guard=join(runtimeDirectory(root),'recovery.lock'),handle=await open(guard,'wx',0o600);
+ try{
+  const state=await lockStatus(root);
+  if(state?.active)throw Error('La operación continúa activa; espera o detenla normalmente.');
+  if(state)await unlink(join(runtimeDirectory(root),'operation.lock'));
+ }finally{await handle.close();await unlink(guard);}
 }

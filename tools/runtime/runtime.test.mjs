@@ -74,3 +74,13 @@ test('doctor reports missing Docker and absent serial without creating devices o
  assert.ok(report.checks.some(v=>v.name==='herramientas'&&v.state==='error'));
  assert.equal(calls,0);assert.equal((await loadRuntime(root,false)).binding,null);
 });
+test('status treats an owned device without its first snapshot as waiting, not an API failure',async t=>{
+ const {loadRuntime,saveRuntime}=await import('./config.mjs');
+ const root=await mkdtemp(join(tmpdir(),'reader-status-test-'));t.after(()=>rm(root,{recursive:true,force:true}));
+ const c=await loadRuntime(root,true);c.images={api:'reader-api:test',web:'reader-web:test',revision:'a'.repeat(40)};
+ c.binding={bindingId:c.bindingId,deviceId:'11111111-1111-4111-8111-111111111111',sourceId:'22222222-2222-4222-8222-222222222222',protocolDeviceId:'CS01'};await saveRuntime(root,c);
+ t.mock.method(globalThis,'fetch',async()=>({ok:false,status:404}));
+ const lines=[];
+ assert.equal(await api.main(['status'],{root,print:s=>lines.push(s),runner:async()=>({stdout:'api\nweb\ndb'})}),0);
+ assert.match(lines.join('\n'),/Esperando primera muestra/);
+});

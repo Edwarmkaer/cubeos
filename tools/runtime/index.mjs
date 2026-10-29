@@ -2,7 +2,7 @@ import {readFile} from 'node:fs/promises';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {resolve,join} from 'node:path';
 import {setTimeout as delay} from 'node:timers/promises';
-import {loadRuntime,saveRuntime,parseStartArgs,inspectSerial,projectName,runtimeEnv,withRuntimeLock} from './config.mjs';
+import {loadRuntime,saveRuntime,parseStartArgs,inspectSerial,projectName,runtimeEnv,withRuntimeLock,lockStatus,recoverRuntimeLock} from './config.mjs';
 import {runProcess,runCompose} from './compose.mjs';
 import {assertPortFree} from '../dev/local.mjs';
 
@@ -19,11 +19,17 @@ async function checkTools(root,runner){
  await runner('docker',['info','--format','{{.ServerVersion}}'],{cwd:root,env});
 }
 async function checkImages(c,runner){
- for(const name of [c.images.api,c.images.web]){
+ const pinned={...c.images};
+ for(const part of ['api','web']){
+  const name=c.images[part];
   const result=await runner('docker',['image','inspect','--format','{{json .Config.Labels}}',name],{cwd:c.root,env:runtimeEnv(c)});
   const labels=JSON.parse(result.stdout);
   if(labels?.['org.opencontainers.image.revision']!==c.images.revision)throw Error('Imagen de revisión distinta. Repite local:setup con imágenes confiables.');
+  const id=(await runner('docker',['image','inspect','--format','{{.Id}}',name],{cwd:c.root,env:runtimeEnv(c)})).stdout.trim();
+  if(!/^sha256:[a-f0-9]{64}$/.test(id))throw Error('Identidad de imagen inválida.');
+  pinned[part]=id;
  }
+ return pinned;
 }
 async function ready(c,runner){
  for(let n=0;n<90;n++){
@@ -44,7 +50,7 @@ export async function main(args,deps={}){
  let startOptions;
  try{
   if(action==='start')startOptions=parseStartArgs(options);
-  else if(options.length&&!(action==='setup'&&options.length===1&&options[0]==='--build'))throw Error('Argumentos inválidos para esta acción.');
+  else if(options.length&&!(action==='setup'&&new Set(options).size===options.length&&options.every(o=>['--build','--recover-lock'].includes(o))))throw Error('Argumentos inválidos para esta acción.');
  }catch(e){print(e.message);return 2;}
  try{
   let c=await loadRuntime(root,action==='setup');
@@ -60,6 +66,7 @@ export async function main(args,deps={}){
     if(running.includes('api')){
      try{
       const r=await fetch(`http://localhost:${c.apiPort}/api/v1/devices/${c.binding.deviceId}/snapshot`,{signal:AbortSignal.timeout(2000)});
+      if(r.status===404){print('Esperando primera muestra; API activa no confirma recepción USB.');return 0;}
       if(!r.ok)throw Error();const p=await r.json();
       const fields=Object.values(p.freshnessByGroup??{}).map(v=>Date.parse(v.receivedAt)).filter(Number.isFinite);
       print(fields.length?`Última recepción hace ${Math.max(0,Math.floor((Date.now()-Math.max(...fields))/1000))} s.`:'Esperando primera muestra; API activa no confirma recepción USB.');
@@ -73,6 +80,7 @@ export async function main(args,deps={}){
    return await withRuntimeLock(root,async()=>{await compose(['stop','web','api','db']);print('Runtime detenido; dispositivos, historial y fotos conservados.');return 0;});
   }
   await (deps.checkTools??checkTools)(root,runner);
+  if(action==='setup'&&options.includes('--recover-lock'))await recoverRuntimeLock(root);
   return await withRuntimeLock(root,async()=>{
    const previous=c.images?list(await compose(['ps','--status','running','--services'])):[];
    if(action==='setup'){
@@ -90,9 +98,9 @@ export async function main(args,deps={}){
       await runner('docker',a,{cwd:root,env:runtimeEnv(updated)});
      }
      c=updated;
-     await (deps.checkImages??checkImages)(c,runner);
+     const pinned=await (deps.checkImages??checkImages)(c,runner);if(pinned)c={...c,images:pinned};
      await saveRuntime(root,c);
-    }else await (deps.checkImages??checkImages)(c,runner);
+    }else {const pinned=await (deps.checkImages??checkImages)(c,runner);if(pinned){c={...c,images:pinned};await saveRuntime(root,c);}}
     try{await compose(['up','--wait','--wait-timeout','90','--no-build','-d','db']);await compose(['run','--rm','-T','--no-deps','migrate']);}
     finally{if(!previous.includes('db'))await compose(['stop','db']);}
     print('Preparación lista. Inicia con pnpm local:start [-- --serial PUERTO --baud 115200].');
@@ -107,7 +115,8 @@ export async function main(args,deps={}){
    if(selected){serial=await inspectSerial(selected.path);c={...c,serial:selected};}
    const started=[];
    try{
-    await compose(['up','--wait','--wait-timeout','90','--no-build','-d','db']);if(!previous.includes('db'))started.push('db');
+    if(!previous.includes('db'))started.push('db');
+    await compose(['up','--wait','--wait-timeout','90','--no-build','-d','db']);
     await compose(['run','--rm','-T','--no-deps','migrate']);
     const result=await compose(['run','--rm','-T','--no-deps','migrate','prepare-receiver'],{input:JSON.stringify({bindingId:c.bindingId,...(c.binding?{expectedDeviceId:c.binding.deviceId,expectedSourceId:c.binding.sourceId}:{})})});
     const binding=JSON.parse(result.stdout);const updated={...c,binding};
@@ -126,6 +135,7 @@ export async function main(args,deps={}){
 }
 async function doctor(c,{runner,print,check}){
  const checks=[];
+ try{const lock=await lockStatus(c.root);if(lock)checks.push({name:'operación',state:'error',message:lock.active?`Operación activa (PID ${lock.pid}); espera su finalización.`:'Operación interrumpida. Recupera explícitamente con pnpm local:setup -- --recover-lock.'});}catch(e){checks.push({name:'operación',state:'error',message:e.message});}
  try{await (check??checkTools)(c.root,runner);checks.push({name:'herramientas',state:'ok',message:'Node, pnpm y Docker accesibles.'});}
  catch(e){checks.push({name:'herramientas',state:'error',message:e.message});}
  if(!c.images)checks.push({name:'imágenes',state:'error',message:'Ejecuta local:setup.'});

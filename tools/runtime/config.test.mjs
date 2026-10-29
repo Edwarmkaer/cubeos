@@ -60,3 +60,15 @@ test('active lock prevents a second operation and is released after errors',asyn
  await assert.rejects(api.withRuntimeLock(root,async()=>{throw Error('failure');}),/failure/);
  await api.withRuntimeLock(root,async()=>{});
 });
+test('explicit recovery only removes a dead operation owned by this installation',async t=>{
+ assert.equal(typeof api.recoverRuntimeLock,'function','safe interrupted-operation recovery missing');
+ const root=await temp(t);await api.loadRuntime(root,true);
+ const file=join(root,'.cubeos/runtime/operation.lock');
+ await writeFile(file,JSON.stringify({pid:process.pid,root}),{mode:0o600});
+ await assert.rejects(api.recoverRuntimeLock(root),/activa/);await stat(file);
+ await writeFile(file,JSON.stringify({pid:99999999,root:'/tmp/other'}));
+ await assert.rejects(api.recoverRuntimeLock(root));await stat(file);
+ await writeFile(file,JSON.stringify({pid:99999999,root}));
+ await api.recoverRuntimeLock(root);await assert.rejects(stat(file));
+ await api.withRuntimeLock(root,async()=>{});
+});
