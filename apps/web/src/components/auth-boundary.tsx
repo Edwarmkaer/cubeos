@@ -1,14 +1,12 @@
 "use client";
 import dynamic from "next/dynamic";
 import { Component } from "react";
-import {createContext,useContext} from 'react';
+import {DeploymentContext} from '@/lib/deployment-context';
 import type { ReactNode } from "react";
 import type { AuthConfig } from "@/lib/auth-config";
 import { setPublicTokenGetter } from "@/lib/telemetry-source";
 
 const PublicAuth = dynamic(() => import("./public-auth"), { ssr: false });
-const DeploymentContext=createContext<AuthConfig['mode']>('local');
-export const useDeploymentMode=()=>useContext(DeploymentContext);
 
 class AuthErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false };

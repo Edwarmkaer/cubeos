@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  // Vercel's native adapter owns tracing; standalone is only for local Docker.
+  output: process.env.VERCEL === "1" ? undefined : "standalone",
   transpilePackages: ["@cubeos/telemetry", "@cubeos/ui", "@cubeos/contracts", "@cubeos/api-client"],
   images: {
     remotePatterns: [

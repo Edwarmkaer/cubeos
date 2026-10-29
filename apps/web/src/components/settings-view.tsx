@@ -8,7 +8,7 @@ import type { SourceSelection } from "@/lib/telemetry-store";
 import { sourceToken, validateSelection } from "@/lib/telemetry-source";
 import { usePublicSession } from "./public-session";
 import { MediaImport } from "./visor/media-gallery";
-import {useDeploymentMode} from './auth-boundary';
+import {useDeploymentMode} from '@/lib/deployment-context';
 
 const control = "w-full rounded-md bg-background px-3 py-2 text-base text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground disabled:opacity-50";
 

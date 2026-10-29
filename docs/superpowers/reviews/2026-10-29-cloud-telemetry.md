@@ -19,6 +19,12 @@ DB local, recuperación de última lectura y revocación con navegador abierto.
 Reinicio offline y conservación exacta del original fotográfico comprobados.
 Los canales de ensayo fueron revocados. No acredita hardware físico ni Vercel.
 
+Runners detectaron que Settings importaba el contexto desde AuthBoundary y hacía
+entrar next/dynamic en el bundle aislado de pruebas de autenticación. Se extrajo
+el contexto sin dependencia Next; reproducción esbuild RED→GREEN, sin saltar gates.
+El primer build Vercel detectó incompatibilidad standalone/traces del adapter:
+se limita standalone a Docker, con test de ambos destinos RED→GREEN.
+
 ## Decisiones del implementador
 
 - Reutilizar worktree aislado; PR dependiente del lector local mientras no se integre.
