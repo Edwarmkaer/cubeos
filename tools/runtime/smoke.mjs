@@ -27,10 +27,12 @@ for(const file of ['package.json','.node-version','tools/runtime','tools/dev/loc
 }
 // This fixture intentionally has no JS dependencies. pnpm 11 otherwise attempts
 // an unrelated install before running the pure-Node runtime scripts.
-const env={...process.env,pnpm_config_verify_deps_before_run:''};
+// CLI option takes precedence over pnpm defaults and CI/user environment.
+// Deliberately hostile env verifies this fixture never installs dependencies.
+const env={...process.env,npm_config_verify_deps_before_run:'error'};
 async function cli(...args){
  console.log('Check:',args.join(' '));
- try{return await runProcess('pnpm',args,{cwd:root,env});}
+ try{return await runProcess('pnpm',['--config.verify-deps-before-run=false',...args],{cwd:root,env});}
  catch(e){
   // Disposable fixture only. Redact its generated credential before CI output.
   for(const command of ['pnpm','docker']){const log=await readFile(join(root,`.cubeos/runtime/last-error-${command}.log`),'utf8').catch(()=>'');console.error(log.replaceAll(c.password,'[REDACTED]'));}
@@ -69,6 +71,7 @@ async function waitForFrames(deviceId,previousRevision=0,temperature=2465){
 }
 try{
  await cli('local:setup');const before=await readFile(join(root,'.cubeos/runtime/config.json'),'utf8');
+ await assert.rejects(stat(join(root,'node_modules')),{code:'ENOENT'});
  await cli('local:setup');assert.equal(await readFile(join(root,'.cubeos/runtime/config.json'),'utf8'),before);
  const occupied=createServer();await new Promise(r=>occupied.listen(c.webPort,'127.0.0.1',r));
  try{await assert.rejects(cli('local:start'));assert.equal((await loadRuntime(root,false)).binding,null);}

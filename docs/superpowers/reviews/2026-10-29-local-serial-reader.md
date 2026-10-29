@@ -30,6 +30,10 @@ restart e instalación preparada en red Docker interna sin Internet.
 
 El primer runner remoto falló en setup del fixture; se añadió diagnóstico con
 credencial efímera redactada. No se declara CI final verde por evidencia local.
+El diagnóstico confirmó instalación automática de dependencias de pnpm 11 en
+el fixture temporal. Se desactiva con opción CLI explícita (no variable de
+entorno ignorada), se prueba con CI=true y política de entorno adversa, y se
+exige que no se cree node_modules en el fixture. La política real no cambia.
 
 ## Decisiones durante ejecución
 
