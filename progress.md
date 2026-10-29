@@ -2,6 +2,22 @@
 
 Actualizado: 2026-10-29.
 
+## 2026-10-29 — Cierre funcional: planes restantes preparados
+
+Edwar solicitó terminar los pendientes. [PLAN.md](PLAN.md) enlaza los planes
+Convex/relay/Visor, Vercel/aceptación y firmware ESP32-C3. Pendientes de revisión
+antes de implementar, conforme al gate de cambios amplios del workspace.
+El PR #23 sigue abierto, sin merge, con 11/11 checks en `22906fc`; la revisión
+dejó 18 tests runtime pasando. No modificar ese PR para introducir cloud.
+
+Comprobado en esta continuación: Vercel MCP permite listar el equipo
+`edwarmkaers-projects` (`team_37jALHTMMEJBAdrILl5zNOYD`), sin proyecto vinculado
+a `Edwarmkaer/cubeos`. Existe autenticación Convex CLI, pero no acredita proyecto,
+plan gratuito ni despliegue. Arduino CLI 1.2.2 y core ESP32 3.3.11 instalados.
+No se crearon proyectos/despliegues, no se instalaron dependencias de producto,
+no se inició la instalación del usuario ni se flasheó hardware.
+Trabajo UI/Pencil del checkout original intacto; planes en worktree del lector.
+
 ## 2026-10-29 — Recepción primero: primer PR local
 
 Arquitectura aprobada: [spec](docs/superpowers/specs/2026-10-29-cubeos-telemetry-first-design.md).

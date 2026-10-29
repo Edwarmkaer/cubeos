@@ -3,7 +3,6 @@ import type { SnapshotProjectionV2, SnapshotV2, GroupFreshness, FieldFreshness, 
 import { readSSE, SSETransportError } from "./stream.ts";
 export type ConnectionState = "connecting" | "connected" | "reconnecting" | "unauthorized" | "error" | "closed";
 export type SnapshotEvent = {
-    revision: number;
     revisionId: string;
     snapshot: SnapshotV2;
     freshnessByGroup: SnapshotProjectionV2["freshnessByGroup"];
@@ -77,7 +76,7 @@ export function parseSnapshot(raw: string): SnapshotEvent {
     const revisionId = revisionLexeme(raw);
     if (!object(value) || typeof value.revision !== "number" || value.revision !== Number(revisionId) || !validateSnapshotV2(value.snapshot) || !freshness(value.freshnessByGroup))
         throw new APIError("Invalid snapshot contract");
-    return { revision: value.revision, revisionId, snapshot: value.snapshot, freshnessByGroup: value.freshnessByGroup };
+    return { revisionId, snapshot: value.snapshot, freshnessByGroup: value.freshnessByGroup };
 }
 function cancellable<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
     signal.throwIfAborted();

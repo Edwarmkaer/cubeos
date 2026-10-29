@@ -5,10 +5,12 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./cloud-replica": "./src/cloud-replica.ts",
     "./schemas/*": "./schemas/*",
     "./fixtures/*": "./fixtures/*"
   },
   "scripts": {
+    "generate:cloud": "node scripts/generate-cloud-validator.mjs",
     "test": "node --test tests/*.test.ts",
     "lint": "eslint src tests",
     "typecheck": "tsc --noEmit"

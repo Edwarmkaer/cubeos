@@ -1,3 +1,27 @@
+# Cierre de recepción funcional
+
+Estado: implementación autorizada por Edwar; ejecución nativa sin más pausas de planificación.
+
+Spec aprobada: [recepción primero](docs/superpowers/specs/2026-10-29-cubeos-telemetry-first-design.md).
+PR base [#23](https://github.com/Edwarmkaer/cubeos/pull/23): abierto, sin merge,
+11/11 checks en `22906fc07977446511cfb39ed7b5982a9ff2cf64`.
+
+Entregas consecutivas, con un PR y verificación propios:
+
+1. [Convex, relay y fuente cloud](docs/superpowers/plans/2026-10-29-cloud-telemetry.md).
+2. [Despliegue Vercel y aceptación cloud](docs/superpowers/plans/2026-10-29-vercel-acceptance.md).
+3. [Firmware ESP32-C3 y ensayo](docs/superpowers/plans/2026-10-29-esp32c3-trial.md).
+
+Ejecución propuesta: nativa, conservando los cambios UI del checkout original.
+PRs dependientes mientras sus bases estén abiertas; no hacer merges implícitos.
+No iniciar servicios del usuario ni flashear su placa automáticamente.
+No habilitar planes medidos, compras, dominios ni subida de fotos/historial.
+La prueba física final requiere que Edwar conecte y cargue la placa.
+
+---
+
+## Plan anterior conservado (2026-09-02; histórico, no estado actual)
+
 # Plan: documentación canónica y arquitectura frontend
 
 **Fecha:** 2026-09-02
