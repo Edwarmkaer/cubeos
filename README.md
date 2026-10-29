@@ -4,6 +4,15 @@ Plataforma web educativa de estación terrena para CubeSat. Pertenece al grupo C
 
 Hay un slice de vista previa en `apps/web`. `DESIGN.md` sigue en `draft` hasta aprobar lo que se ve.
 
+## Usar la estación local
+
+El [lector local](docs/local-receiver.md) ejecuta API, PostgreSQL y Visor preparados
+con Node/pnpm y Docker, sin Go en el host. Incluye preparación, diagnóstico,
+arranque serial explícito y parada conservando datos. En revisiones aún sin
+imágenes GHCR, la preparación explícita desde fuente requiere Docker Buildx.
+Convex/Vercel y el firmware ESP32-C3 son entregas posteriores, no están listos
+por haber instalado el lector.
+
 ## Desarrollo
 
 Usar Node.js `22.23.2` (`.node-version`) y pnpm `11.22.0` (`packageManager`); pnpm 11 requiere Node >=22.13. El único lockfile es `pnpm-lock.yaml` en la raíz.
