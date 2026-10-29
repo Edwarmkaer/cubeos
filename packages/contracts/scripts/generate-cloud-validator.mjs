@@ -8,8 +8,9 @@ const read=async name=>JSON.parse(await readFile(new URL('../schemas/'+name,impo
 ajv.addSchema(await read('snapshot-v2.json'));
 const validate=ajv.compile(await read('cloud-replica-v1.json'));
 const imports=[];
-const code=standalone(ajv,validate).replace(/require\("([^"]+)"\)/g,(_,path)=>{
+const code=standalone(ajv,validate).replace(/require\("([^"]+)"\)(\.default)?/g,(_,path,hasDefault)=>{
  const name='dependency'+imports.length;
- imports.push(`import ${name} from ${JSON.stringify(path+'.js')};`);return name;
+ imports.push(`import * as ${name} from ${JSON.stringify(path+'.js')};`);
+ return hasDefault?`(${name}.default?.default ?? ${name}.default)`:`(${name}.default ?? ${name})`;
 });
 await writeFile(new URL('../src/cloud-validator.mjs',import.meta.url),'// Generated from canonical JSON schemas. Do not edit.\n'+imports.join('\n')+'\n'+code+'\n');
