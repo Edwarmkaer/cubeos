@@ -65,6 +65,9 @@ func run() error {
 		if c.Mode == "public" && os.Args[1] != "migrate" && os.Args[1] != "media-reconcile" {
 			return errors.New("local fixture/rebuild commands are disabled in public mode")
 		}
+		if len(os.Args) == 2 && os.Args[1] == "prepare-receiver" {
+			return prepareReceiver(ctx, pool, os.Stdin, os.Stdout, c.Mode)
+		}
 		if len(os.Args) == 2 && os.Args[1] == "fixture" {
 			return fixture(ctx, pool, os.Stdin, os.Stdout)
 		}
@@ -88,7 +91,7 @@ func run() error {
 			return nil
 		}
 		if len(os.Args) != 2 || os.Args[1] != "migrate" {
-			return errors.New("usage: server [migrate | fixture | rebuild DEVICE_UUID | media-reconcile]")
+			return errors.New("usage: server [migrate | prepare-receiver | fixture | rebuild DEVICE_UUID | media-reconcile]")
 		}
 		migrationCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
 		defer cancel()

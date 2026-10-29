@@ -207,6 +207,7 @@ jobs:
       TEST_CONSTRUCTION_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_construction_test?sslmode=disable
       TEST_MEDIA_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_media_test?sslmode=disable
       TEST_MEDIA_SERVICE_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_media_service_test?sslmode=disable
+      TEST_RECEIVER_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_receiver_test?sslmode=disable
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -228,6 +229,7 @@ jobs:
           createdb -h localhost -U postgres cubeos_construction_test
           createdb -h localhost -U postgres cubeos_media_test
           createdb -h localhost -U postgres cubeos_media_service_test
+          createdb -h localhost -U postgres cubeos_receiver_test
       - name: Format, vet and race tests against PostgreSQL
         working-directory: apps/api
         run: |
