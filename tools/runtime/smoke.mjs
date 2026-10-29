@@ -50,7 +50,10 @@ async function request(path,options={}){
 }
 async function json(path){return(await request(path)).json();}
 let writer,cloudChannel;
-const cloudAdmin=(name,input)=>runProcess(process.execPath,[join(source,'packages/cloud/node_modules/convex/bin/main.js'),'run',name,JSON.stringify(input)],{cwd:join(source,'packages/cloud'),env:process.env});
+const cloudAdmin=(name,input)=>{
+ const deployment=new URL(process.env.CUBEOS_CLOUD_URL).hostname.replace(/\.convex\.cloud$/,'');
+ return runProcess(process.execPath,[join(source,'packages/cloud/node_modules/convex/bin/main.js'),'run','--deployment',deployment,name,JSON.stringify(input)],{cwd:join(source,'packages/cloud'),env:process.env});
+};
 async function openPTY(){
  const child=spawn(helper,[],{stdio:['pipe','pipe','inherit']});const lines=createInterface({input:child.stdout});
  const firstLine=once(lines,'line');
@@ -103,7 +106,9 @@ try{
   const files=await provisionChannel({directory:join(root,'.cubeos/runtime/practice'),deviceId:c.binding.deviceId,endpoint:process.env.CUBEOS_CLOUD_SITE_URL+'/telemetry/v1/snapshot',convexURL:process.env.CUBEOS_CLOUD_URL},args=>cloudAdmin('channels:provision',args));
   cloudChannel=files.channelId;const access=JSON.parse(await readFile(files.readFile,'utf8'));
   await cli('cloud:enable','--','--config',files.publishFile);c=await loadRuntime(root,false);
-  await verifyCloudBrowser({web,access,directory:root,advance:async expectValue=>{
+  const cloudWeb=process.env.CUBEOS_CLOUD_WEB_URL??web;
+  if(cloudWeb!==web){const u=new URL(cloudWeb);assert.ok(u.protocol==='https:'&&u.origin===cloudWeb&&u.hostname.endsWith('.vercel.app'),'explicit Vercel origin required');}
+  await verifyCloudBrowser({web:cloudWeb,access,directory:root,advance:async expectValue=>{
    let revision=Number((await json(`/api/v1/devices/${c.binding.deviceId}/snapshot`)).revision);
    await waitForFrames(c.binding.deviceId,revision,2755);await expectValue('27.55');
    // Only this fresh fixture: make the real cloud hostname unreachable for API,

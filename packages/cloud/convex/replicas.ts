@@ -1,4 +1,4 @@
-import {v} from 'convex/values';
+import {v,ConvexError} from 'convex/values';
 import {RateLimiter} from '@convex-dev/rate-limiter';
 import {parseCloudReplica} from '@cubeos/contracts/cloud-replica';
 import {internalMutation,query} from './_generated/server';
@@ -18,8 +18,8 @@ export const accept=internalMutation({args:{publishHash:v.string(),replica:v.any
  if(previous)await ctx.db.replace(previous._id,row);else await ctx.db.insert('replicas',row);return 200;
 }});
 export const latest=query({args:{channelId:v.string(),readToken:v.string()},returns:v.any(),handler:async(ctx,{channelId,readToken})=>{
- if(!uuid.test(channelId)||!digestPattern.test(readToken))throw Error('Access unavailable');
+ if(!uuid.test(channelId)||!digestPattern.test(readToken))throw new ConvexError({code:'ACCESS_UNAVAILABLE'});
  const c=await ctx.db.query('channels').withIndex('by_channelId',q=>q.eq('channelId',channelId)).unique();
- if(!c||c.revoked||c.expiresAt<=Date.now()||c.readHash!==await sha256(readToken))throw Error('Access unavailable');
+ if(!c||c.revoked||c.expiresAt<=Date.now()||c.readHash!==await sha256(readToken))throw new ConvexError({code:'ACCESS_UNAVAILABLE'});
  return (await ctx.db.query('replicas').withIndex('by_channelId',q=>q.eq('channelId',channelId)).unique())?.replica??null;
 }});

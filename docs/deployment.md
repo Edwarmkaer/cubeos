@@ -140,3 +140,8 @@ sí solo no es inmutable. No hay despliegue automático en estos workflows.
 Pendientes externos: volumen real Railway, private policies/smoke del proveedor
 S3 elegido, Google/Clerk autorizado, dominios/edge TLS/SSE, presupuesto/alertas,
 GHCR tras merge y primer restore cloud descartable.
+# Etapa actual: local + Vercel/Convex
+
+Railway no es un destino activo. Se conserva esta preparación como antecedente y
+recuperación; para el alcance vigente usar [web cloud](cloud-deployment.md) y
+[lector local](local-receiver.md). No publicar Go/PostgreSQL ni fotos en Vercel.

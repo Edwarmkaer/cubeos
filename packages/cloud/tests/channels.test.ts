@@ -22,6 +22,9 @@ const replica=(revisionId='9007199254740993')=>({replicaVersion:1,channelId:chan
 const post=(t:ReturnType<typeof convexTest>,body:unknown=replica(),token=publishToken)=>t.fetch('/telemetry/v1/snapshot',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body)});
 afterEach(()=>vi.useRealTimers());
 test('browser and Convex fixture satisfies the canonical cloud contract',()=>{expect(()=>parseCloudReplica(replica())).not.toThrow();});
+test('production clients receive only a structured access-denied code',async()=>{
+ const t=await setup();await expect(t.query(latest,{channelId:channel,readToken:publishToken})).rejects.toMatchObject({data:{code:'ACCESS_UNAVAILABLE'}});
+});
 test('publish and read capabilities are isolated and never returned',async()=>{
  const t=await setup();expect((await post(t,replica(),readToken)).status).toBe(403);
  expect((await post(t)).status).toBe(200);

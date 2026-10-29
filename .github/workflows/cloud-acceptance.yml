@@ -1,0 +1,49 @@
+name: Cloud acceptance (manual)
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: Verified Vercel production origin for this commit
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  acceptance:
+    if: github.ref == 'refs/heads/main'
+    environment: cloud-acceptance
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .node-version
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa
+        with:
+          run_install: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version-file: .go-version
+          cache-dependency-path: apps/api/go.sum
+      - name: Prepare only reviewed main code, no cloud secrets
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm --filter web exec playwright install --with-deps chromium
+          pnpm local:setup -- --build
+          cd apps/api
+          go build -o ../../.cubeos/runtime/serial-smoke ./cmd/serial-smoke
+      - name: Verify live cloud after authenticated deployment metadata check
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+          CUBEOS_LIVE_ACCEPTANCE: '1'
+          CUBEOS_EXPECTED_COMMIT: ${{ github.sha }}
+          CUBEOS_CLOUD_WEB_URL: ${{ inputs.url }}
+          CUBEOS_SERIAL_HELPER: ${{ github.workspace }}/.cubeos/runtime/serial-smoke
+          DEPLOYMENT_RECORD: ${{ vars.DEPLOYMENT_RECORD }}
+        run: |
+          test -n "$CONVEX_DEPLOY_KEY"
+          node --input-type=module -e 'import {writeFileSync} from "node:fs"; const r=JSON.parse(process.env.DEPLOYMENT_RECORD); writeFileSync(".cubeos/runtime/deployment.json",JSON.stringify(r),{mode:0o600});'
+          node tools/cloud/acceptance.mjs .cubeos/runtime/deployment.json
