@@ -1,6 +1,29 @@
 # Progreso — CubeOS
 
-Actualizado: 2026-10-03.
+Actualizado: 2026-10-29.
+
+## 2026-10-29 — Recepción primero: primer PR local
+
+Arquitectura aprobada: [spec](docs/superpowers/specs/2026-10-29-cubeos-telemetry-first-design.md).
+Login/progreso/cloud de fotografías fuera del alcance inmediato. Railway no es
+destino de esta etapa. Secuencia: lector local → réplica Convex → Vercel →
+firmware .ino ESP32-C3 SuperMini y ensayo físico → pulido UI.
+
+Este PR añade [operación del lector](docs/local-receiver.md): comandos local:*,
+configuración privada, imágenes preparadas, binding serial transaccional estable,
+permisos/mapeo de un único TTY, diagnóstico y recuperación opt-in de lock muerto.
+No modifica el contrato v2, el frontend de producto ni los artefactos Pencil.
+La API conserva historial/fotos locales y el modo de desarrollo anterior.
+
+Verificación local: Node runtime 13 tests; Go receiver/server race con PostgreSQL
+exclusivo; lint, tipos, tests raíz y build. Smoke real en instalación nueva:
+setup repetido, puerto ocupado, PTY→Go→PostgreSQL→SSE/navegador, silencio,
+reconexión y persistencia exacta de foto; imágenes arrancadas sin egress en red
+Docker interna. No se ha probado USB físico ni grabado una ESP32.
+Runners del SHA final y revisión independiente se reportan en el PR/chat.
+Convex, Vercel y firmware todavía no implementados ni desplegados por este PR.
+
+Registro anterior: 2026-10-03.
 
 ## Planificación — Frontend local completo
 

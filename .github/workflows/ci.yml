@@ -62,7 +62,7 @@ jobs:
   ci-required:
     name: ci-required
     if: ${{ always() }}
-    needs: [web, contracts, go, docker, browser, auth, media, recovery, developer]
+    needs: [web, contracts, go, docker, browser, auth, media, recovery, developer, reader]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -77,7 +77,47 @@ jobs:
           MEDIA_RESULT: ${{ needs.media.result }}
           RECOVERY_RESULT: ${{ needs.recovery.result }}
           DEVELOPER_RESULT: ${{ needs.developer.result }}
-        run: test "$WEB_RESULT" = success && test "$CONTRACTS_RESULT" = success && test "$GO_RESULT" = success && test "$DOCKER_RESULT" = success && test "$BROWSER_RESULT" = success && test "$AUTH_RESULT" = success && test "$MEDIA_RESULT" = success && test "$RECOVERY_RESULT" = success && test "$DEVELOPER_RESULT" = success
+          READER_RESULT: ${{ needs.reader.result }}
+        run: test "$WEB_RESULT" = success && test "$CONTRACTS_RESULT" = success && test "$GO_RESULT" = success && test "$DOCKER_RESULT" = success && test "$BROWSER_RESULT" = success && test "$AUTH_RESULT" = success && test "$MEDIA_RESULT" = success && test "$RECOVERY_RESULT" = success && test "$DEVELOPER_RESULT" = success && test "$READER_RESULT" = success
+
+  reader:
+    name: local-reader
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .node-version
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa
+        with:
+          run_install: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version-file: .go-version
+          cache-dependency-path: apps/api/go.sum
+      - name: Install and verify runtime configuration
+        run: |
+          pnpm install --frozen-lockfile
+          node --test tools/runtime/*.test.mjs
+          pnpm --filter web exec playwright install --with-deps chromium
+      - name: Prepare reusable runtime images
+        run: pnpm local:setup -- --build
+      - name: Build test-only PTY helper
+        working-directory: apps/api
+        run: go build -o ../../.cubeos/runtime/serial-smoke ./cmd/serial-smoke
+      - name: Verify serial to browser, recovery and prepared offline runtime
+        env:
+          CUBEOS_RUNTIME_SMOKE: '1'
+          CUBEOS_SERIAL_HELPER: ${{ github.workspace }}/.cubeos/runtime/serial-smoke
+        run: node tools/runtime/smoke.mjs
+      - name: Diagnose failed preparation without printing configuration
+        if: failure()
+        run: pnpm local:doctor
 
   developer:
     name: developer-workflow
@@ -207,6 +247,7 @@ jobs:
       TEST_CONSTRUCTION_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_construction_test?sslmode=disable
       TEST_MEDIA_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_media_test?sslmode=disable
       TEST_MEDIA_SERVICE_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_media_service_test?sslmode=disable
+      TEST_RECEIVER_DATABASE_URL: postgres://postgres:ci-disposable@localhost:5432/cubeos_receiver_test?sslmode=disable
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -228,6 +269,7 @@ jobs:
           createdb -h localhost -U postgres cubeos_construction_test
           createdb -h localhost -U postgres cubeos_media_test
           createdb -h localhost -U postgres cubeos_media_service_test
+          createdb -h localhost -U postgres cubeos_receiver_test
       - name: Format, vet and race tests against PostgreSQL
         working-directory: apps/api
         run: |
