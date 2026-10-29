@@ -33,7 +33,7 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   await connection();
-  const config = authConfig(process.env.DEPLOYMENT_MODE, process.env.CLERK_PUBLISHABLE_KEY);
+  const config = authConfig(process.env.DEPLOYMENT_MODE, process.env.CLERK_PUBLISHABLE_KEY,process.env.NEXT_PUBLIC_CONVEX_URL);
   return (
     <html
       lang="es"

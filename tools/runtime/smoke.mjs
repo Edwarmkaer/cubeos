@@ -1,6 +1,6 @@
 // Creates ONLY a new, disposable temporary installation. Never accepts a student DB.
 import assert from 'node:assert/strict';
-import {mkdtemp,cp,readFile,mkdir,stat} from 'node:fs/promises';
+import {mkdtemp,cp,readFile,mkdir,stat,writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -9,9 +9,11 @@ import {createInterface} from 'node:readline';
 import {once} from 'node:events';
 import {createServer} from 'node:net';
 import {setTimeout as delay} from 'node:timers/promises';
-import {loadRuntime,saveRuntime,projectName,runtimeEnv} from './config.mjs';
+import {loadRuntime,saveRuntime,projectName,runtimeEnv,inspectSerial} from './config.mjs';
 import {runProcess,runCompose} from './compose.mjs';
 import {verifySerialBrowser} from '../../apps/web/tests/browser-serial.mjs';
+import {verifyCloudBrowser} from '../../apps/web/tests/browser-cloud.mjs';
+import {provisionChannel} from '../cloud/channel.mjs';
 
 assert.equal(process.env.CUBEOS_RUNTIME_SMOKE,'1','explicit CUBEOS_RUNTIME_SMOKE=1 required');
 const source=resolve(fileURLToPath(new URL('../..',import.meta.url)));
@@ -22,7 +24,7 @@ assert.ok(helper,'compiled test-only serial helper required');
 assert.ok((await stat(helper)).isFile(),'compile the test-only helper first');
 const root=await mkdtemp(join(tmpdir(),'cubeos-reader-smoke-'));
 console.log('Disposable runtime:',root);
-for(const file of ['package.json','.node-version','tools/runtime','tools/dev/local.mjs','infra/docker/compose.runtime.yaml','infra/docker/compose.serial.yaml']){
+for(const file of ['package.json','.node-version','tools/runtime','tools/dev/local.mjs','infra/docker/compose.runtime.yaml','infra/docker/compose.serial.yaml','infra/docker/compose.cloud.yaml']){
  await mkdir(join(root,file,'..'),{recursive:true});await cp(join(source,file),join(root,file),{recursive:true});
 }
 // This fixture intentionally has no JS dependencies. pnpm 11 otherwise attempts
@@ -47,7 +49,8 @@ async function request(path,options={}){
  assert.ok(r.ok,`HTTP ${r.status} on ${path}`);return r;
 }
 async function json(path){return(await request(path)).json();}
-let writer;
+let writer,cloudChannel;
+const cloudAdmin=(name,input)=>runProcess(process.execPath,[join(source,'packages/cloud/node_modules/convex/bin/main.js'),'run',name,JSON.stringify(input)],{cwd:join(source,'packages/cloud'),env:process.env});
 async function openPTY(){
  const child=spawn(helper,[],{stdio:['pipe','pipe','inherit']});const lines=createInterface({input:child.stdout});
  const firstLine=once(lines,'line');
@@ -57,10 +60,12 @@ async function openPTY(){
  assert.match(path,/^\/dev\/pts\/[0-9]+$/);return {child,path};
 }
 async function closePTY(){if(writer){const child=writer.child;writer=null;child.stdin.end();if(child.exitCode===null){const done=once(child,'exit');child.kill('SIGTERM');await Promise.race([done,delay(3000).then(()=>{if(child.exitCode===null)child.kill('SIGKILL');})]);}}}
+let frameRound=0;
 async function waitForFrames(deviceId,previousRevision=0,temperature=2465){
+ const round=frameRound++;
  const frames=JSON.parse(await readFile(join(source,'packages/contracts/fixtures/chasqui-v2/uplink-examples-v2.json'),'utf8'));
  for(let n=0;n<40;n++){
-  for(const original of frames){const payload={...original,n:original.n+(previousRevision?10000:0)+n*5,u:original.u+(previousRevision?5000:0)+n*1000};if(payload.m==='E')payload.t1=temperature;writer.child.stdin.write(JSON.stringify({envelopeVersion:1,payload})+'\n');}
+  for(const original of frames){const payload={...original,n:original.n+round*10000+n*5,u:original.u+round*5000+n*1000};if(payload.m==='E')payload.t1=temperature;writer.child.stdin.write(JSON.stringify({envelopeVersion:1,payload})+'\n');}
   const response=await fetch(api+`/api/v1/devices/${deviceId}/snapshot`,{headers:{Origin:web}});
   if(response.status===404){await delay(250);continue;}
   assert.ok(response.ok);const snapshot=await response.json();
@@ -93,6 +98,30 @@ try{
   await closePTY();writer=await openPTY();await cli('local:start','--','--serial',writer.path,'--baud','115200');
   await waitForFrames(c.binding.deviceId,revision,2615);
  }});
+ if(process.env.CUBEOS_CLOUD_SMOKE==='1'){
+  assert.ok(process.env.CUBEOS_CLOUD_SITE_URL&&process.env.CUBEOS_CLOUD_URL,'explicit cloud test deployment URLs required');
+  const files=await provisionChannel({directory:join(root,'.cubeos/runtime/practice'),deviceId:c.binding.deviceId,endpoint:process.env.CUBEOS_CLOUD_SITE_URL+'/telemetry/v1/snapshot',convexURL:process.env.CUBEOS_CLOUD_URL},args=>cloudAdmin('channels:provision',args));
+  cloudChannel=files.channelId;const access=JSON.parse(await readFile(files.readFile,'utf8'));
+  await cli('cloud:enable','--','--config',files.publishFile);c=await loadRuntime(root,false);
+  await verifyCloudBrowser({web,access,directory:root,advance:async expectValue=>{
+   let revision=Number((await json(`/api/v1/devices/${c.binding.deviceId}/snapshot`)).revision);
+   await waitForFrames(c.binding.deviceId,revision,2755);await expectValue('27.55');
+   // Only this fresh fixture: make the real cloud hostname unreachable for API,
+   // without touching DB, reader device, TLS or the user's host network.
+   const host=new URL(process.env.CUBEOS_CLOUD_SITE_URL).hostname;
+   await writeFile(join(root,'cloud-fault.json'),JSON.stringify({services:{api:{extra_hosts:[host+':127.0.0.1']}}}));
+   const serial=await inspectSerial(writer.path);
+   const faultEnv={...runtimeEnv(c),CLOUD_RELAY_ENABLED:'true',SERIAL_HOST_DEVICE:serial.realPath,SERIAL_DEVICE_GID:String(serial.gid),SERIAL_BAUD:'115200',SERIAL_SOURCE_ID:c.binding.sourceId};
+   const faultArgs=['compose','--project-name',projectName(root),'-f',join(root,'infra/docker/compose.runtime.yaml'),'-f',join(root,'infra/docker/compose.cloud.yaml'),'-f',join(root,'infra/docker/compose.serial.yaml'),'-f',join(root,'cloud-fault.json'),'up','--no-build','--pull','never','--force-recreate','--no-deps','-d','api'];
+   await runProcess('docker',faultArgs,{cwd:root,env:faultEnv});
+   await delay(3000);revision=Number((await json(`/api/v1/devices/${c.binding.deviceId}/snapshot`)).revision);
+   await waitForFrames(c.binding.deviceId,revision,2855);await delay(11000);
+   await expectValue('27.55'); // retained remotely, local DB already advanced
+   await cli('local:start');await expectValue('28.55');
+  },revoke:async()=>{await cloudAdmin('channels:revoke',{channelId:cloudChannel});cloudChannel=null;}});
+  await cli('cloud:disable');c=await loadRuntime(root,false);
+  console.log('PASS: real local→relay→Convex→browser, network loss/recovery and revocation.');
+ }
  await cli('local:stop');await closePTY();
  // Runtime without serial is explicit for a disconnected device. Preserve binding.
  c=await loadRuntime(root,false);c.serial=null;await saveRuntime(root,c);
@@ -116,6 +145,7 @@ try{
  await offline('exec','-T','web','wget','-T','3','-q','-O','/dev/null','http://127.0.0.1:3000/healthz');
  console.log('PASS: repeated setup, real PTY→Go→PostgreSQL→SSE/browser, reconnect and exact photo persistence.');
 }finally{
+ if(cloudChannel)await cloudAdmin('channels:revoke',{channelId:cloudChannel}).catch(()=>console.error('Scoped test channel revocation not confirmed:',cloudChannel));
  await closePTY();await cli('local:stop').catch(()=>{});
  // Only this freshly-created test installation: release scarce Docker subnets.
  // No -v: database/photo volumes stay recoverable, production stop is unchanged.

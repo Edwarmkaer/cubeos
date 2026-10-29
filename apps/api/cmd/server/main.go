@@ -68,6 +68,12 @@ func run() error {
 		if len(os.Args) == 2 && os.Args[1] == "prepare-receiver" {
 			return prepareReceiver(ctx, pool, os.Stdin, os.Stdout, c.Mode)
 		}
+		if len(os.Args) == 3 && os.Args[1] == "prepare-relay" {
+			return prepareRelay(ctx, pool, os.Stdin, os.Args[2], c.Mode, relayDirectory)
+		}
+		if len(os.Args) == 2 && os.Args[1] == "remove-relay" {
+			return removeRelay()
+		}
 		if len(os.Args) == 2 && os.Args[1] == "fixture" {
 			return fixture(ctx, pool, os.Stdin, os.Stdout)
 		}
@@ -123,6 +129,9 @@ func run() error {
 		return errors.New("media storage unavailable")
 	}
 	photos := media.New(pool, objects, c)
+	if c.CloudRelayEnabled {
+		startCloudRelay(ctx, pool)
+	}
 	go hub.Run(ctx, c.DatabaseURL)
 	defer hub.Close()
 	server := &http.Server{Addr: c.Address, Handler: api.NewWithMedia(c, pool, devices.NewRepository(pool), telemetry.NewRepository(pool), resolver, hub, photos), BaseContext: func(net.Listener) context.Context { return ctx }, ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 120 * time.Second, WriteTimeout: 120 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}

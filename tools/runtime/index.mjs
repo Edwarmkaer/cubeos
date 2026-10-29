@@ -4,10 +4,11 @@ import {resolve,join} from 'node:path';
 import {setTimeout as delay} from 'node:timers/promises';
 import {loadRuntime,saveRuntime,parseStartArgs,inspectSerial,projectName,runtimeEnv,withRuntimeLock,lockStatus,recoverRuntimeLock} from './config.mjs';
 import {runProcess,runCompose} from './compose.mjs';
+import {readCloudConfig} from './cloud.mjs';
 import {assertPortFree} from '../dev/local.mjs';
 
 const defaultRoot=resolve(fileURLToPath(new URL('../..',import.meta.url)));
-const actions=['setup','start','status','stop','doctor'];
+const actions=['setup','start','status','stop','doctor','cloud-enable','cloud-disable'];
 async function checkTools(root,runner){
  if(process.platform!=='linux')throw Error('Este runtime inicial requiere Linux.');
  const expected=(await readFile(join(root,'.node-version'),'utf8')).trim().replace(/^v/,'');
@@ -52,11 +53,12 @@ export async function main(args,deps={}){
  let startOptions;
  try{
   if(action==='start')startOptions=parseStartArgs(options);
+  else if(action==='cloud-enable'){if(options.length!==2||options[0]!=='--config'||!options[1])throw Error('Usa cloud:enable -- --config ARCHIVO_PRIVADO');startOptions=parseStartArgs([]);}
   else if(options.length&&!(action==='setup'&&new Set(options).size===options.length&&options.every(o=>['--build','--recover-lock'].includes(o))))throw Error('Argumentos inválidos para esta acción.');
  }catch(e){print(e.message);return 2;}
  try{
   let c=await loadRuntime(root,action==='setup');
-  if(!c){print('Runtime no preparado. Ejecuta pnpm local:setup.');return action==='start'?1:0;}
+  if(!c){print('Runtime no preparado. Ejecuta pnpm local:setup.');return ['start','cloud-enable'].includes(action)?1:0;}
   const compose=(a,o={})=>runCompose(c,a,{runner,...o});
   if(action==='doctor')return await doctor(c,{runner,print,check:deps.checkTools});
   if(action==='status'){
@@ -87,6 +89,13 @@ export async function main(args,deps={}){
    c=await loadRuntime(root,false);
    deps.signal?.throwIfAborted();
    const previous=c.images?list(await compose(['ps','--status','running','--services'])):[];
+   if(action==='cloud-disable'){
+    if(!c.images){print('No hay publicación cloud preparada.');return 0;}
+    await compose(['run','--rm','-T','--no-deps','migrate','remove-relay'],{cloudAdmin:true});
+    c={...c,cloudEnabled:false};await saveRuntime(root,c);
+    print('Publicación cloud deshabilitada; recepción local conservada.');return 0;
+   }
+   const cloud=action==='cloud-enable'?await readCloudConfig(options[1],c.binding?.deviceId):null;
    if(action==='setup'){
     if(options.includes('--build')&&previous.length)throw Error('Detén el runtime antes de reconstruir sus imágenes.');
     if(!c.images||options.includes('--build')){
@@ -126,6 +135,10 @@ export async function main(args,deps={}){
     const binding=JSON.parse(result.stdout);const updated={...c,binding};
     // Persist the installation identity before starting reception. Validation is strict.
     await saveRuntime(root,updated);c=updated;
+    if(cloud){
+     await compose(['run','--rm','-T','--no-deps','migrate','prepare-relay',c.binding.deviceId],{cloudAdmin:true,input:JSON.stringify(cloud)});
+     c={...c,cloudEnabled:true};await saveRuntime(root,c);
+    }
     for(const name of ['api','web'])if(!previous.includes(name))started.push(name);
     // Recreate only API: a reattached USB can have the same path/GID but a new inode.
     await compose(['up','--no-build','--pull','never','--force-recreate','--no-deps','-d','api'],{serial});

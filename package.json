@@ -11,9 +11,12 @@
     "local:status": "node tools/runtime/index.mjs status",
     "local:stop": "node tools/runtime/index.mjs stop",
     "local:doctor": "node tools/runtime/index.mjs doctor",
+    "cloud:channel:create": "node tools/cloud/channel.mjs",
+    "cloud:enable": "node tools/runtime/index.mjs cloud-enable",
+    "cloud:disable": "node tools/runtime/index.mjs cloud-disable",
     "build": "turbo run build",
     "lint": "turbo run lint",
-    "test": "node --test tools/dev/*.test.mjs tools/runtime/*.test.mjs && turbo run test",
+    "test": "node --test tools/dev/*.test.mjs tools/runtime/*.test.mjs tools/cloud/*.test.mjs && turbo run test",
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": { "turbo": "2.10.11", "railway": "3.12.0" }

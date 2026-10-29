@@ -69,7 +69,7 @@ export function RealDashboard({ state }: { state: TelemetryState & { now: number
         <p className="font-mono text-lg">{links[state.connection]}</p>
         <Link href="/configuracion" className="shrink-0 text-xs underline focus-visible:outline-2">Configurar fuente</Link>
       </div>
-      <p className="text-xs text-muted-foreground">{selection.mode === "local" ? "API local" : "API pública"} · {selection.deviceName || "Selecciona un dispositivo"}</p>
+      <p className="text-xs text-muted-foreground">{selection.mode === "cloud"?"Convex · última lectura":selection.mode === "local" ? "API local" : "API pública"} · {selection.deviceName || "Selecciona un dispositivo"}</p>
       <p className="break-all text-[11px] text-muted-foreground">{selection.deviceId}</p>
       <p className="mt-1 text-xs text-muted-foreground">{s ? `Entrega observada · ${s.gateway.id ?? "receptor sin identificación"} · hace ${Math.max(0, Math.floor((now - Date.parse(s.receivedAt)) / 1000))} s` : "Receptor: esperando entrega"}</p>
       <p className="text-xs text-muted-foreground">Enlace de radio desconocido</p>

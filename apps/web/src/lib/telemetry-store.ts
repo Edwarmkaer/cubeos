@@ -6,7 +6,7 @@ import { seedSample } from "./simulator.ts";
 import { appendReadings, gpsPosition } from "./real-telemetry.ts";
 import type { ReadingHistory } from "./real-telemetry.ts";
 
-export type SourceSelection = { mode: "demo" | "local" | "public"; apiURL: string; deviceId: string; deviceName: string; offline: boolean };
+export type SourceSelection = { mode: "demo" | "local" | "public" | "cloud"; apiURL: string; deviceId: string; deviceName: string; offline: boolean;cloudChannelId?:string;cloudReadToken?:string };
 export type LinkState = APIConnection | "pending" | "simulated";
 export type TelemetryState = {
   selection: SourceSelection; generation: number; event: SnapshotEvent | null;

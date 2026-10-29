@@ -3,10 +3,11 @@ import {createHash,randomBytes,randomUUID} from 'node:crypto';
 import {resolve,join} from 'node:path';
 
 const id=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
-const keys=['schemaVersion','root','bindingId','password','webPort','apiPort','images','serial','binding'];
+const keys=['schemaVersion','root','bindingId','password','webPort','apiPort','images','serial','binding','cloudEnabled'];
 export const runtimeDirectory=root=>join(resolve(root),'.cubeos/runtime');
 export const projectName=root=>'cubeos-runtime-'+createHash('sha256').update(resolve(root)).digest('hex').slice(0,12);
 export function validateConfig(c,root){
+ if(c?.cloudEnabled!==undefined&&typeof c.cloudEnabled!=='boolean')throw Error('Estado cloud inválido.');
  if(!c||typeof c!=='object'||Array.isArray(c)||Object.keys(c).some(k=>!keys.includes(k))||c.schemaVersion!==1||c.root!==resolve(root)||!id.test(c.bindingId)||!/^[a-f0-9]{48}$/.test(c.password))throw Error('Configuración runtime inválida o de otra instalación; no se modificó.');
  for(const n of [c.webPort,c.apiPort])if(!Number.isInteger(n)||n<1024||n>65535)throw Error('Puertos runtime inválidos.');
  if(c.webPort===c.apiPort)throw Error('Puertos web/API deben ser distintos.');

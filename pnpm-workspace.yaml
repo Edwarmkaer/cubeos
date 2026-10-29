@@ -10,3 +10,4 @@ minimumReleaseAgeExclude:
   - '@clerk/nextjs@7.9.10'
   - '@clerk/react@6.17.5'
   - '@clerk/shared@4.38.0'
+  - '@convex-dev/rate-limiter@0.4.3'

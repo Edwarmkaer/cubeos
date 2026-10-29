@@ -31,6 +31,7 @@ export function runProcess(command,args,{cwd,env,input='',signal}={}){
 export async function runCompose(c,args,options={}){
  const env=runtimeEnv(c);
  const argv=['compose','--project-name',projectName(c.root),'--file',join(c.root,'infra/docker/compose.runtime.yaml')];
+ if(c.cloudEnabled||options.cloudAdmin){argv.push('--file',join(c.root,'infra/docker/compose.cloud.yaml'));env.CLOUD_RELAY_ENABLED=String(c.cloudEnabled??false);}
  if(options.serial){
   argv.push('--file',join(c.root,'infra/docker/compose.serial.yaml'));
   Object.assign(env,{SERIAL_HOST_DEVICE:options.serial.realPath,SERIAL_DEVICE_GID:String(options.serial.gid),SERIAL_BAUD:String(c.serial.baud),SERIAL_SOURCE_ID:c.binding?.sourceId??''});

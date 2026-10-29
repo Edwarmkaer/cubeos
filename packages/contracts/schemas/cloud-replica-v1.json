@@ -1,0 +1,31 @@
+{
+ "$schema":"https://json-schema.org/draft/2020-12/schema",
+ "$id":"https://cubeos.local/schemas/cloud-replica-v1.json",
+ "type":"object","additionalProperties":false,
+ "required":["replicaVersion","channelId","deviceId","revisionId","snapshot","freshnessByGroup"],
+ "properties":{
+  "replicaVersion":{"const":1},
+  "channelId":{"type":"string","format":"uuid"},
+  "deviceId":{"type":"string","format":"uuid"},
+  "revisionId":{"type":"string","pattern":"^[1-9][0-9]{0,18}$"},
+  "snapshot":{"$ref":"https://cubeos.local/schemas/snapshot-v2.json"},
+  "freshnessByGroup":{"type":"object","additionalProperties":false,"properties":{
+   "H":{"$ref":"#/$defs/group"},"E":{"$ref":"#/$defs/group"},"O":{"$ref":"#/$defs/group"},"I":{"$ref":"#/$defs/group"},"G":{"$ref":"#/$defs/group"}
+  }}
+ },
+ "$defs":{
+  "field":{"type":"object","additionalProperties":false,"required":["receivedAt","sequence","uptimeMs","receptionEpoch"],"properties":{
+   "receivedAt":{"type":"string","format":"date-time"},
+   "sequence":{"type":"integer","minimum":0,"maximum":4294967295},
+   "uptimeMs":{"type":"integer","minimum":0,"maximum":4294967295},
+   "receptionEpoch":{"type":"integer","minimum":0,"maximum":9007199254740991}
+  }},
+  "group":{"type":"object","additionalProperties":false,"required":["receivedAt","sequence","uptimeMs","receptionEpoch","fields"],"properties":{
+   "receivedAt":{"type":"string","format":"date-time"},
+   "sequence":{"type":"integer","minimum":0,"maximum":4294967295},
+   "uptimeMs":{"type":"integer","minimum":0,"maximum":4294967295},
+   "receptionEpoch":{"type":"integer","minimum":0,"maximum":9007199254740991},
+   "fields":{"type":"object","maxProperties":128,"propertyNames":{"minLength":1,"maxLength":128},"additionalProperties":{"$ref":"#/$defs/field"}}
+  }}
+ }
+}

@@ -9,6 +9,7 @@ import (
 )
 
 type Config struct {
+	CloudRelayEnabled                                                       bool
 	RailwayHealthcheck                                                      bool
 	Mode, PublicAPIHost                                                     string
 	ClerkIssuer, ClerkJWKSURL, ClerkAudience, ClerkSecretKey                string
@@ -65,6 +66,15 @@ func Load(get func(string) string) (Config, error) {
 	}
 	c := Config{Address: net.JoinHostPort(host, port), DatabaseURL: db, Origin: origin, Port: port, IngestionAddress: get("INGESTION_ADDRESS"), SerialPort: get("SERIAL_PORT"), SerialSourceID: get("SERIAL_SOURCE_ID")}
 	c.Mode = mode
+	if v := get("CLOUD_RELAY_ENABLED"); v != "" {
+		if v != "true" && v != "false" {
+			return Config{}, errors.New("invalid cloud relay flag")
+		}
+		if v == "true" && mode != "local" {
+			return Config{}, errors.New("cloud relay requires local ingestion")
+		}
+		c.CloudRelayEnabled = v == "true"
+	}
 	if v := get("RAILWAY_HEALTHCHECK"); v != "" {
 		if (v != "true" && v != "false") || (v == "true" && mode != "public") {
 			return Config{}, errors.New("Railway healthcheck requires explicit public mode")
