@@ -13,6 +13,7 @@ test('fresh cloud deployment starts with cloud inputs and no local management', 
   const base=`http://127.0.0.1:${port}`;let ready=false;
   for(let i=0;i<100;i++){try{if((await fetch(base+'/healthz')).ok){ready=true;break;}}catch{}await delay(100);}
   assert.ok(ready,'cloud server did not become ready');
+  assert.equal((await(await fetch(base+'/healthz')).json()).mode,'cloud');
   browser=await chromium.launch({headless:true});const page=await browser.newPage();
   await page.goto(base+'/configuracion');
   await page.getByLabel('Clave de consulta',{exact:true}).waitFor({timeout:5000});
