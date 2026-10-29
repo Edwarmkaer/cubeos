@@ -62,7 +62,7 @@ jobs:
   ci-required:
     name: ci-required
     if: ${{ always() }}
-    needs: [web, contracts, go, docker, browser, auth, media, recovery, developer, reader]
+    needs: [web, contracts, go, docker, browser, auth, media, recovery, developer, reader, cloud]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -78,7 +78,31 @@ jobs:
           RECOVERY_RESULT: ${{ needs.recovery.result }}
           DEVELOPER_RESULT: ${{ needs.developer.result }}
           READER_RESULT: ${{ needs.reader.result }}
-        run: test "$WEB_RESULT" = success && test "$CONTRACTS_RESULT" = success && test "$GO_RESULT" = success && test "$DOCKER_RESULT" = success && test "$BROWSER_RESULT" = success && test "$AUTH_RESULT" = success && test "$MEDIA_RESULT" = success && test "$RECOVERY_RESULT" = success && test "$DEVELOPER_RESULT" = success && test "$READER_RESULT" = success
+          CLOUD_RESULT: ${{ needs.cloud.result }}
+        run: test "$WEB_RESULT" = success && test "$CONTRACTS_RESULT" = success && test "$GO_RESULT" = success && test "$DOCKER_RESULT" = success && test "$BROWSER_RESULT" = success && test "$AUTH_RESULT" = success && test "$MEDIA_RESULT" = success && test "$RECOVERY_RESULT" = success && test "$DEVELOPER_RESULT" = success && test "$READER_RESULT" = success && test "$CLOUD_RESULT" = success
+
+  cloud:
+    name: cloud-replica
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .node-version
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa
+        with:
+          run_install: false
+      - run: pnpm install --frozen-lockfile
+      - name: Contract generation, protected channels and private capability files
+        run: |
+          pnpm --filter @cubeos/contracts generate:cloud
+          git diff --exit-code -- packages/contracts/src/cloud-validator.mjs
+          pnpm --filter @cubeos/cloud typecheck
+          pnpm --filter @cubeos/cloud test
+          node --test tools/cloud/*.test.mjs tools/runtime/*.test.mjs
 
   reader:
     name: local-reader

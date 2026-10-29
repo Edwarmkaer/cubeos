@@ -464,3 +464,11 @@ Hover sobre el rail izquierdo en `/visor` para ver la magnificación. En móvil,
 1. Recapturar Landing, Visor y Equipo en desktop y móvil.
 2. Aprobar explícitamente la dirección aplicada y cambiar `DESIGN.md` a `approved`.
 3. Seguir el plan progresivo Go/v2; la integración web REST/SSE corresponde a PR6/PR7.
+# 2026-10-29 — réplica cloud en implementación
+
+Rama `feat/cloud-telemetry`, dependiente del PR 23 (no fusionado). Contrato de réplica
+con revisiones int64 exactas, canales temporales Convex, relay Go opt-in y controles
+del visor implementados. [Operación](docs/cloud-telemetry.md). El deployment Convex
+`adamant-antelope-864` es de desarrollo; no equivale a producción ni a aceptación
+física. La verificación integral y los runners de este PR son el gate de entrega.
+No se han modificado el frontend Pencil del checkout original ni sus archivos locales.

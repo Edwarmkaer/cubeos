@@ -7,7 +7,7 @@ import type { SnapshotEvent } from "@cubeos/api-client";
 const snapshot = JSON.parse(readFileSync(new URL("../../../packages/contracts/fixtures/chasqui-v2/backend-snapshot-example-v2.json", import.meta.url), "utf8"));
 const at = "2026-10-01T12:00:00Z";
 const evidence = { receivedAt: at, sequence: 1, uptimeMs: 1, receptionEpoch: 0 };
-const event = (): SnapshotEvent => ({ revision: 1, revisionId: "1", snapshot: structuredClone(snapshot), freshnessByGroup: { E: { ...evidence, fields: { "sensors.bme680.temperatureC": evidence } } } });
+const event = (): SnapshotEvent => ({ revisionId: "1", snapshot: structuredClone(snapshot), freshnessByGroup: { E: { ...evidence, fields: { "sensors.bme680.temperatureC": evidence } } } });
 
 test("zero is a reading, unavailable and missing stay distinct, idle age becomes stale", () => {
   const e = event(); e.snapshot.sensors.bme680.temperatureC = 0;

@@ -8,10 +8,12 @@ import type { SourceSelection } from "@/lib/telemetry-store";
 import { sourceToken, validateSelection } from "@/lib/telemetry-source";
 import { usePublicSession } from "./public-session";
 import { MediaImport } from "./visor/media-gallery";
+import {useDeploymentMode} from './auth-boundary';
 
 const control = "w-full rounded-md bg-background px-3 py-2 text-base text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground disabled:opacity-50";
 
 export function SettingsView() {
+  const deployment=useDeploymentMode();
   const session = usePublicSession();
   const selection = useTelemetryStore(s => s.selection);
   const select = useTelemetryStore(s => s.select);
@@ -30,6 +32,9 @@ export function SettingsView() {
     });
     return () => { unsubscribe(); operation.current?.abort(); };
   }, []);
+  useEffect(()=>{
+   if(deployment==='cloud'&&useTelemetryStore.getState().selection.mode==='local')select({mode:'cloud',apiURL:process.env.NEXT_PUBLIC_CONVEX_URL??'',deviceId:'',deviceName:'Canal cloud',offline:false,cloudChannelId:'',cloudReadToken:''});
+  },[deployment,select]);
   function change(next: SourceSelection) {
     operation.current?.abort(); setBusy(false); setError(null); setDevices([]);
     const empty = { ...next, deviceId: "", deviceName: "" };
@@ -68,11 +73,17 @@ export function SettingsView() {
       <Tile title="Fuente de datos" className="min-h-full overflow-visible">
         <div className="max-w-lg space-y-4 pb-8">
           <label className="block text-sm text-muted-foreground">Origen
-            <select aria-label="Origen" className={control} value={draft.mode} onChange={e => change({ ...draft, mode: e.target.value as SourceSelection["mode"], offline: e.target.value === "local" })}>
-              <option value="local">API local</option><option value="public">API pública</option><option value="demo">DEMO · datos sintéticos</option>
+            <select aria-label="Origen" className={control} value={draft.mode} onChange={e => change({ ...draft, mode: e.target.value as SourceSelection["mode"],apiURL:e.target.value==='cloud'?(process.env.NEXT_PUBLIC_CONVEX_URL??''):draft.apiURL,cloudChannelId:'',cloudReadToken:'', offline: e.target.value === "local" })}>
+              {deployment!=='cloud'?<><option value="local">API local</option><option value="public">API pública</option></>:null}<option value="cloud">Cloud · canal temporal</option><option value="demo">DEMO · datos sintéticos</option>
             </select>
           </label>
-          {draft.mode === "demo" ? <p className="text-sm text-muted-foreground">Simulador legacy a 2 Hz. Ángulos, batería y fotografías de ejemplo son sintéticos.</p> : <>
+          {draft.mode === "demo" ? <p className="text-sm text-muted-foreground">Simulador legacy a 2 Hz. Ángulos, batería y fotografías de ejemplo son sintéticos.</p> : draft.mode==='cloud'?<>
+           <p className="text-sm text-muted-foreground">Consulta la última lectura publicada por la estación. La clave temporal solo se mantiene en esta pestaña; no necesitas una cuenta.</p>
+           <label className="block text-sm text-muted-foreground">URL de Convex<input className={control} type="url" value={draft.apiURL} placeholder="https://deployment.convex.cloud" onChange={e=>setDraft({...draft,apiURL:e.target.value})}/></label>
+           <label className="block text-sm text-muted-foreground">Canal de la práctica<input className={control} value={draft.cloudChannelId??''} autoComplete="off" onChange={e=>setDraft({...draft,cloudChannelId:e.target.value})}/></label>
+           <label className="block text-sm text-muted-foreground">Clave de consulta<input className={control} type="password" value={draft.cloudReadToken??''} autoComplete="off" spellCheck={false} onChange={e=>setDraft({...draft,cloudReadToken:e.target.value})}/></label>
+           <div className="flex gap-3"><button type="button" className={control} onClick={()=>{try{validateSelection(draft);select({...draft,deviceName:'Canal cloud'});setError(null);}catch{setError('Revisa la URL Convex, el canal y la clave temporal.');}}}>Conectar canal</button><button type="button" className={control} onClick={()=>change({...draft,cloudReadToken:''})}>Desconectar</button></div>
+          </>:<>
             <label className="block text-sm text-muted-foreground">URL de API
               <input className={control} type="url" value={draft.apiURL} placeholder={draft.mode === "local" ? "http://localhost:8080" : "https://api.example.com"} onChange={e => change({ ...draft, apiURL: e.target.value })} />
             </label>
@@ -95,7 +106,7 @@ export function SettingsView() {
             <label className="block text-sm text-muted-foreground">Identificador de vuelo<input className={control} value={protocolId} onChange={e => setProtocolId(e.target.value)} placeholder="CS01" /></label>
             <div className="flex gap-3"><button type="button" className={control} disabled={busy || !name.trim() || !protocolId.trim()} onClick={() => void request("create")}>Registrar dispositivo</button><button type="button" className={control} disabled={busy || !draft.deviceId || !name.trim()} onClick={() => void request("rename")}>Renombrar</button></div>
           </>}
-          <MediaImport />
+          {draft.mode!=='cloud'?<MediaImport />:null}
           {error ? <p role="alert" className="text-sm text-muted-foreground">{error}</p> : null}
         </div>
       </Tile>

@@ -1,0 +1,11 @@
+services:
+  api:
+    environment:
+      CLOUD_RELAY_ENABLED: ${CLOUD_RELAY_ENABLED:-false}
+    volumes:
+      - cloud-relay-data:/data/cloud-relay:ro
+  migrate:
+    volumes:
+      - cloud-relay-data:/data/cloud-relay
+volumes:
+  cloud-relay-data:
