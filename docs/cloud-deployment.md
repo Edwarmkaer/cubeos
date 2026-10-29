@@ -64,11 +64,17 @@ La prueba crea su canal y runtime exclusivos, exige nuevos valores, pérdida/ret
 de red, revocación y vencimiento real de una suscripción. Los secretos no forman
 parte del registro ni del reporte. Para previews protegidas se requiere acceso
 temporal válido del proyecto; no desactivar protección para hacer pasar pruebas.
+El acceso temporal de Vercel puede guardarse como `{"url":"URL_CON_VERSEL_SHARE"}`
+en un archivo 0600 fuera de Git y pasar su ruta con `CUBEOS_VERCEL_ACCESS_FILE`.
+El navegador verifica el origen exacto antes de obtener la cookie; nunca envía
+esa URL ni esa cookie a Convex.
 
 Workflow manual `cloud-acceptance.yml`: solo main, environment `cloud-acceptance`.
 El propietario debe configurar revisores/ramas permitidas y el secreto
 `CONVEX_DEPLOY_KEY` limitado al deployment de producción. Configurar la variable
 `DEPLOYMENT_RECORD` con el registro autenticado anterior del mismo github.sha.
+Para el deployment protegido, añadir `VERCEL_ACCEPTANCE_SHARE_URL` como secreto
+temporal de ese mismo deployment; retirarlo/revocar el enlace después del ensayo.
 La preparación sin secretos ocurre antes del único paso que los recibe. No se ha
 copiado la sesión administrativa local a GitHub ni configurado ese secreto desde
 este chat; el ensayo local autenticado no equivale a haber ejecutado ese workflow.

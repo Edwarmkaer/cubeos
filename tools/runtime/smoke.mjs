@@ -108,7 +108,7 @@ try{
   await cli('cloud:enable','--','--config',files.publishFile);c=await loadRuntime(root,false);
   const cloudWeb=process.env.CUBEOS_CLOUD_WEB_URL??web;
   if(cloudWeb!==web){const u=new URL(cloudWeb);assert.ok(u.protocol==='https:'&&u.origin===cloudWeb&&u.hostname.endsWith('.vercel.app'),'explicit Vercel origin required');}
-  await verifyCloudBrowser({web:cloudWeb,access,directory:root,advance:async expectValue=>{
+  await verifyCloudBrowser({web:cloudWeb,access,directory:root,requireCloudMode:cloudWeb!==web,advance:async expectValue=>{
    let revision=Number((await json(`/api/v1/devices/${c.binding.deviceId}/snapshot`)).revision);
    await waitForFrames(c.binding.deviceId,revision,2755);await expectValue('27.55');
    // Only this fresh fixture: make the real cloud hostname unreachable for API,

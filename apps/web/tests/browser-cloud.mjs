@@ -1,10 +1,19 @@
 import assert from 'node:assert/strict';
 import {chromium} from 'playwright';
-export async function verifyCloudBrowser({web,access,directory,advance,revoke}){
+import {readFile,lstat} from 'node:fs/promises';
+export async function verifyCloudBrowser({web,access,directory,advance,revoke,requireCloudMode=false}){
  const browser=await chromium.launch({headless:true});
  try{
   const page=await browser.newPage({viewport:{width:1440,height:900},reducedMotion:'reduce'}),errors=[];
   page.on('pageerror',e=>errors.push(e.message));
+  if(requireCloudMode&&process.env.CUBEOS_VERCEL_ACCESS_FILE){
+   const file=process.env.CUBEOS_VERCEL_ACCESS_FILE,info=await lstat(file);
+   assert.ok(info.isFile()&&!info.isSymbolicLink()&&(info.mode&0o777)===0o600,'private Vercel access file required');
+   const {url}=JSON.parse(await readFile(file,'utf8')),u=new URL(url);
+   assert.equal(u.origin,web);assert.ok(u.searchParams.has('_vercel_share'));assert.deepEqual([...u.searchParams.keys()],['_vercel_share']);
+   await page.goto(url);
+  }
+  if(requireCloudMode){const health=await page.request.get(web+'/healthz');assert.equal(health.status(),200);assert.equal((await health.json()).mode,'cloud');}
   await page.goto(web+'/configuracion');await page.getByLabel('Origen',{exact:true}).selectOption('cloud');
   await page.getByLabel('URL de Convex',{exact:true}).fill(access.convexURL);
   await page.getByLabel('Canal de la práctica',{exact:true}).fill(access.channelId);

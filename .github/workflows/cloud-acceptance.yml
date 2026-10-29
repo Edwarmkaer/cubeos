@@ -43,7 +43,10 @@ jobs:
           CUBEOS_CLOUD_WEB_URL: ${{ inputs.url }}
           CUBEOS_SERIAL_HELPER: ${{ github.workspace }}/.cubeos/runtime/serial-smoke
           DEPLOYMENT_RECORD: ${{ vars.DEPLOYMENT_RECORD }}
+          VERCEL_ACCEPTANCE_SHARE_URL: ${{ secrets.VERCEL_ACCEPTANCE_SHARE_URL }}
+          CUBEOS_VERCEL_ACCESS_FILE: ${{ github.workspace }}/.cubeos/runtime/vercel-access.json
         run: |
           test -n "$CONVEX_DEPLOY_KEY"
           node --input-type=module -e 'import {writeFileSync} from "node:fs"; const r=JSON.parse(process.env.DEPLOYMENT_RECORD); writeFileSync(".cubeos/runtime/deployment.json",JSON.stringify(r),{mode:0o600});'
+          node --input-type=module -e 'import {writeFileSync} from "node:fs"; if(!process.env.VERCEL_ACCEPTANCE_SHARE_URL) throw Error("Temporary scoped preview access required"); writeFileSync(process.env.CUBEOS_VERCEL_ACCESS_FILE,JSON.stringify({url:process.env.VERCEL_ACCEPTANCE_SHARE_URL}),{mode:0o600});'
           node tools/cloud/acceptance.mjs .cubeos/runtime/deployment.json
