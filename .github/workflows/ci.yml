@@ -103,6 +103,15 @@ jobs:
           pnpm --filter @cubeos/cloud typecheck
           pnpm --filter @cubeos/cloud test
           node --test tools/cloud/*.test.mjs tools/runtime/*.test.mjs
+      - name: Fresh cloud deployment form without local management
+        env:
+          DEPLOYMENT_MODE: cloud
+          NEXT_PUBLIC_CONVEX_URL: https://ci-cloud.convex.cloud
+          CUBEOS_CLOUD_MODE_BROWSER: '1'
+        run: |
+          pnpm --filter web build
+          pnpm --filter web exec playwright install --with-deps chromium
+          pnpm --filter web exec node --test tests/browser-cloud-mode.test.mjs
 
   reader:
     name: local-reader

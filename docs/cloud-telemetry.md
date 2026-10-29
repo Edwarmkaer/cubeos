@@ -27,7 +27,7 @@ Los canales duran ocho horas y requieren creación administrativa explícita.
 Para revocar un canal antes:
 
 ```bash
-pnpm --filter @cubeos/cloud exec convex run channels:revoke '{"channelId":"UUID_DEL_CANAL"}'
+pnpm --filter @cubeos/cloud exec convex run --deployment DEPLOYMENT channels:revoke '{"channelId":"UUID_DEL_CANAL"}'
 pnpm cloud:disable
 ```
 

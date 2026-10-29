@@ -9,6 +9,10 @@ function origin(value,suffix,path=''){
  if(u.protocol!=='https:'||!new RegExp('^[a-z0-9-]+\\.'+suffix.replaceAll('.','\\.')+'$').test(u.hostname)||u.username||u.password||u.port||u.search||u.hash||u.pathname!==(path||'/'))throw Error('Invalid Convex destination');
  return u;
 }
+export function provisionArguments(convexURL,input){
+ const deployment=origin(convexURL,'convex.cloud').hostname.replace(/\.convex\.cloud$/,'');
+ return ['run','--deployment',deployment,'channels:provision',JSON.stringify(input)];
+}
 export async function provisionChannel(input,provision){
  if(!uuid.test(input.deviceId))throw Error('Invalid device UUID');
  const site=origin(input.endpoint,'convex.site','/telemetry/v1/snapshot'),cloud=origin(input.convexURL,'convex.cloud');
@@ -30,7 +34,7 @@ async function cli(args){
  const directory=options['--directory'];if(!directory)throw Error('Explicit private output directory required');
  const root=resolve(fileURLToPath(new URL('../..',import.meta.url))),cwd=join(root,'packages/cloud');
  const result=await provisionChannel({directory,deviceId:options['--device'],endpoint:options['--endpoint'],convexURL:options['--url']},input=>new Promise((done,fail)=>{
-  const child=spawn(process.execPath,[join(cwd,'node_modules/convex/bin/main.js'),'run','channels:provision',JSON.stringify(input)],{cwd,stdio:['ignore','ignore','ignore']});
+  const child=spawn(process.execPath,[join(cwd,'node_modules/convex/bin/main.js'),...provisionArguments(options['--url'],input)],{cwd,stdio:['ignore','ignore','ignore']});
   child.on('error',()=>fail(Error('Administrative CLI unavailable')));child.on('close',code=>code===0?done():fail(Error('Administrative operation failed')));
  }));
  console.log(JSON.stringify(result,null,2));

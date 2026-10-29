@@ -1,6 +1,10 @@
 import {test} from 'node:test';import assert from 'node:assert/strict';
 import {mkdtemp,readFile,stat,rm,mkdir} from 'node:fs/promises';import {tmpdir} from 'node:os';import {join} from 'node:path';
 const module=await import('./channel.mjs').catch(()=>({}));
+test('administrative call explicitly selects the requested deployment, never the configured default',()=>{
+ assert.equal(typeof module.provisionArguments,'function');
+ assert.deepEqual(module.provisionArguments('https://requested-b.convex.cloud',{channelId:'test'}),['run','--deployment','requested-b','channels:provision','{"channelId":"test"}']);
+});
 test('channel provisioning writes separate private capabilities and sends only hashes to admin CLI',async t=>{
  assert.equal(typeof module.provisionChannel,'function');
  const root=await mkdtemp(join(tmpdir(),'cubeos-channel-'));t.after(()=>rm(root,{recursive:true,force:true}));
