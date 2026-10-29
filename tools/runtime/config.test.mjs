@@ -4,6 +4,13 @@ import {mkdtemp,readFile,writeFile,stat,chmod,symlink,rm} from 'node:fs/promises
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 const api=await import('./config.mjs').catch(()=>({}));
+test('container serial access requires both read and write permissions for UID 10001 plus device GID',()=>{
+ assert.equal(typeof api.serialAccessible,'function');
+ assert.equal(api.serialAccessible({uid:1000,mode:0o600}),false);
+ assert.equal(api.serialAccessible({uid:1000,mode:0o660}),true);
+ assert.equal(api.serialAccessible({uid:10001,mode:0o600}),true);
+ assert.equal(api.serialAccessible({uid:1000,mode:0o640}),false);
+});
 async function temp(t){const root=await mkdtemp(join(tmpdir(),'cubeos-runtime-test-'));t.after(()=>rm(root,{recursive:true,force:true}));return root;}
 test('private setup is repeatable and absent inspection makes no files',async t=>{
  assert.equal(typeof api.loadRuntime,'function','runtime config missing');

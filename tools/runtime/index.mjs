@@ -31,20 +31,22 @@ async function checkImages(c,runner){
  }
  return pinned;
 }
-async function ready(c,runner){
+export async function ready(c,runner,signal){
  for(let n=0;n<90;n++){
+  signal?.throwIfAborted();
   try{
    await runCompose(c,['exec','-T','api','wget','-T','2','-q','-O','/dev/null',`http://127.0.0.1:${c.apiPort}/readyz`],{runner});
-   const r=await fetch(`http://localhost:${c.webPort}/healthz`,{signal:AbortSignal.timeout(2000)});
+   const r=await fetch(`http://localhost:${c.webPort}/healthz`,{signal:signal?AbortSignal.any([signal,AbortSignal.timeout(2000)]):AbortSignal.timeout(2000)});
    if(r.ok)return;
-  }catch{}
-  await delay(1000);
+  }catch(e){signal?.throwIfAborted();if(e.name==='AbortError')throw e;}
+  await delay(1000,undefined,{signal});
  }
  throw Error('Servicios iniciados pero no listos; revisa local:doctor. No se borraron datos.');
 }
 const list=out=>out.stdout.trim().split(/\s+/).filter(Boolean);
 export async function main(args,deps={}){
- const root=deps.root??defaultRoot,print=deps.print??console.log,runner=deps.runner??runProcess;
+ const root=deps.root??defaultRoot,print=deps.print??console.log,baseRunner=deps.runner??runProcess;
+ const runner=(command,args,options)=>{deps.signal?.throwIfAborted();return baseRunner(command,args,{...options,signal:deps.signal});};
  const [action,...options]=args.filter(a=>a!=='--');
  if(!actions.includes(action)){print('Usa pnpm local:setup/start/status/stop/doctor.');return 2;}
  let startOptions;
@@ -77,11 +79,13 @@ export async function main(args,deps={}){
   }
   if(action==='stop'){
    if(!c.images){print('No hay servicios preparados que detener.');return 0;}
-   return await withRuntimeLock(root,async()=>{await compose(['stop','web','api','db']);print('Runtime detenido; dispositivos, historial y fotos conservados.');return 0;});
+   return await withRuntimeLock(root,async()=>{c=await loadRuntime(root,false);await compose(['stop','web','api','db']);print('Runtime detenido; dispositivos, historial y fotos conservados.');return 0;});
   }
   await (deps.checkTools??checkTools)(root,runner);
   if(action==='setup'&&options.includes('--recover-lock'))await recoverRuntimeLock(root);
   return await withRuntimeLock(root,async()=>{
+   c=await loadRuntime(root,false);
+   deps.signal?.throwIfAborted();
    const previous=c.images?list(await compose(['ps','--status','running','--services'])):[];
    if(action==='setup'){
     if(options.includes('--build')&&previous.length)throw Error('Detén el runtime antes de reconstruir sus imágenes.');
@@ -102,7 +106,7 @@ export async function main(args,deps={}){
      await saveRuntime(root,c);
     }else {const pinned=await (deps.checkImages??checkImages)(c,runner);if(pinned){c={...c,images:pinned};await saveRuntime(root,c);}}
     try{await compose(['up','--wait','--wait-timeout','90','--no-build','-d','db']);await compose(['run','--rm','-T','--no-deps','migrate']);}
-    finally{if(!previous.includes('db'))await compose(['stop','db']);}
+    finally{if(!previous.includes('db'))await compose(['stop','db'],{runner:baseRunner});}
     print('Preparación lista. Inicia con pnpm local:start [-- --serial PUERTO --baud 115200].');
     return 0;
    }
@@ -123,9 +127,12 @@ export async function main(args,deps={}){
     // Persist the installation identity before starting reception. Validation is strict.
     await saveRuntime(root,updated);c=updated;
     for(const name of ['api','web'])if(!previous.includes(name))started.push(name);
-    await compose(['up','--no-build','--pull','never','-d','api','web'],{serial});
-    await (deps.ready??ready)(c,runner);
-   }catch(e){if(started.length)await compose(['stop',...started]).catch(()=>{});throw e;}
+    // Recreate only API: a reattached USB can have the same path/GID but a new inode.
+    await compose(['up','--no-build','--pull','never','--force-recreate','--no-deps','-d','api'],{serial});
+    await compose(['up','--no-build','--pull','never','--no-deps','-d','web']);
+    await (deps.ready??ready)(c,runner,deps.signal);
+    deps.signal?.throwIfAborted();
+   }catch(e){if(started.length)await compose(['stop',...started],{runner:baseRunner}).catch(()=>{});throw e;}
    print(`Web http://localhost:${c.webPort} · API http://localhost:${c.apiPort}`);
    print(`Selecciona en Configuración el dispositivo ${c.binding.deviceId} (CS01 · datos sintéticos).`);
    print(serial?'Lector serial iniciado; confirma recepción con local:status y el Visor.':'Esperando placa: vuelve a iniciar con --serial PUERTO --baud 115200.');
@@ -145,4 +152,9 @@ async function doctor(c,{runner,print,check}){
  print(JSON.stringify({checks,ready:checks.every(v=>v.state!=='error')},null,2));
  return checks.some(v=>v.state==='error')?1:0;
 }
-if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href)process.exitCode=await main(process.argv.slice(2));
+if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href){
+ const controller=new AbortController(),cancel=()=>controller.abort(new DOMException('Operación cancelada.','AbortError'));
+ process.on('SIGINT',cancel);process.on('SIGTERM',cancel);
+ try{process.exitCode=await main(process.argv.slice(2),{signal:controller.signal});}
+ finally{process.removeListener('SIGINT',cancel);process.removeListener('SIGTERM',cancel);}
+}

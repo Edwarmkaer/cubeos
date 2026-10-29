@@ -50,14 +50,16 @@ válido e id CS01. Cierra Serial Monitor antes de usar el lector. No se flashea
 la placa desde estos comandos.
 
 El contenedor usa UID 10001, el GID del puerto y solo ese dispositivo/bind,
-sin privileged ni todo /dev. Si ese grupo no puede leer/escribir, revisa permisos
+sin privileged ni todo /dev. El diagnóstico rechaza un nodo sin lectura/escritura
+para esa identidad (por ejemplo 0600 de otro propietario). Si ese grupo no puede leer/escribir, revisa permisos
 con el administrador; no uses chmod 777 ni reglas udev generales.
 Doctor no abre el puerto ni certifica exclusividad. API lista no significa
 datos USB recibidos: status muestra la edad de la última recepción, si existe.
 
 Al desconectar USB, valores retenidos envejecen, no se sustituyen por ceros/DEMO.
 Al reconectar puede cambiar el nodo: repite local:start con la ruta actual
-para recrear el mapeo de API. Go recupera errores del mismo nodo con backoff;
+para recrear solo API y su mapeo, incluso si la ruta/GID son iguales pero cambió
+el inode. La web y PostgreSQL no se recrean. Go recupera errores del mismo nodo con backoff;
 no se promete remapeo Docker automático.
 
 ## Parada y diagnóstico

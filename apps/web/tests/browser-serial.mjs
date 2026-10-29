@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {chromium} from 'playwright';
 
-export async function verifySerialBrowser({web,api,deviceId}){
+export async function verifySerialBrowser({web,api,deviceId,reconnect}){
  const browser=await chromium.launch({headless:true});
  try{
   const context=await browser.newContext({viewport:{width:1440,height:900},reducedMotion:'reduce'});
@@ -21,6 +21,8 @@ export async function verifySerialBrowser({web,api,deviceId}){
   assert.deepEqual(external,[]);assert.deepEqual(errors,[]);
   // Age advances without another reception; no fake heartbeat refresh.
   await page.getByText('Antigua',{exact:false}).first().waitFor({timeout:20000});
+  if(reconnect){await reconnect();await page.getByText('26.15',{exact:false}).first().waitFor({timeout:30000});}
+  assert.deepEqual(errors,[]);
   await context.close();
  }finally{await browser.close();}
 }

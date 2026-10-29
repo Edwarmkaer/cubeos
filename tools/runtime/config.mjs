@@ -54,10 +54,12 @@ export function parseStartArgs(args){
  if(!Number.isInteger(baud)||baud<1||baud>4000000||seen.has('--baud')&&!serialPath)throw Error('Baud requiere un puerto y valor 1..4000000.');
  return {serialPath,baud};
 }
+export const serialAccessible=s=>s.uid===10001?(s.mode&0o600)===0o600:(s.mode&0o060)===0o060||(s.mode&0o006)===0o006;
 export async function inspectSerial(path){
  let target,s;
  try{target=await realpath(path);s=await lstat(target);}catch{throw Error('Puerto serial ausente: conecta la placa y comprueba la ruta.');}
  if(!/^\/dev\/(tty(ACM|USB)[0-9]+|pts\/[0-9]+)$/.test(target)||!s.isCharacterDevice())throw Error('Selecciona explícitamente un dispositivo TTY USB/serial.');
+ if(!serialAccessible(s))throw Error('El usuario del contenedor (UID 10001) necesita lectura/escritura mediante el grupo del puerto. Configura una regla udev 0660; no uses chmod 777 ni ejecutes como root.');
  return {realPath:target,gid:s.gid};
 }
 export function runtimeEnv(c,inherited=process.env){
