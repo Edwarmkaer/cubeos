@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 import { detectFormat, parseLine } from "./parse.ts";
@@ -54,4 +55,16 @@ test("parseProfile valida y rechaza roles inexistentes", () => {
 test("csv de lecturas", () => {
   const csv = readingsToCsv([{ t: 0, values: { a: 1 } }, { t: 1000, values: { a: 2, b: 3 } }]);
   assert.equal(csv, "time,a,b\n1970-01-01T00:00:00.000Z,1,\n1970-01-01T00:00:01.000Z,2,3\n");
+});
+
+test("comentarios con # se ignoran", () => {
+  assert.deepEqual(parseLine("# CubeOS: sin MPU6050", "auto"), { kind: "skip" });
+});
+
+test("el perfil del firmware de ejemplo es válido", () => {
+  const raw = JSON.parse(readFileSync(new URL("../../../../../firmware/esp32-telemetry/esp32-telemetry.cubeos.json", import.meta.url), "utf8"));
+  const p = parseProfile(raw);
+  assert.ok(p);
+  assert.deepEqual(p.attitude, { roll: "roll", pitch: "pitch", yaw: "yaw" });
+  assert.equal(p.fields.length, 11);
 });
