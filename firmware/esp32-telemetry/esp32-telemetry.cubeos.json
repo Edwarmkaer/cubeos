@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "name": "ESP32 + MPU6050",
+  "format": "json",
+  "baudRate": 115200,
+  "csvColumns": [],
+  "fields": [
+    { "key": "seq", "label": "Secuencia", "unit": "", "digits": 0, "visible": false },
+    { "key": "temp", "label": "Temperatura", "unit": "°C", "digits": 1, "visible": true },
+    { "key": "hum", "label": "Humedad", "unit": "%", "digits": 0, "visible": true },
+    { "key": "roll", "label": "Roll", "unit": "°", "digits": 1, "visible": true },
+    { "key": "pitch", "label": "Pitch", "unit": "°", "digits": 1, "visible": true },
+    { "key": "yaw", "label": "Yaw", "unit": "°", "digits": 1, "visible": true },
+    { "key": "lat", "label": "Latitud", "unit": "°", "digits": 5, "visible": true },
+    { "key": "lon", "label": "Longitud", "unit": "°", "digits": 5, "visible": true },
+    { "key": "ax", "label": "Aceleración X", "unit": "g", "digits": 2, "visible": true },
+    { "key": "ay", "label": "Aceleración Y", "unit": "g", "digits": 2, "visible": true },
+    { "key": "az", "label": "Aceleración Z", "unit": "g", "digits": 2, "visible": true }
+  ],
+  "attitude": { "roll": "roll", "pitch": "pitch", "yaw": "yaw" },
+  "gps": { "lat": "lat", "lon": "lon" }
+}

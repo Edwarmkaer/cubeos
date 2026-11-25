@@ -13,14 +13,14 @@ El estado con backend Go queda en el tag `legacy/cubeos-v1`.
 
 ## Stack
 
-- Monorepo pnpm + Turbo: `apps/web`, `packages/ui`, `packages/telemetry`.
+- Monorepo pnpm + Turbo: `apps/web`, `packages/ui`; `firmware/` con sketches Arduino.
 - Next.js (App Router), Tailwind, Zustand, three + React Three Fiber + drei.
 - Despliegue estático en Vercel, solo cuando Edwar lo pida.
 
 ## Comandos
 
 - Desarrollo: `pnpm dev`
-- Verificación: `pnpm lint`, `pnpm typecheck`, `pnpm build`
+- Verificación: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`
 
 ## Mapa del proyecto
 

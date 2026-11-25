@@ -42,7 +42,7 @@ function splitCsv(line: string) {
 
 export function parseLine(line: string, format: LineFormat, columns: string[] = []): ParsedLine {
   const text = line.trim();
-  if (!text) return { kind: "skip" };
+  if (!text || text.startsWith("#")) return { kind: "skip" }; // comentarios de arranque del firmware
   const kind = format === "auto" ? detectFormat(text) : format;
 
   if (kind === "json") {

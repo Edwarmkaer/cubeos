@@ -1,17 +1,19 @@
 # Roadmap
 
-Trabajo en local; se publica en Vercel al cerrar el bloque UI.
+Trabajo en local con ramas apiladas; se publica en Vercel al cerrar el bloque UI.
 
-| # | PR | Estado |
-| --- | --- | --- |
-| 1 | Base solo web: quitar backend/auth/fotos y referencias a CHASQUI/UNI | en curso |
-| 2 | Diseño: vistas, wireframes, landing y motion (con Edwar) | pendiente |
-| 3 | Shell y navegación nuevos según el diseño aprobado | pendiente |
-| 4 | Landing nueva | pendiente |
-| 5 | Conectar: Web Serial, parsers (JSON/CSV/clave=valor), perfiles | pendiente |
-| 6 | Visor generado desde el perfil; grabar y exportar CSV | pendiente |
-| 7 | Armado cargable: GLB + guía JSON/MD, piezas, conceptos, `.zip` | pendiente |
-| 8 | Firmware de ejemplo ESP32 (`.ino`, JSON por línea) | pendiente |
-| 9 | Publicar en Vercel | pendiente |
+| # | Rama | Contenido | Estado |
+| --- | --- | --- | --- |
+| 1 | `chore/web-only` | Base solo web, sin backend ni CHASQUI/UNI | hecho |
+| 2 | `feat/serial-telemetry` | Web Serial, parsers, perfiles, Conectar, Visor desde perfil, CSV | hecho |
+| 3 | `feat/custom-assembly` | Armado cargable: GLB + guía JSON/MD, piezas, conceptos | hecho |
+| 4 | `feat/esp32-example` | Firmware ESP32 de ejemplo + perfil | hecho |
+| 5 | — | Diseño con Edwar: referencias, landing, shell, motion | siguiente |
+| 6 | — | Landing nueva | pendiente |
+| 7 | — | Shell y navegación (móvil incluido) según diseño aprobado | pendiente |
+| 8 | — | Publicar en Vercel | pendiente |
+
+Ideas posteriores: adaptador WebSocket, vista explosionada en proyectos propios,
+exportar/importar proyecto de armado como `.zip`.
 
 Estado anterior (Go, PostgreSQL, auth, fotos): tag `legacy/cubeos-v1`.

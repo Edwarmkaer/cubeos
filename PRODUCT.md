@@ -27,7 +27,7 @@ la DEMO sintética está siempre disponible.
 | `/` Landing | Presentar el proyecto y llevar a la DEMO o a conectar una placa. |
 | `/visor` Visor | Leer la telemetría en vivo: último valor, tendencia, orientación, mapa. |
 | `/construccion` Armado | Seguir el armado de un modelo 3D paso a paso. |
-| Conectar (por definir) | Elegir fuente, puerto, formato y perfil de campos. |
+| `/conectar` Conectar | Elegir fuente, puerto, formato y perfil de campos. |
 
 ## Principios
 

@@ -5,21 +5,25 @@ Actualizado: 2026-11-25.
 ## Dirección
 
 Proyecto personal de portafolio, sin backend ([ADR 0007](docs/adr/0007-web-only.md)).
-Roadmap en [docs/roadmap.md](docs/roadmap.md). Historial anterior (CHASQUI-II,
-Go/PostgreSQL, PRs #9–#22) en el tag `legacy/cubeos-v1` y en git.
+Roadmap: [docs/roadmap.md](docs/roadmap.md). Historial anterior en el tag local
+`legacy/cubeos-v1` (no publicado aún).
 
-## PR 1 — Base solo web (rama `chore/web-only`)
+## Hecho (ramas locales apiladas, sin push)
 
-- Eliminados: `apps/api`, `packages/api-client`, `packages/contracts`, `infra/`,
-  `tools/`, Clerk, fotos, progreso remoto, rutas `/configuracion`, `/equipo`, `/lab`, `/healthz`.
-- Visor y Armado funcionan solo con la DEMO. Landing sin CHASQUI/UNI.
-- `Galaxy` ya no rompe la landing sin WebGL.
-- Docs reescritos: README, PRODUCT, CONTEXT, AGENTS, ADR 0007, roadmap.
-- Verificado: lint, typecheck, build (3 rutas estáticas), navegador en `/`, `/visor`, `/construccion`.
+1. `chore/web-only` — quita backend, auth, fotos y referencias a CHASQUI/UNI.
+2. `feat/serial-telemetry` — `/conectar`: DEMO o USB (Web Serial), JSON/CSV/clave=valor,
+   campos detectados, roles orientación/mapa, perfiles exportables. Visor generado y CSV.
+3. `feat/custom-assembly` — Armado: pestaña ejemplo + "Mi proyecto" (GLB + guía MD/JSON,
+   IndexedDB). Ejemplo en `apps/web/public/examples`, generado por `scripts/make-example-glb.mjs`.
+4. `feat/esp32-example` — `firmware/esp32-telemetry` (sintético o MPU6050) + perfil.
 
-## Pendiente
+Verificado: lint, typecheck, tests (`pnpm test`), build; navegador (DEMO, serial simulado
+por JS) y 3D con Playwright + Chrome/swiftshader. Sin probar con una placa física; el sketch no se pudo compilar (descarga del toolchain ESP32 fallida).
 
-- Revisar y fusionar PR 1. Publicar el tag `legacy/cubeos-v1` en GitHub.
-- PR 2: definir diseño con Edwar (vistas, landing, motion, modelo).
-- Sin tocar (cambios locales de Edwar): `delivery/design/`, `docs/frontend-local-roadmap.md`
-  y `docs/superpowers/` sin seguimiento; son del diseño anterior.
+## Siguiente
+
+- Diseño con Edwar: referencias para la landing; luego shell/navegación móvil (la cabecera
+  se aprieta en 390 px).
+- Dev server: puerto 3100 (`.claude/launch.json`); el 3000 lo usa otro proyecto.
+- Sin tocar: `delivery/design/`, `docs/frontend-local-roadmap.md`, `docs/superpowers/`
+  (diseño anterior, cambios locales de Edwar).
