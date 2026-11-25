@@ -173,7 +173,7 @@ function FieldsPanel() {
       {profile.fields.length === 0 ? (
         <p className="mt-6 text-sm text-muted-foreground">Los campos aparecen solos al recibir la primera lectura.</p>
       ) : (
-        <div className="mt-4 min-h-0 flex-1 overflow-auto">
+        <div className="mt-4 lg:min-h-0 lg:flex-1 lg:overflow-auto">
           <table className="w-full text-sm">
             <thead className="text-left text-xs text-muted-foreground">
               <tr>
@@ -223,7 +223,7 @@ function FieldsPanel() {
 export function ConnectView() {
   useSource({ autoDemo: false });
   return (
-    <div className="grid h-full min-h-0 grid-cols-1 gap-3 overflow-y-auto lg:grid-cols-[22rem_minmax(0,1fr)] lg:grid-rows-[auto_minmax(0,1fr)] lg:overflow-hidden">
+    <div className="grid h-full min-h-0 auto-rows-max grid-cols-1 gap-3 overflow-y-auto lg:auto-rows-auto lg:grid-cols-[22rem_minmax(0,1fr)] lg:grid-rows-[auto_minmax(0,1fr)] lg:overflow-hidden">
       <SourcePanel />
       <FieldsPanel />
       <Monitor />

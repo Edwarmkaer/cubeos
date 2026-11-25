@@ -86,7 +86,9 @@ export function VisorApp() {
   const gpsSamples = gps
     ? readings.filter((r) => gps.lat in r.values && gps.lon in r.values).map((r) => ({ gps_lat: r.values[gps.lat], gps_lon: r.values[gps.lon] }))
     : [];
-  const metrics = profile.fields.filter((f) => f.visible && latest && f.key in latest.values);
+  // Los campos que ya dibujan la orientación o el mapa no se repiten como tarjetas.
+  const shown = new Set([...(attValue && att ? [att.roll, att.pitch, att.yaw] : []), ...(gpsSamples.length && gps ? [gps.lat, gps.lon] : [])]);
+  const metrics = profile.fields.filter((f) => f.visible && latest && f.key in latest.values && !shown.has(f.key));
 
   return (
     <AppShell>

@@ -1,0 +1,16 @@
+{
+  "title": "Mi proyecto",
+  "parts": [
+    { "id": "base", "label": "Base", "qty": 1 },
+    { "id": "tornillos", "label": "Tornillo M3", "qty": 4 }
+  ],
+  "steps": [
+    {
+      "title": "Preparar la base",
+      "body": "Texto del paso. Usa los nombres de objetos de tu modelo en meshes; * sirve de comodín.",
+      "concept": "Una idea que conviene entender en este paso.",
+      "parts": ["base", "tornillos"],
+      "meshes": ["Base*"]
+    }
+  ]
+}
