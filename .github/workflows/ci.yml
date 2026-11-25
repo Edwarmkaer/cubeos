@@ -38,3 +38,15 @@ jobs:
       - name: Build
         run: pnpm exec turbo run build --filter=web...
 
+
+  ci-required:
+    name: ci-required
+    if: ${{ always() }}
+    needs: [web]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require applicable checks to pass
+        env:
+          WEB_RESULT: ${{ needs.web.result }}
+        run: test "$WEB_RESULT" = success
