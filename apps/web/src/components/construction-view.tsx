@@ -1,10 +1,10 @@
 "use client";
 
 import { ChevronLeft, ChevronRight, Puzzle } from "lucide-react";
-import { Component, Suspense, lazy, useEffect, useSyncExternalStore } from "react";
-import type { ReactNode } from "react";
+import { Suspense, lazy, useEffect } from "react";
 
 import { PartTelemetry } from "@/components/assembly/part-telemetry";
+import { SceneBoundary, useMounted } from "@/components/assembly/scene-boundary";
 import { Tile } from "@/components/visor/tile";
 import { assemblySteps, parts } from "@/lib/assembly-guide";
 import { useAssemblyStore } from "@/lib/assembly-store";
@@ -14,29 +14,6 @@ import { cn } from "@/lib/utils";
 const AssemblyScene = lazy(() =>
   import("@/components/assembly/assembly-scene").then((m) => ({ default: m.AssemblyScene })),
 );
-
-/** Si el navegador no puede crear un contexto WebGL, la guía sigue funcionando sin el modelo. */
-class SceneBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
-  state = { failed: false };
-  static getDerivedStateFromError() {
-    return { failed: true };
-  }
-  render() {
-    return this.state.failed ? (
-      <p className="grid h-full place-items-center p-6 text-center text-sm text-muted-foreground">
-        Este navegador no tiene WebGL disponible, así que el modelo 3D no puede mostrarse. Los pasos siguen disponibles.
-      </p>
-    ) : (
-      this.props.children
-    );
-  }
-}
-
-const noop = () => () => {};
-/** `false` en el servidor y en la hidratación; `true` ya en el navegador. */
-function useMounted() {
-  return useSyncExternalStore(noop, () => true, () => false);
-}
 
 function SceneToolbar() {
   const mode = useAssemblyStore((s) => s.mode);
