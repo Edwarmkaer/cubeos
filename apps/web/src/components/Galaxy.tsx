@@ -226,10 +226,16 @@ export default function Galaxy({
   useEffect(() => {
     if (!ctnDom.current) return;
     const ctn = ctnDom.current;
-    const renderer = new Renderer({
-      alpha: transparent,
-      premultipliedAlpha: false
-    });
+    // Sin WebGL (navegadores/equipos limitados) el fondo se omite en vez de romper la página.
+    let renderer: Renderer;
+    try {
+      renderer = new Renderer({
+        alpha: transparent,
+        premultipliedAlpha: false
+      });
+    } catch {
+      return;
+    }
     const gl = renderer.gl;
 
     if (lightMode) {

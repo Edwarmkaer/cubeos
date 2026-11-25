@@ -1,15 +1,13 @@
 "use client";
 
 import { ChevronLeft, ChevronRight, Puzzle } from "lucide-react";
-import { Component, Suspense, lazy, useEffect, useRef, useSyncExternalStore } from "react";
+import { Component, Suspense, lazy, useEffect, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 
 import { PartTelemetry } from "@/components/assembly/part-telemetry";
 import { Tile } from "@/components/visor/tile";
 import { assemblySteps, parts } from "@/lib/assembly-guide";
 import { useAssemblyStore } from "@/lib/assembly-store";
-import { startConstruction, useConstructionStore } from "@/lib/construction-store";
-import { useTelemetryStore } from "@/lib/telemetry-store";
 import { cn } from "@/lib/utils";
 
 // WebGL solo existe en el navegador: la escena se carga después de montar.
@@ -112,10 +110,6 @@ function PartPanel() {
 }
 
 export function ConstructionView() {
-  const selection = useTelemetryStore((s) => s.selection);
-  const generation = useTelemetryStore((s) => s.generation);
-  const state = useConstructionStore();
-  const session = useRef<ReturnType<typeof startConstruction> | null>(null);
   const mounted = useMounted();
   const mode = useAssemblyStore((s) => s.mode);
   const guideStep = useAssemblyStore((s) => s.step);
@@ -123,31 +117,13 @@ export function ConstructionView() {
 
   useEffect(() => {
     void useAssemblyStore.persist.rehydrate();
-    const active = startConstruction(useTelemetryStore);
-    session.current = active;
-    return () => {
-      active.stop();
-      session.current = null;
-    };
   }, []);
 
-  const progress = state.generation === generation ? state.progress : null;
-  const busy = state.generation !== generation || state.status === "loading" || state.status === "saving";
-  const serverSteps = progress?.steps ?? [];
-  const server = serverSteps.length > 0;
-  const configured = selection.mode !== "demo" && Boolean(selection.apiURL && selection.deviceId);
-
-  // Con pasos publicados en la API se muestran esos (con progreso guardado);
-  // si no, la guía local conduce el armado 3D.
-  const steps = server
-    ? serverSteps.map((s) => ({ id: s.id, title: s.title, instructions: s.instructions }))
-    : assemblySteps;
+  const steps = assemblySteps;
   const index = Math.min(guideStep, steps.length - 1);
   const step = steps[index];
-  const percentage = server ? progress?.percentage ?? 0 : (index / assemblySteps.length) * 100;
-  const status = server
-    ? `${progress?.completed} / ${progress?.total} pasos · ${Math.round(progress?.percentage ?? 0)}%`
-    : `Guía 1U · paso ${index + 1} de ${steps.length}`;
+  const percentage = (index / steps.length) * 100;
+  const status = `Paso ${index + 1} de ${steps.length}`;
 
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-col gap-3 overflow-auto">
@@ -155,29 +131,18 @@ export function ConstructionView() {
         <Tile title="Pasos" className="order-2 lg:order-none">
           <ol className="space-y-1 overflow-y-auto text-sm">
             {steps.map((s, i) => {
-              const done = server ? serverSteps[i].completed : i < index;
+              const done = i < index;
               return (
                 <li key={s.id} className="flex items-start gap-2">
-                  {server ? (
-                    <input
-                      type="checkbox"
-                      className="mt-2 size-4 shrink-0 accent-foreground"
-                      aria-label={`Completar ${s.title}`}
-                      checked={serverSteps[i].completed}
-                      disabled={busy || state.status === "error"}
-                      onChange={(e) => void session.current?.save(s.id, e.target.checked)}
-                    />
-                  ) : (
-                    <span
-                      aria-hidden
-                      className={cn(
-                        "mt-1.5 grid size-5 shrink-0 place-items-center rounded-full font-mono text-[10px]",
-                        i === index ? "bg-[var(--chart-roll)] text-background" : done ? "bg-foreground/20 text-foreground" : "bg-background text-muted-foreground",
-                      )}
-                    >
-                      {i + 1}
-                    </span>
-                  )}
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "mt-1.5 grid size-5 shrink-0 place-items-center rounded-full font-mono text-[10px]",
+                      i === index ? "bg-[var(--chart-roll)] text-background" : done ? "bg-foreground/20 text-foreground" : "bg-background text-muted-foreground",
+                    )}
+                  >
+                    {i + 1}
+                  </span>
                   <button
                     type="button"
                     className={cn(
@@ -193,18 +158,6 @@ export function ConstructionView() {
               );
             })}
           </ol>
-          <div className="mt-auto pt-4 text-sm text-muted-foreground" aria-live="polite">
-            {configured && state.status === "loading" && <p>Cargando progreso…</p>}
-            {configured && state.status === "saving" && <p>{selection.deviceName} · Guardando…</p>}
-            {state.generation === generation && state.error && (
-              <>
-                <p role="alert" className="mt-2 text-foreground">{state.error}</p>
-                <button type="button" className="mt-2 underline" onClick={() => session.current?.reload()}>
-                  Recargar progreso
-                </button>
-              </>
-            )}
-          </div>
         </Tile>
 
         <section

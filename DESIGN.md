@@ -199,7 +199,6 @@ Laboratorio o aula, portátil, luz de clase. Fondo oscuro para que el dato recib
 
 ## Assets
 
-- Logo: `references/ui/chasqui-ii-logo.png`. No va en el navbar; entra al final, a tamaño real.
 - Wordmark: la palabra CubeOS en Big Shoulders.
 - Exploración: `references/ui/lab-*.png`. Histórico: Dovetail, Tempo, wireframes.
 - Modelo 3D: más adelante, gate estático.
@@ -238,7 +237,6 @@ Pendientes de aprobación del producto aplicado:
 ## Gate de aprobación
 
 - [x] Dirección Pozo elegida en `/lab`.
-- [x] Logo CHASQUI-II en `references/ui/chasqui-ii-logo.png`.
 - [x] MapLibre GL JS + OpenFreeMap Dark aprobados para GPS (2026-09-06).
 - [x] Telemetría definida como estado de conexión con estación terrena (2026-09-06).
 - [ ] El usuario aprobó el producto aplicado (fondo tinta, pozos, CTA textual).

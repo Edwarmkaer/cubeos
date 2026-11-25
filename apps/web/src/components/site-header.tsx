@@ -12,26 +12,10 @@ import {
 import { useTelemetryStore } from "@/lib/telemetry-store";
 import { cn } from "@/lib/utils";
 
-const connectionLabels = {
-  simulated: "Simulado",
-  connecting: "Conectando",
-  connected: "Conectado",
-  disconnected: "Desconectado",
-  error: "Error",
-  pending: "Pendiente",
-  reconnecting: "Reconectando API",
-  unauthorized: "Sin autorización",
-  closed: "API cerrada",
-} as const;
-
 export function SiteHeader() {
   const pathname = usePathname();
   const connection = useTelemetryStore((state) => state.connection);
   const appPath = isAppPath(pathname);
-
-  if (pathname.startsWith("/lab")) {
-    return null;
-  }
 
   return (
     <header className="relative z-20 grid h-16 shrink-0 grid-cols-[auto_1fr_auto] items-center gap-2 px-3 md:grid-cols-[1fr_auto_1fr] md:px-6 lg:px-10">
@@ -70,7 +54,7 @@ export function SiteHeader() {
             ·
           </span>
           <span aria-hidden className="size-1.5 rounded-full bg-muted" />
-          <span>{connection === "simulated" ? "DEMO · sintética" : connectionLabels[connection]}</span>
+          <span>{connection === "simulated" ? "DEMO · sintética" : connection}</span>
         </p>
       ) : (
         <span aria-hidden />
