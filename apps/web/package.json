@@ -7,10 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "next typegen && tsc --noEmit"
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "node --test src/lib/**/*.test.ts"
   },
   "dependencies": {
-    "@cubeos/telemetry": "workspace:*",
     "@cubeos/ui": "workspace:*",
     "@react-three/drei": "10.7.6",
     "@react-three/fiber": "9.3.0",

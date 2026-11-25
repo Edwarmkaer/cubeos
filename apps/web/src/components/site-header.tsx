@@ -9,12 +9,11 @@ import {
   publicNav,
   stationTitle,
 } from "@/components/station-nav";
-import { useTelemetryStore } from "@/lib/telemetry-store";
+import { SourceStatus } from "@/components/source-status";
 import { cn } from "@/lib/utils";
 
 export function SiteHeader() {
   const pathname = usePathname();
-  const connection = useTelemetryStore((state) => state.connection);
   const appPath = isAppPath(pathname);
 
   return (
@@ -53,8 +52,7 @@ export function SiteHeader() {
           <span aria-hidden className="hidden md:inline">
             ·
           </span>
-          <span aria-hidden className="size-1.5 rounded-full bg-muted" />
-          <span>{connection === "simulated" ? "DEMO · sintética" : connection}</span>
+          <SourceStatus />
         </p>
       ) : (
         <span aria-hidden />

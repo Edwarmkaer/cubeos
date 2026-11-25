@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import {
   IconCube,
+  IconPlugConnected,
   IconLayoutDashboard,
 } from "@tabler/icons-react";
 
@@ -13,6 +14,7 @@ export const publicNav = [
   { href: "/", label: "Inicio" },
   { href: "/visor", label: "Visor" },
   { href: "/construccion", label: "Armado" },
+  { href: "/conectar", label: "Conectar" },
 ] as const;
 
 export const stationNav: {
@@ -33,12 +35,19 @@ export const stationNav: {
     description: "Modelo 3D paso a paso",
     icon: IconCube,
   },
+  {
+    href: "/conectar",
+    label: "Conectar",
+    description: "Fuente y campos",
+    icon: IconPlugConnected,
+  },
 ];
 
 export function isAppPath(pathname: string) {
   return (
     pathname.startsWith("/visor") ||
-    pathname.startsWith("/construccion")
+    pathname.startsWith("/construccion") ||
+    pathname.startsWith("/conectar")
   );
 }
 

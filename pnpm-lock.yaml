@@ -14,9 +14,6 @@ importers:
 
   apps/web:
     dependencies:
-      '@cubeos/telemetry':
-        specifier: workspace:*
-        version: link:../../packages/telemetry
       '@cubeos/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -102,8 +99,6 @@ importers:
       typescript:
         specifier: ^5
         version: 5.9.3
-
-  packages/telemetry: {}
 
   packages/ui:
     dependencies:
