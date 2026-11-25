@@ -6,141 +6,47 @@ status: current
 
 # Producto
 
-## Register
-
-product
-
 ## Resumen
 
-CubeOS es una plataforma web educativa del grupo CHASQUI-II para ver en tiempo real la telemetría de un CubeSat, recorrer su construcción y elegir la fuente de datos. Corre en el navegador. No opera el satélite.
+CubeOS es una estación de tierra que corre en el navegador. Conectas una placa
+(ESP32, Arduino…) por USB, defines cómo leer sus datos y ves su telemetría en
+vivo. Además, cargas tu modelo 3D y sigues su armado paso a paso.
 
-## Problema
+Proyecto personal de portafolio (hardware + web). Debe funcionar sin hardware:
+la DEMO sintética está siempre disponible.
 
-El prototipo en PyQt5 no se comparte en aula ni se abre en un navegador. Los estudiantes necesitan ver orientación, sensores y posición con claridad didáctica, no con una consola de operación profesional.
+## Público
 
-## Público principal
-
-Estudiantes de ingeniería que construyen u operan el CubeSat, y el grupo CHASQUI-II — UNI que los acompaña. Uso típico: laboratorio o aula, portátil, atención puesta en entender mediciones de grupos con distintas cadencias.
-
-## Propuesta
-
-Mostrar el estado del CubeSat de forma comprensible: última muestra, historial breve, orientación y posición. El carácter didáctico es objetivo de producto, no adorno.
-
-## Acción principal
-
-- CTA de uso: abrir el Visor y leer la telemetría en vivo (simulada en Sprint 1, real en Sprint 2).
-- Resultado esperado: el estudiante identifica orientación, ambiente y posición sin instalar cliente.
-
-## Usuarios y trabajo
-
-En el Visor, el trabajo es leer el último dato y su tendencia. En Construcción, seguir un paso de ensamblaje. En Configuración, saber de dónde vienen los datos y el estado de conexión.
-
-## Personalidad
-
-Clara, técnica y didáctica. Copia en español, concreta, sin slogans. El estado de conexión se dice en voz alta: no se esconde detrás de un icono mudo.
-
-## Principios de diseño
-
-- El dato manda: cada región del Visor enseña una magnitud, no un widget genérico.
-- La fuente de datos es un borde: demo y recepción real conservan la composición; los datos reales pueden estar ausentes o ser antiguos.
-- La composición estática se entiende antes de añadir 3D o motion.
-- Consistencia de shell entre las tres superficies: misma cabecera, misma navegación, mismo indicador de conexión.
-
-## Anti-referencias
-
-- Consolas de misión profesionales (Cosmos, Yamcs) como modelo de densidad opaca.
-- El prototipo PyQt5 como destino de implementación.
-- El trazo sketch de los wireframes como identidad visual.
-- SaaS genérico de tarjetas idénticas con icono + título + texto.
-
-## Accesibilidad e inclusión
-
-Objetivo WCAG AA en contraste, foco visible y semántica. Respetar `prefers-reduced-motion`. El visor 3D no puede ser el único canal de la orientación: los valores numéricos permanecen en HTML.
+- Quien revisa el portafolio: entiende el proyecto en segundos con la DEMO.
+- Makers y estudiantes con una placa propia: la usan como herramienta real.
 
 ## Superficies
 
-Las rutas de la app (Visor, Construcción, Configuración) son el producto. Landing y Equipo son la cara pública del grupo. El Sprint 1 de la app implementa el Visor con datos simulados; Construcción y Configuración después. Landing se especifica ahora y se construye en estático **antes** de su motion.
+| Ruta | Trabajo |
+| --- | --- |
+| `/` Landing | Presentar el proyecto y llevar a la DEMO o a conectar una placa. |
+| `/visor` Visor | Leer la telemetría en vivo: último valor, tendencia, orientación, mapa. |
+| `/construccion` Armado | Seguir el armado de un modelo 3D paso a paso. |
+| Conectar (por definir) | Elegir fuente, puerto, formato y perfil de campos. |
 
-Evidencia de IA: [references/ui/](references/ui/). Identidad: [DESIGN.md](DESIGN.md) (`draft`).
+## Principios
 
-### Landing
+- Simple, efectiva y al grano: cada pantalla tiene un solo trabajo.
+- El dato manda: cada widget muestra una magnitud con su unidad.
+- El estado de la fuente se dice en texto (DEMO, conectado, sin datos).
+- Lo del usuario (perfiles, modelos, guías) vive en su navegador y se exporta.
+- Sin backend, sin cuentas.
 
-Cara pública de CubeOS. Grilla tipo Dovetail sobre navy. CTA: entrar al Visor. No opera telemetría. Referencia de piel: [references/ui/dovetail-hero-live.png](references/ui/dovetail-hero-live.png).
+## Fuera de alcance
 
-### Equipo
+- Enviar comandos al hardware.
+- Cuentas, sincronización en la nube o colaboración.
+- Formatos de modelo distintos de GLB/glTF.
 
-Apartado (landing o blog) de las personas de CHASQUI-II. Composición tipo Tempo: texto + objeto en movimiento. El motion entra después de aprobar la versión estática. Referencia: [references/ui/tempo-hero.png](references/ui/tempo-hero.png).
+## Accesibilidad
 
-### Visor
+WCAG AA, foco visible, `prefers-reduced-motion`. El 3D nunca es el único canal:
+los valores también están en HTML.
 
-Pantalla principal de telemetría. Shell: cabecera (marca CubeOS, título, estado de conexión) y barra lateral con tres destinos (Visor, Construcción, Configuración).
-
-Regiones actuales de la demo legacy, según wireframe de tablero y spec previa:
-
-| Región | Trabajo | Datos sintéticos legacy |
-| --- | --- | --- |
-| Visor 3D | Mostrar orientación del CubeSat 1U | `gyro_roll`, `gyro_pitch`, `gyro_yaw` |
-| Tarjetas de sensores | Última muestra, con estado normal/alerta/crítico | temperatura, UV, humedad, altitud, orientación, aceleración |
-| Gráficas | Tendencia de ~30 s (60 muestras) | temperatura, orientación, aceleración |
-| Mapa GPS | Posición y trayectoria reciente | `gps_lat`, `gps_lon`, `gps_alt` |
-
-El visor se detalla en expansiones (no son rutas nuevas): CubeSat, GPS, movimiento y orientación, sensores ambientales, sensores climáticos y cámara. Ver [references/ui/ExpansionCubesat.png](references/ui/ExpansionCubesat.png) y vecinos.
-
-En móvil, las secciones 3D, sensores y mapa pasan a pestañas.
-
-**Migración v2:** luz, presión, energía opcional y estado de cámara pertenecen
-al contrato hardware. El giroscopio mide velocidad angular, UV permanece crudo
-y GPS puede no estar instalado. Paneles no tiene medición independiente y el
-estado de cámara no prueba una foto recibida. PR2 conserva la demo y presentación;
-PR7 adaptará las lecturas. Campos/unidades: [telemetría](docs/telemetry.md).
-
-### Construcción
-
-Guía de ensamblaje del CubeSat. Mismo shell. Contenido: visor del armazón, paso actual (el wireframe usa el ejemplo 15/60), lista de piezas del paso y barra de progreso entre pasos. No envía comandos al hardware. Evidencia: [references/ui/ConstruccionPrincipal.png](references/ui/ConstruccionPrincipal.png).
-
-El catálogo de pasos, piezas y criterios de “paso completado” aún no está escrito (D-005). Esta superficie existe como producto; no se inventa el contenido educativo al implementar.
-
-### Configuración
-
-Mismo shell. Destino para fuente de datos, estado de conexión y ajustes de la estación. El wireframe [references/ui/SettingsPrincipal.png](references/ui/SettingsPrincipal.png) solo fija el marco; los controles dependen de la integración acordada con la ESP32 receptora.
-
-## Alcance de la primera versión
-
-### Incluye (documentado)
-
-- Las tres superficies de la app y el shell compartido.
-- Landing y Equipo como cara pública (estático primero).
-- Demo legacy existente y contrato hardware v2 separado con reproducción sin hardware.
-- Independencia de la fuente de datos.
-
-### Entrega actual y progresiva
-
-- Sprint 1: Visor con simulador, composición estática primero, 3D después.
-- PR2: contratos y reproducción v2. Próximos PRs: API Go, historial persistente,
-  identidad local/pública, progreso por dispositivo y fotografías conforme a
-  [ADR 0005](docs/adr/0005-backend-local-cloud-media.md).
-
-### No incluye todavía
-
-- Comandar o controlar el CubeSat.
-- Sustituir software profesional de operación.
-- Cliente de escritorio. PyQt5 es antecedente, no destino.
-- Derivar orientación, índice UV o porcentaje de batería sin evidencia/calibración.
-- Sincronización automática entre instalación local y pública.
-- Identidad visual: `DESIGN.md` en `draft` hasta aprobar navy, split de superficies y logo.
-
-## Resultado esperado por etapa
-
-| Etapa | Fuente | Objetivo |
-| --- | --- | --- |
-| Sprint 1 | Simulador en el frontend | Validar Visor, visualizaciones y flujo educativo |
-| Contratos PR2 | Reproducción v2 sin hardware | Validar esquema y conversiones |
-| Backend progresivo | ESP32 receptora → API Go → REST/SSE | Lecturas reales, ausencia/falla/frescura e historial persistido |
-
-## Criterio de éxito
-
-Un estudiante abre el Visor en el navegador, entiende si hay conexión, lee orientación, ambiente y posición, y distingue una muestra viva de un fallo de sensor. La Construcción se puede seguir como secuencia de pasos cuando su contenido exista. La Configuración explica la fuente de datos sin jerga de infraestructura.
-
-## Antecedente
-
-El prototipo PyQt5 aporta el esquema inicial de SQLite, la lógica de roll/pitch/yaw y la simulación con GPS. El stack web actual está en [docs/adr/0004-nextjs-app-router.md](docs/adr/0004-nextjs-app-router.md).
+Roadmap: [docs/roadmap.md](docs/roadmap.md). Decisión de arquitectura:
+[ADR 0007](docs/adr/0007-web-only.md).

@@ -4,10 +4,7 @@ El frontend se construye ahora; el backend FastAPI llega en Sprint 2. Ambos debe
 
 **Decisión:** un monorepo pnpm con `apps/web` (Next.js, ver [0004](0004-nextjs-app-router.md)) ahora, `packages/telemetry` como única fuente del contrato, y `apps/api` reservado para Sprint 2. El slice de vista previa ya creó `apps/web` y `packages/telemetry`; `apps/api` sigue sin crearse.
 
-**Status:** amended by [0005-backend-local-cloud-media.md](0005-backend-local-cloud-media.md). El monorepo se conserva; FastAPI y la exclusión inicial de Turborepo son antecedentes de la etapa anterior.
-
-PR2 propone [0006](0006-hardware-v2-contracts.md): `packages/contracts` gobierna
-hardware v2; `packages/telemetry` conserva exclusivamente la demo legacy.
+**Status:** amended by [0007](0007-web-only.md). Se conserva el monorepo con `apps/web`, `packages/ui` y `packages/telemetry`; el backend y `packages/contracts` salen del código activo (tag `legacy/cubeos-v1`).
 
 ## Considered Options
 

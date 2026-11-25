@@ -1,6 +1,5 @@
 import type { ComponentType } from "react";
 import {
-  IconAdjustmentsHorizontal,
   IconCube,
   IconLayoutDashboard,
 } from "@tabler/icons-react";
@@ -13,7 +12,7 @@ type StationIcon = ComponentType<{
 export const publicNav = [
   { href: "/", label: "Inicio" },
   { href: "/visor", label: "Visor" },
-  { href: "/equipo", label: "Equipo" },
+  { href: "/construccion", label: "Armado" },
 ] as const;
 
 export const stationNav: {
@@ -30,23 +29,16 @@ export const stationNav: {
   },
   {
     href: "/construccion",
-    label: "Construcción",
-    description: "Armazón y pasos",
+    label: "Armado",
+    description: "Modelo 3D paso a paso",
     icon: IconCube,
-  },
-  {
-    href: "/configuracion",
-    label: "Configuración",
-    description: "Fuente de datos",
-    icon: IconAdjustmentsHorizontal,
   },
 ];
 
 export function isAppPath(pathname: string) {
   return (
     pathname.startsWith("/visor") ||
-    pathname.startsWith("/construccion") ||
-    pathname.startsWith("/configuracion")
+    pathname.startsWith("/construccion")
   );
 }
 
@@ -58,6 +50,5 @@ export function stationTitle(pathname: string) {
 
 export function isPublicActive(href: string, pathname: string) {
   if (href === "/") return pathname === "/";
-  if (href === "/visor") return isAppPath(pathname);
   return pathname.startsWith(href);
 }
