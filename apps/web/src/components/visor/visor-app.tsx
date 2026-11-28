@@ -9,6 +9,7 @@ import { OrientationChart } from "@/components/visor/orientation-chart";
 import { Sparkline, formatValue } from "@/components/visor/sparkline";
 import { TelemetryMap } from "@/components/visor/telemetry-map";
 import { Tile } from "@/components/visor/tile";
+import { TrackingPanel } from "@/components/visor/tracking-panel";
 import { downloadText, readingsToCsv } from "@/lib/telemetry/csv";
 import { readingRate, useTelemetryStore } from "@/lib/telemetry/store";
 import { useSource } from "@/lib/telemetry/use-source";
@@ -94,6 +95,7 @@ export function VisorApp() {
     <AppShell>
       <h1 className="sr-only">Visor de telemetría</h1>
       <Toolbar />
+      <TrackingPanel />
       <div className="min-h-0 flex-1 overflow-y-auto">
         {!latest ? (
           <Empty />
