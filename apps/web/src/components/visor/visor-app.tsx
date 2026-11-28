@@ -9,6 +9,7 @@ import { OrientationChart } from "@/components/visor/orientation-chart";
 import { Sparkline, formatValue } from "@/components/visor/sparkline";
 import { TelemetryMap } from "@/components/visor/telemetry-map";
 import { Tile } from "@/components/visor/tile";
+import { TrackingPanel } from "@/components/visor/tracking-panel";
 import { downloadText, readingsToCsv } from "@/lib/telemetry/csv";
 import { readingRate, useTelemetryStore } from "@/lib/telemetry/store";
 import { useSource } from "@/lib/telemetry/use-source";
@@ -72,6 +73,8 @@ export function VisorApp() {
   useSource();
   const readings = useTelemetryStore((s) => s.readings);
   const profile = useTelemetryStore((s) => s.profiles[s.source]);
+  const trajectoryPoints = useTelemetryStore((s) => s.trajectory.points);
+  const replayIndex = useTelemetryStore((s) => s.replayIndex);
   const latest = readings.at(-1);
 
   const series = (key: string) => readings.map((r) => r.values[key]).filter((v): v is number => v !== undefined);
@@ -86,6 +89,13 @@ export function VisorApp() {
   const gpsSamples = gps
     ? readings.filter((r) => gps.lat in r.values && gps.lon in r.values).map((r) => ({ gps_lat: r.values[gps.lat], gps_lon: r.values[gps.lon] }))
     : [];
+  const shownPoints = replayIndex === null ? trajectoryPoints : trajectoryPoints.slice(0, replayIndex + 1);
+  const trailSamples = shownPoints.length > 0
+    ? shownPoints.map((p) => ({ gps_lat: p.lat, gps_lon: p.lon }))
+    : gpsSamples;
+  const mapSample = replayIndex !== null && trajectoryPoints[replayIndex]
+    ? { gps_lat: trajectoryPoints[replayIndex].lat, gps_lon: trajectoryPoints[replayIndex].lon }
+    : trailSamples.at(-1) ?? null;
   // Los campos que ya dibujan la orientación o el mapa no se repiten como tarjetas.
   const shown = new Set([...(attValue && att ? [att.roll, att.pitch, att.yaw] : []), ...(gpsSamples.length && gps ? [gps.lat, gps.lon] : [])]);
   const metrics = profile.fields.filter((f) => f.visible && latest && f.key in latest.values && !shown.has(f.key));
@@ -94,6 +104,7 @@ export function VisorApp() {
     <AppShell>
       <h1 className="sr-only">Visor de telemetría</h1>
       <Toolbar />
+      <TrackingPanel />
       <div className="min-h-0 flex-1 overflow-y-auto">
         {!latest ? (
           <Empty />
@@ -107,11 +118,11 @@ export function VisorApp() {
                 </div>
               </Tile>
             )}
-            {gpsSamples.length > 0 && (
+            {(gpsSamples.length > 0 || trajectoryPoints.length > 0) && mapSample && (
               <Tile title="Posición" className="row-span-2 sm:col-span-2">
-                <TelemetryMap sample={gpsSamples.at(-1)!} history={gpsSamples} />
+                <TelemetryMap sample={mapSample} history={trailSamples} />
                 <p className="mt-2 shrink-0 font-mono text-sm text-muted-foreground">
-                  {formatValue(gpsSamples.at(-1)!.gps_lat, 5)}°, {formatValue(gpsSamples.at(-1)!.gps_lon, 5)}°
+                  {formatValue(mapSample.gps_lat, 5)}°, {formatValue(mapSample.gps_lon, 5)}°
                 </p>
               </Tile>
             )}
