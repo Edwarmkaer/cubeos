@@ -21,6 +21,20 @@ muestra el recorrido y el panel nuevo muestra el estado del viaje.
 createTripFeed → parseLine → useTelemetryStore.ingest → ingestTrip → TripPanel + TelemetryMap
 ```
 
+```mermaid
+flowchart LR
+  A[createTripFeed<br/>JSON por tick] --> B[parseLine<br/>valores numéricas]
+  B --> C[useTelemetryStore.ingest]
+  C --> D[ingestTrip<br/>idempotencia por vehicle_id:seq]
+  D --> E{¿seq continuo?}
+  E -->|sí| F[applyEvent<br/>estado + geofence + ETA]
+  E -->|no| G[buffer pending]
+  G --> E
+  D --> H[DLQ<br/>discardedCount]
+  F --> I[TripPanel]
+  F --> J[TelemetryMap]
+```
+
 - `trip-feed.ts`: productor sintético. Inyecta duplicados (cada 5 ticks) y una
   coordenada imposible (cada 7 ticks) para que se vea cómo reacciona el pipeline.
 - `trip-pipeline.ts`: reducidor puro. No depende de React ni de AWS.
