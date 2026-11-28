@@ -159,7 +159,7 @@ function applyReading(
   };
 }
 
-function haversineM(a: { lat: number; lon: number }, b: { lat: number; lon: number }): number {
+export function haversineM(a: { lat: number; lon: number }, b: { lat: number; lon: number }): number {
   const toRad = (degrees: number) => (degrees * Math.PI) / 180;
   const dLat = toRad(b.lat - a.lat);
   const dLon = toRad(b.lon - a.lon);

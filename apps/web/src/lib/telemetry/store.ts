@@ -7,6 +7,7 @@ import { demoProfile, emptyProfile, mergeKeys } from "./profile.ts";
 import type { FieldConfig, Profile } from "./profile.ts";
 import { openSerial } from "./serial.ts";
 import type { LineSource } from "./serial.ts";
+import { ingestTrajectory, initialTrajectoryState, type TrajectoryState } from "./trajectory.ts";
 
 export type SourceKind = "demo" | "serial";
 export type SourceStatus = "idle" | "connecting" | "live" | "error";
@@ -26,6 +27,13 @@ type State = {
   lineCount: number;
   recording: boolean;
   recorded: Reading[];
+  trajectory: TrajectoryState;
+  trajectoryActive: boolean;
+  replayIndex: number | null;
+  startTrajectory: () => void;
+  stopTrajectory: () => void;
+  clearTrajectory: () => void;
+  setReplayIndex: (index: number | null) => void;
   connect: (source: SourceKind) => Promise<void>;
   disconnect: () => Promise<void>;
   select: (source: SourceKind) => Promise<void>;
@@ -50,6 +58,16 @@ export const useTelemetryStore = create<State>()(
       lineCount: 0,
       recording: false,
       recorded: [],
+      trajectory: initialTrajectoryState(),
+      trajectoryActive: false,
+      replayIndex: null,
+
+      startTrajectory: () =>
+        set({ trajectoryActive: true, trajectory: initialTrajectoryState(), replayIndex: null }),
+      stopTrajectory: () => set({ trajectoryActive: false, replayIndex: null }),
+      clearTrajectory: () =>
+        set({ trajectory: initialTrajectoryState(), replayIndex: null }),
+      setReplayIndex: (replayIndex) => set({ replayIndex }),
 
       connect: async (source) => {
         await get().disconnect();
@@ -89,7 +107,7 @@ export const useTelemetryStore = create<State>()(
       },
 
       ingest: (line) => {
-        const { source, profiles, readings, lines, lineCount, recording, recorded } = get();
+        const { source, profiles, readings, lines, lineCount, recording, recorded, trajectoryActive } = get();
         const profile = profiles[source];
         const parsed = parseLine(line, profile.format, profile.csvColumns);
         const nextLines = [...lines, line].slice(-LINES);
@@ -100,11 +118,13 @@ export const useTelemetryStore = create<State>()(
         if (parsed.kind === "skip") return set({ lines: nextLines, lineCount: lineCount + 1 });
         const reading = { t: Date.now(), values: parsed.values };
         const merged = mergeKeys(profile, Object.keys(parsed.values));
+        const trajectory = trajectoryActive ? ingestTrajectory(get().trajectory, reading) : get().trajectory;
         set({
           lines: nextLines,
           lineCount: lineCount + 1,
           readings: [...readings, reading].slice(-HISTORY),
           recorded: recording && recorded.length < MAX_RECORDING ? [...recorded, reading] : recorded,
+          trajectory,
           ...(merged !== profile ? { profiles: { ...profiles, [source]: merged } } : {}),
         });
       },
